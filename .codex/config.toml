@@ -1,0 +1,16 @@
+# Песочница включена: запись только в рабочую область.
+sandbox_mode = "workspace-write"
+
+# Небольшое ужесточение среды shell.
+allow_login_shell = false
+
+# Для Windows OpenAI рекомендует elevated.
+[windows]
+sandbox = "elevated"
+
+[sandbox_workspace_write]
+# Сеть только по разрешению / по умолчанию выключена.
+network_access = false
+
+# Не расширяем writable_roots, чтобы Codex писал только в репозиторий.
+# writable_roots = []
