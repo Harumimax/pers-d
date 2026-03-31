@@ -13,7 +13,6 @@ return new class extends Migration
             $table->string('word');
             $table->string('translation');
             $table->text('comment')->nullable();
-            $table->string('source_language');
             $table->timestamps();
 
             $table->index('word');

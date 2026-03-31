@@ -11,12 +11,16 @@ class Word extends Model
         'word',
         'translation',
         'comment',
-        'source_language',
     ];
 
     public function dictionaries(): BelongsToMany
     {
-        return $this->belongsToMany(UserDictionary::class, 'user_dictionary_word')
+        return $this->belongsToMany(
+            UserDictionary::class,
+            'user_dictionary_word',
+            'word_id',
+            'user_dictionary_id'
+        )
             ->withTimestamps();
     }
 }

@@ -68,7 +68,6 @@ class UserDictionaryTest extends TestCase
             'word' => 'Haus',
             'translation' => 'House',
             'comment' => 'Common noun',
-            'source_language' => 'de',
         ]);
 
         $dictionary->words()->attach($word);
@@ -94,7 +93,6 @@ class UserDictionaryTest extends TestCase
             'word' => 'bonjour',
             'translation' => 'hello',
             'comment' => null,
-            'source_language' => 'fr',
         ]);
 
         $firstDictionary->words()->attach($word);

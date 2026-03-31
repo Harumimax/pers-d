@@ -20,7 +20,12 @@ class UserDictionary extends Model
 
     public function words(): BelongsToMany
     {
-        return $this->belongsToMany(Word::class, 'user_dictionary_word')
+        return $this->belongsToMany(
+            Word::class,
+            'user_dictionary_word',
+            'user_dictionary_id',
+            'word_id'
+        )
             ->withTimestamps();
     }
 }
