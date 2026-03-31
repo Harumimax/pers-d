@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ProfileController;
 use App\Livewire\Dictionaries\Index;
 use App\Livewire\Dictionaries\Show;
 use Illuminate\Support\Facades\Route;
@@ -9,6 +10,15 @@ Route::get('/', function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', fn () => redirect()->route('dictionaries.index'))
+        ->name('dashboard');
+
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
     Route::get('/dictionaries', Index::class)->name('dictionaries.index');
     Route::get('/dictionaries/{dictionary}', Show::class)->name('dictionaries.show');
 });
+
+require __DIR__.'/auth.php';

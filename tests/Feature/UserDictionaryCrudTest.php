@@ -13,6 +13,23 @@ class UserDictionaryCrudTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_guest_is_redirected_to_login_when_opening_dictionaries_page(): void
+    {
+        $response = $this->get(route('dictionaries.index'));
+
+        $response->assertRedirect(route('login'));
+    }
+
+    public function test_authenticated_user_can_open_their_dictionaries_page(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('dictionaries.index'));
+
+        $response->assertOk();
+        $response->assertSee('Your dictionaries');
+    }
+
     public function test_user_sees_only_their_own_dictionaries(): void
     {
         $user = User::factory()->create();
