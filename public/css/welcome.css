@@ -37,9 +37,9 @@ img {
 
 .container {
     width: 100%;
-    max-width: 1520px;
+    max-width: 1280px;
     margin: 0 auto;
-    padding: 0 48px;
+    padding: 0 32px;
 }
 
 /* Header */
@@ -49,14 +49,14 @@ img {
 }
 
 .header-inner {
-    min-height: 94px;
+    min-height: 78px;
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
 .logo {
-    font-size: 2.125rem;
+    font-size: 1.75rem;
     font-weight: 500;
     letter-spacing: -0.02em;
     color: var(--text-color);
@@ -104,54 +104,57 @@ img {
 }
 
 .header-actions .btn {
-    min-width: 112px;
-    height: 60px;
-    padding: 0 24px;
-    font-size: 1.0625rem;
+    min-width: 104px;
+    height: 48px;
+    padding: 0 20px;
+    font-size: 0.95rem;
+    border-radius: 12px;
 }
 
 .btn-large {
-    min-width: 122px;
-    height: 58px;
-    padding: 0 28px;
-    font-size: 1rem;
+    min-width: 102px;
+    height: 48px;
+    padding: 0 22px;
+    font-size: 0.95rem;
+    border-radius: 12px;
 }
 
 /* Hero */
 .hero {
-    min-height: calc(100vh - 95px);
+    min-height: calc(100vh - 78px);
     display: flex;
     align-items: center;
 }
 
 .hero-inner {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 72px;
+    grid-template-columns: 0.92fr 1.08fr;
+    gap: 44px;
     align-items: center;
-    padding-top: 40px;
-    padding-bottom: 80px;
+    padding-top: 24px;
+    padding-bottom: 48px;
 }
 
 .hero-content {
-    max-width: 620px;
-    padding-left: 120px;
+    max-width: 560px;
+    padding-left: 56px;
 }
 
 .hero-title {
-    margin: 0 0 28px;
-    font-size: 5rem;
-    line-height: 0.95;
+    margin: 0 0 24px;
+    font-size: 4.1rem;
+    line-height: 0.98;
     font-weight: 700;
     letter-spacing: -0.04em;
+    max-width: 560px;
     color: var(--text-color);
 }
 
 .hero-description {
-    margin: 0 0 44px;
-    max-width: 600px;
-    font-size: 1.125rem;
-    line-height: 1.7;
+    margin: 0 0 36px;
+    max-width: 520px;
+    font-size: 0.98rem;
+    line-height: 1.65;
     color: var(--muted-color);
 }
 
@@ -169,10 +172,10 @@ img {
 
 .hero-image {
     width: 100%;
-    max-width: 700px;
-    height: 385px;
+    max-width: 580px;
+    height: 320px;
     object-fit: cover;
-    border-radius: 24px;
+    border-radius: 20px;
 }
 
 /* Responsive */
