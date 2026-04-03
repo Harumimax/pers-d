@@ -15,6 +15,10 @@
             <nav class="header-actions">
                 @auth
                     <a href="{{ url('/dashboard') }}" class="btn btn-primary">Dashboard</a>
+                    <form method="POST" action="{{ route('logout') }}" style="display:inline">
+                        @csrf
+                        <button type="submit" class="btn btn-secondary">Log Out</button>
+                    </form>
                 @else
                     <a href="{{ route('login') }}" class="btn btn-secondary">Log in</a>
                     <a href="{{ route('register') }}" class="btn btn-primary">Sign up</a>
