@@ -6,7 +6,7 @@
         </div>
 
         @if (! $showCreateForm)
-            <button type="button" class="btn btn-primary dictionaries-new-btn" wire:click="showCreateForm">
+            <button type="button" class="btn btn-primary dictionaries-new-btn" wire:click="openCreateForm">
                 <span class="dictionaries-new-btn__plus">+</span>
                 <span>New Dictionary</span>
             </button>
@@ -46,10 +46,10 @@
 
                 <div class="dictionaries-create-actions">
                     <button type="submit" class="btn btn-primary dictionaries-action-btn">
-                        Create
+                        Создать
                     </button>
                     <button type="button" class="btn btn-secondary dictionaries-action-btn" wire:click="cancelCreate">
-                        Cancel
+                        Отмена
                     </button>
                 </div>
             </form>

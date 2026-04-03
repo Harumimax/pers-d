@@ -17,7 +17,7 @@ class Index extends Component
     public string $language = '';
     public bool $showCreateForm = false;
 
-    public function showCreateForm(): void
+    public function openCreateForm(): void
     {
         $this->showCreateForm = true;
     }
