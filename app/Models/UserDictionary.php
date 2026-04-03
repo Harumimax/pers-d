@@ -11,6 +11,7 @@ class UserDictionary extends Model
     protected $fillable = [
         'user_id',
         'name',
+        'language',
     ];
 
     public function user(): BelongsTo

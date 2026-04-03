@@ -14,31 +14,25 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="auth-shell">
-        <header class="site-header">
-            <div class="container header-inner">
-                <a href="{{ url('/') }}" class="logo">WordKeeper</a>
+        <x-site-header label="Authentication links">
+            @if (Route::has('login'))
+                <a
+                    href="{{ route('login') }}"
+                    class="btn {{ request()->routeIs('login') ? 'btn-primary' : 'btn-secondary' }}"
+                >
+                    Log in
+                </a>
+            @endif
 
-                <nav class="header-actions" aria-label="Authentication links">
-                    @if (Route::has('login'))
-                        <a
-                            href="{{ route('login') }}"
-                            class="btn {{ request()->routeIs('login') ? 'btn-primary' : 'btn-secondary' }}"
-                        >
-                            Log in
-                        </a>
-                    @endif
-
-                    @if (Route::has('register'))
-                        <a
-                            href="{{ route('register') }}"
-                            class="btn {{ request()->routeIs('register') ? 'btn-primary' : 'btn-secondary' }}"
-                        >
-                            Sign up
-                        </a>
-                    @endif
-                </nav>
-            </div>
-        </header>
+            @if (Route::has('register'))
+                <a
+                    href="{{ route('register') }}"
+                    class="btn {{ request()->routeIs('register') ? 'btn-primary' : 'btn-secondary' }}"
+                >
+                    Sign up
+                </a>
+            @endif
+        </x-site-header>
 
         <main class="auth-main">
             <div class="container">

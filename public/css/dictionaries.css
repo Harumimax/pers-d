@@ -1,0 +1,288 @@
+.dictionaries-shell {
+    min-height: 100vh;
+    background-color: var(--bg-color);
+}
+
+.dictionaries-header-nav {
+    display: flex;
+    align-items: center;
+    gap: 34px;
+}
+
+.dictionaries-header-nav__link {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--muted-color);
+    transition: color 0.2s ease;
+}
+
+.dictionaries-header-nav__link:hover {
+    color: var(--text-color);
+}
+
+.dictionaries-header-nav__form {
+    margin: 0;
+}
+
+.dictionaries-header-nav .btn {
+    min-width: 104px;
+    height: 48px;
+    padding: 0 20px;
+    font-size: 0.95rem;
+    border-radius: 12px;
+}
+
+.dictionaries-main {
+    padding: 56px 0 72px;
+}
+
+.dictionaries-container {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 32px;
+}
+
+.dictionaries-intro {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 34px;
+}
+
+.dictionaries-title {
+    margin: 0 0 8px;
+    font-size: 3.4rem;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--text-color);
+}
+
+.dictionaries-subtitle {
+    margin: 0;
+    font-size: 1.15rem;
+    color: var(--muted-color);
+}
+
+.dictionaries-new-btn {
+    height: 58px;
+    min-width: 232px;
+    border-radius: 16px;
+    font-size: 1.05rem;
+    gap: 10px;
+}
+
+.dictionaries-new-btn__plus {
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
+.dictionaries-create-card {
+    margin-bottom: 24px;
+    background-color: var(--bg-color);
+    border: 1px solid #d8dce4;
+    border-radius: 16px;
+    padding: 24px 28px 28px;
+}
+
+.dictionaries-create-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 18px;
+    align-items: end;
+}
+
+.dictionaries-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dictionaries-label {
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.dictionaries-input {
+    width: 100%;
+    height: 56px;
+    border-radius: 14px;
+    border: 1px solid #c8ced9;
+    background: #f8fafc;
+    padding: 0 18px;
+    font-size: 1.02rem;
+    color: var(--text-color);
+}
+
+.dictionaries-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12);
+}
+
+.dictionaries-error {
+    margin: 2px 0 0;
+    font-size: 0.88rem;
+    color: #b91c1c;
+}
+
+.dictionaries-create-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.dictionaries-action-btn {
+    height: 56px;
+    min-width: 112px;
+    border-radius: 14px;
+    font-size: 1.02rem;
+}
+
+.dictionaries-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.dictionary-card {
+    background: var(--bg-color);
+    border: 1px solid #d8dce4;
+    border-radius: 16px;
+    padding: 24px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.dictionary-card__title {
+    margin: 0 0 10px;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text-color);
+}
+
+.dictionary-card__title a:hover {
+    color: var(--primary-color);
+}
+
+.dictionary-card__meta {
+    margin: 0;
+    color: var(--muted-color);
+    font-size: 1.15rem;
+}
+
+.dictionary-card__dot {
+    margin: 0 8px;
+}
+
+.dictionary-card__delete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #ef4444;
+    cursor: pointer;
+}
+
+.dictionary-card__delete:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.dictionary-card__delete svg {
+    width: 24px;
+    height: 24px;
+}
+
+.dictionary-card--empty {
+    display: block;
+}
+
+@media (max-width: 1280px) {
+    .dictionaries-header-nav__link {
+        font-size: 1rem;
+    }
+
+    .dictionaries-title {
+        font-size: 2.55rem;
+    }
+
+    .dictionary-card__title {
+        font-size: 1.9rem;
+    }
+
+    .dictionary-card__meta {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .dictionaries-container {
+        padding: 0 24px;
+    }
+
+    .dictionaries-intro {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .dictionaries-new-btn {
+        width: 100%;
+    }
+
+    .dictionaries-create-form {
+        grid-template-columns: 1fr;
+    }
+
+    .dictionaries-create-actions {
+        width: 100%;
+    }
+
+    .dictionaries-action-btn {
+        flex: 1;
+    }
+}
+
+@media (max-width: 640px) {
+    .dictionaries-header-nav {
+        width: 100%;
+        justify-content: center;
+        gap: 20px;
+    }
+
+    .dictionaries-header-nav .btn {
+        min-width: 96px;
+        height: 52px;
+        padding: 0 18px;
+    }
+
+    .dictionaries-main {
+        padding: 36px 0 52px;
+    }
+
+    .dictionaries-title {
+        font-size: 2rem;
+    }
+
+    .dictionaries-subtitle {
+        font-size: 1rem;
+    }
+
+    .dictionary-card {
+        padding: 20px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .dictionary-card__delete {
+        align-self: flex-end;
+    }
+}
