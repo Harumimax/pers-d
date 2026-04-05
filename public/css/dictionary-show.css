@@ -84,10 +84,219 @@
 }
 
 .dictionary-show-card__title {
-    margin: 0 0 20px;
+    margin: 0;
     font-size: 1.7rem;
     letter-spacing: -0.01em;
     color: var(--text-color);
+}
+
+.word-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    padding-bottom: 18px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.word-list-subtitle {
+    margin: 8px 0 0;
+    font-size: 0.95rem;
+    color: var(--muted-color);
+}
+
+.word-list-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.word-list-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 300px;
+    height: 48px;
+    padding: 0 14px;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid #d8dce4;
+    border-radius: 14px;
+    color: var(--muted-color);
+}
+
+.word-list-search input {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    outline: none;
+    color: var(--text-color);
+    font: inherit;
+}
+
+.word-list-select {
+    height: 48px;
+    padding: 0 14px;
+    border-radius: 14px;
+    border: 1px solid #d8dce4;
+    background: rgba(255, 255, 255, 0.85);
+    color: var(--text-color);
+    font: inherit;
+}
+
+.word-list-table-wrap {
+    overflow-x: auto;
+}
+
+.word-list-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+}
+
+.word-list-table thead th {
+    text-align: left;
+    padding: 0 14px 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted-color);
+}
+
+.word-list-table tbody tr {
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.word-list-table tbody td {
+    padding: 16px 14px;
+    vertical-align: middle;
+    border-top: 1px solid rgba(148, 163, 184, 0.12);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.word-list-table tbody td:first-child {
+    border-left: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 16px 0 0 16px;
+}
+
+.word-list-table tbody td:last-child {
+    border-right: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 0 16px 16px 0;
+}
+
+.word-list-main {
+    font-size: 1.03rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-color);
+}
+
+.word-list-meta {
+    margin-top: 6px;
+    font-size: 0.84rem;
+    color: var(--muted-color);
+}
+
+.word-list-translation {
+    font-size: 0.98rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.word-list-comment {
+    max-width: 360px;
+    color: var(--muted-color);
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.word-list-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 30px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: rgba(35, 66, 160, 0.08);
+    color: var(--primary-color);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.word-list-action-cell {
+    text-align: center;
+}
+
+.word-list-delete-btn {
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: #ef4444;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.word-list-delete-btn:hover {
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.word-list-pagination {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.word-list-pagination__info {
+    margin: 0;
+    color: var(--muted-color);
+    font-size: 0.93rem;
+}
+
+.word-list-pagination__nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.word-list-page-btn {
+    min-width: 42px;
+    height: 42px;
+    padding: 0 14px;
+    border: 1px solid #d8dce4;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.85);
+    color: var(--text-color);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.word-list-page-btn.is-active {
+    background: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+
+.word-list-page-btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.dictionary-show-list__empty {
+    margin: 8px 0 0;
+    font-size: 1rem;
+    color: var(--muted-color);
 }
 
 .dictionary-show-meta {
@@ -137,6 +346,33 @@
 
     .dictionary-show__create-actions {
         width: 100%;
+    }
+
+    .word-list-header {
+        flex-direction: column;
+    }
+
+    .word-list-controls {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .word-list-search {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .word-list-select {
+        width: 100%;
+    }
+
+    .word-list-pagination {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .word-list-pagination__nav {
+        flex-wrap: wrap;
     }
 
     .dictionary-show__title {
