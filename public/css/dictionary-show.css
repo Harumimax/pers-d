@@ -294,6 +294,76 @@
     cursor: default;
 }
 
+.dictionary-delete-modal {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.dictionary-delete-modal__title {
+    margin: 0;
+    font-size: 1.25rem;
+    line-height: 1.3;
+    color: var(--text-color);
+}
+
+.dictionary-delete-modal__text {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    color: var(--muted-color);
+}
+
+.dictionary-delete-modal__actions {
+    margin-top: 4px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.dictionary-delete-modal__actions .btn {
+    min-width: 84px;
+    height: 48px;
+}
+
+.dictionary-delete-modal__danger-btn {
+    min-width: 84px;
+    height: 48px;
+    border: 1px solid #dc2626;
+    border-radius: 12px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.dictionary-delete-modal__danger-btn:hover {
+    background: #b91c1c;
+    border-color: #b91c1c;
+}
+
+.dictionary-delete-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(15, 23, 42, 0.45);
+}
+
+.dictionary-delete-dialog {
+    width: 100%;
+    max-width: 520px;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 20px 48px rgba(15, 23, 42, 0.22);
+    overflow: hidden;
+}
+
 .dictionary-show-list__empty {
     margin: 8px 0 0;
     font-size: 1rem;
@@ -400,5 +470,14 @@
 
     .dictionary-show-card {
         padding: 20px;
+    }
+
+    .dictionary-delete-modal__actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dictionary-delete-modal__danger-btn {
+        width: 100%;
     }
 }

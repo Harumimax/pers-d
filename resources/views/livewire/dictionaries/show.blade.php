@@ -1,7 +1,6 @@
 <main class="dictionaries-main dictionary-show-main">
     <section class="dictionaries-container dictionary-show">
         <header class="dictionary-show__header">
-
             <div class="dictionary-show__title-row">
                 <h1 class="dictionary-show__title">{{ $dictionary->name }}</h1>
                 @if (! $showCreateForm)
@@ -128,7 +127,7 @@
                         </thead>
                         <tbody>
                             @foreach ($words as $wordItem)
-                                <tr>
+                                <tr wire:key="word-row-{{ $wordItem->id }}-{{ $wordItem->pivot->created_at?->timestamp ?? 'na' }}">
                                     <td>
                                         <div class="word-list-main">{{ $wordItem->word }}</div>
                                         <div class="word-list-meta">{{ $dictionary->language ?? 'Language not specified' }}</div>
@@ -146,8 +145,8 @@
                                         <button
                                             type="button"
                                             class="word-list-delete-btn"
-                                            wire:click="deleteWord({{ $wordItem->id }})"
-                                            wire:confirm="Delete this word from the system?"
+                                            wire:key="word-delete-btn-{{ $wordItem->id }}"
+                                            wire:click="confirmDeleteWord({{ $wordItem->id }})"
                                             aria-label="Delete word {{ $wordItem->word }}"
                                         >
                                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -198,5 +197,39 @@
                 </div>
             @endif
         </article>
+
+        @if ($pendingDeleteWordId !== null)
+            <div class="dictionary-delete-overlay" wire:key="delete-overlay-{{ $pendingDeleteWordId }}" wire:click="cancelDeleteWord">
+                <div class="dictionary-delete-dialog" wire:click.stop>
+                    <div class="dictionary-delete-modal">
+                        <h2 class="dictionary-delete-modal__title">Delete Word</h2>
+
+                        <p class="dictionary-delete-modal__text">
+                            Are you sure you want to delete "{{ $pendingDeleteWordLabel }}"?
+                        </p>
+
+                        <div class="dictionary-delete-modal__actions">
+                            <button
+                                type="button"
+                                class="btn btn-secondary"
+                                wire:key="delete-cancel-{{ $pendingDeleteWordId }}"
+                                wire:click="cancelDeleteWord"
+                            >
+                                No
+                            </button>
+
+                            <button
+                                type="button"
+                                class="dictionary-delete-modal__danger-btn"
+                                wire:key="delete-confirm-{{ $pendingDeleteWordId }}"
+                                wire:click="deleteConfirmedWord"
+                            >
+                                Yes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
     </section>
 </main>

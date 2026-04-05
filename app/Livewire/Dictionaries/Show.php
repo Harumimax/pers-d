@@ -21,6 +21,8 @@ class Show extends Component
     public string $comment = '';
     public bool $showCreateForm = false;
     public int $formRenderKey = 0;
+    public ?int $pendingDeleteWordId = null;
+    public string $pendingDeleteWordLabel = '';
 
     public function mount(UserDictionary $dictionary): void
     {
@@ -73,8 +75,31 @@ class Show extends Component
         $this->formRenderKey++;
     }
 
-    public function deleteWord(int $wordId): void
+    public function confirmDeleteWord(int $wordId): void
     {
+        $isAttached = $this->dictionary->words()
+            ->where('words.id', $wordId)
+            ->exists();
+
+        abort_if(! $isAttached, 403);
+
+        $word = Word::query()->findOrFail($wordId);
+        $this->pendingDeleteWordId = $wordId;
+        $this->pendingDeleteWordLabel = $word->word;
+
+    }
+
+    public function cancelDeleteWord(): void
+    {
+        $this->pendingDeleteWordId = null;
+        $this->pendingDeleteWordLabel = '';
+    }
+
+    public function deleteConfirmedWord(): void
+    {
+        $wordId = $this->pendingDeleteWordId;
+        abort_if($wordId === null || $wordId <= 0, 404);
+
         $isAttached = $this->dictionary->words()
             ->where('words.id', $wordId)
             ->exists();
@@ -83,6 +108,8 @@ class Show extends Component
 
         $this->dictionary->words()->detach($wordId);
         Word::query()->whereKey($wordId)->delete();
+
+        $this->cancelDeleteWord();
 
         $currentPage = $this->getPage();
         $totalAfterDelete = $this->dictionary->words()->count();
