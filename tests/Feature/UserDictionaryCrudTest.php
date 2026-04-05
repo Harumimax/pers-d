@@ -27,7 +27,7 @@ class UserDictionaryCrudTest extends TestCase
         $response = $this->actingAs($user)->get(route('dictionaries.index'));
 
         $response->assertOk();
-        $response->assertSee('Your dictionaries');
+        $response->assertSee('My Dictionaries');
     }
 
     public function test_user_sees_only_their_own_dictionaries(): void
@@ -59,12 +59,14 @@ class UserDictionaryCrudTest extends TestCase
         Livewire::actingAs($user)
             ->test(Index::class)
             ->set('name', 'Travel Words')
+            ->set('language', 'English')
             ->call('createDictionary')
             ->assertHasNoErrors();
 
         $this->assertDatabaseHas('user_dictionaries', [
             'user_id' => $user->id,
             'name' => 'Travel Words',
+            'language' => 'English',
         ]);
     }
 
@@ -80,7 +82,7 @@ class UserDictionaryCrudTest extends TestCase
 
         Livewire::actingAs($user)
             ->test(Index::class)
-            ->call('deleteDictionary', $foreignDictionary->id)
+            ->call('confirmDeleteDictionary', $foreignDictionary->id)
             ->assertForbidden();
 
         $this->assertDatabaseHas('user_dictionaries', [
