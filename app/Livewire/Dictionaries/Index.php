@@ -17,6 +17,8 @@ class Index extends Component
     public string $language = '';
     public bool $showCreateForm = false;
     public int $formRenderKey = 0;
+    public ?int $pendingDeleteDictionaryId = null;
+    public string $pendingDeleteDictionaryLabel = '';
 
     public function openCreateForm(): void
     {
@@ -56,7 +58,7 @@ class Index extends Component
         $this->formRenderKey++;
     }
 
-    public function deleteDictionary(int $dictionaryId): void
+    public function confirmDeleteDictionary(int $dictionaryId): void
     {
         $user = $this->currentUser();
 
@@ -64,7 +66,29 @@ class Index extends Component
 
         abort_if($dictionary === null, 403);
 
+        $this->pendingDeleteDictionaryId = $dictionary->id;
+        $this->pendingDeleteDictionaryLabel = $dictionary->name;
+    }
+
+    public function cancelDeleteDictionary(): void
+    {
+        $this->pendingDeleteDictionaryId = null;
+        $this->pendingDeleteDictionaryLabel = '';
+    }
+
+    public function deleteConfirmedDictionary(): void
+    {
+        $user = $this->currentUser();
+
+        $dictionaryId = $this->pendingDeleteDictionaryId;
+        abort_if($dictionaryId === null, 404);
+
+        $dictionary = $user->dictionaries()->find($dictionaryId);
+
+        abort_if($dictionary === null, 403);
+
         $dictionary->delete();
+        $this->cancelDeleteDictionary();
     }
 
     public function render(): View

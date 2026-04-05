@@ -78,8 +78,7 @@
                 <button
                     type="button"
                     class="dictionary-card__delete"
-                    wire:click="deleteDictionary({{ $dictionary->id }})"
-                    wire:confirm="Delete this dictionary?"
+                    wire:click="confirmDeleteDictionary({{ $dictionary->id }})"
                     aria-label="Delete dictionary {{ $dictionary->name }}"
                 >
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -94,4 +93,36 @@
             </article>
         @endforelse
     </section>
+
+    @if ($pendingDeleteDictionaryId !== null)
+        <div class="dictionary-delete-overlay" wire:click="cancelDeleteDictionary">
+            <div class="dictionary-delete-dialog" wire:click.stop>
+                <div class="dictionary-delete-modal">
+                    <h2 class="dictionary-delete-modal__title">Delete Dictionary</h2>
+
+                    <p class="dictionary-delete-modal__text">
+                        Are you sure you want to delete "{{ $pendingDeleteDictionaryLabel }}"?
+                    </p>
+
+                    <div class="dictionary-delete-modal__actions">
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            wire:click="cancelDeleteDictionary"
+                        >
+                            No
+                        </button>
+
+                        <button
+                            type="button"
+                            class="dictionary-delete-modal__danger-btn"
+                            wire:click="deleteConfirmedDictionary"
+                        >
+                            Yes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </main>
