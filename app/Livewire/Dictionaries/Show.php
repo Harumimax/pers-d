@@ -15,10 +15,15 @@ class Show extends Component
 {
     use WithPagination;
 
+    private const SORT_NEWEST = 'newest';
+    private const SORT_OLDEST = 'oldest';
+    private const SORT_A_TO_Z = 'a-z';
+
     public UserDictionary $dictionary;
     public string $word = '';
     public string $translation = '';
     public string $comment = '';
+    public string $sort = self::SORT_NEWEST;
     public bool $showCreateForm = false;
     public int $formRenderKey = 0;
     public ?int $pendingDeleteWordId = null;
@@ -36,8 +41,17 @@ class Show extends Component
 
     public function render(): View
     {
-        $words = $this->dictionary->words()
-            ->orderByDesc('user_dictionary_word.created_at')
+        $wordsQuery = $this->dictionary->words();
+
+        if ($this->sort === self::SORT_OLDEST) {
+            $wordsQuery->orderBy('user_dictionary_word.created_at');
+        } elseif ($this->sort === self::SORT_A_TO_Z) {
+            $wordsQuery->orderBy('words.word');
+        } else {
+            $wordsQuery->orderByDesc('user_dictionary_word.created_at');
+        }
+
+        $words = $wordsQuery
             ->paginate(20);
 
         return view('livewire.dictionaries.show', [
@@ -66,6 +80,19 @@ class Show extends Component
     public function openCreateForm(): void
     {
         $this->showCreateForm = true;
+    }
+
+    public function updatedSort(string $value): void
+    {
+        if (! in_array($value, [
+            self::SORT_NEWEST,
+            self::SORT_OLDEST,
+            self::SORT_A_TO_Z,
+        ], true)) {
+            $this->sort = self::SORT_NEWEST;
+        }
+
+        $this->resetPage();
     }
 
     public function cancelCreate(): void

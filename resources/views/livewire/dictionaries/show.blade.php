@@ -103,10 +103,10 @@
                         <input type="text" placeholder="Search word or translation..." aria-label="Search words">
                     </label>
 
-                    <select class="word-list-select" aria-label="Sort words">
-                        <option>Newest first</option>
-                        <option>A-Z</option>
-                        <option>Oldest first</option>
+                    <select class="word-list-select" aria-label="Sort words" wire:model.live="sort">
+                        <option value="newest">Newest first</option>
+                        <option value="a-z">A-Z</option>
+                        <option value="oldest">Oldest first</option>
                     </select>
                 </div>
             </div>
