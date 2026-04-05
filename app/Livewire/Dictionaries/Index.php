@@ -98,7 +98,7 @@ class Index extends Component
         /** @var Collection<int, \App\Models\UserDictionary> $dictionaries */
         $dictionaries = $user->dictionaries()
             ->withCount('words')
-            ->orderBy('name')
+            ->orderByDesc('created_at')
             ->get();
 
         return view('livewire.dictionaries.index', [
