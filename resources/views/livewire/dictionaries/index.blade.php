@@ -15,7 +15,7 @@
 
     @if ($showCreateForm)
         <section class="dictionaries-container dictionaries-create-card" aria-label="Create dictionary form">
-            <form class="dictionaries-create-form" wire:submit="createDictionary">
+            <form class="dictionaries-create-form" wire:submit="createDictionary" wire:key="dictionary-create-form-{{ $formRenderKey }}">
                 <div class="dictionaries-field">
                     <label for="dictionary-name" class="dictionaries-label">Dictionary Name</label>
                     <input

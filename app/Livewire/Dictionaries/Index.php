@@ -16,6 +16,7 @@ class Index extends Component
     public string $name = '';
     public string $language = '';
     public bool $showCreateForm = false;
+    public int $formRenderKey = 0;
 
     public function openCreateForm(): void
     {
@@ -25,6 +26,8 @@ class Index extends Component
     public function cancelCreate(): void
     {
         $this->reset(['showCreateForm', 'name', 'language']);
+        $this->resetValidation();
+        $this->formRenderKey++;
     }
 
     public function createDictionary(): void
@@ -49,6 +52,8 @@ class Index extends Component
         $user->dictionaries()->create($validated);
 
         $this->reset(['name', 'language']);
+        $this->resetValidation();
+        $this->formRenderKey++;
     }
 
     public function deleteDictionary(int $dictionaryId): void
