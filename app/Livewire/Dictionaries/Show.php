@@ -20,6 +20,7 @@ class Show extends Component
     public string $translation = '';
     public string $comment = '';
     public bool $showCreateForm = false;
+    public int $formRenderKey = 0;
 
     public function mount(UserDictionary $dictionary): void
     {
@@ -54,6 +55,8 @@ class Show extends Component
         $this->dictionary->words()->attach($word->id);
 
         $this->reset(['word', 'translation', 'comment']);
+        $this->resetValidation();
+        $this->formRenderKey++;
         $this->showCreateForm = true;
         $this->resetPage();
     }
@@ -66,6 +69,8 @@ class Show extends Component
     public function cancelCreate(): void
     {
         $this->reset(['showCreateForm', 'word', 'translation', 'comment']);
+        $this->resetValidation();
+        $this->formRenderKey++;
     }
 
     public function deleteWord(int $wordId): void

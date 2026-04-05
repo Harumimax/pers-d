@@ -29,6 +29,7 @@
                 <form
                     class="dictionaries-create-form dictionary-show__create-form"
                     wire:submit.prevent="addWord"
+                    wire:key="add-word-form-{{ $formRenderKey }}"
                 >
                     <div class="dictionaries-field">
                         <label for="word-name" class="dictionaries-label">Word</label>
