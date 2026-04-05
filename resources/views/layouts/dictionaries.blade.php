@@ -18,9 +18,34 @@
     </head>
     <body class="dictionaries-shell">
         <x-site-header nav-class="dictionaries-header-nav" label="Dictionaries navigation">
-            <a href="{{ route('dictionaries.index') }}" class="dictionaries-header-nav__link">
-                Dictionaries
-            </a>
+            @if (request()->routeIs('dictionaries.show'))
+                @php
+                    $headerDictionaries = auth()->user()?->dictionaries()
+                        ->orderByDesc('created_at')
+                        ->get(['id', 'name']) ?? collect();
+                @endphp
+
+                <div class="dictionaries-header-nav__dropdown">
+                    <a href="{{ route('dictionaries.index') }}" class="dictionaries-header-nav__link">
+                        Dictionaries
+                    </a>
+
+                    <div class="dictionaries-header-nav__menu" aria-label="Your dictionaries">
+                        @foreach ($headerDictionaries as $headerDictionary)
+                            <a
+                                href="{{ route('dictionaries.show', $headerDictionary) }}"
+                                class="dictionaries-header-nav__menu-link"
+                            >
+                                {{ $headerDictionary->name }}
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @else
+                <a href="{{ route('dictionaries.index') }}" class="dictionaries-header-nav__link">
+                    Dictionaries
+                </a>
+            @endif
             <a href="{{ route('profile.edit') }}" class="dictionaries-header-nav__link">
                 Profile
             </a>
