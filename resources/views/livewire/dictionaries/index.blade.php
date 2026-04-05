@@ -48,10 +48,10 @@
 
                 <div class="dictionaries-create-actions">
                     <button type="submit" class="btn btn-primary dictionaries-action-btn">
-                        Создать
+                        Create
                     </button>
                     <button type="button" class="btn btn-secondary dictionaries-action-btn" wire:click="cancelCreate">
-                        Отмена
+                        Cancel
                     </button>
                 </div>
             </form>
