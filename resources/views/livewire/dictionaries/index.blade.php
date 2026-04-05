@@ -32,13 +32,15 @@
 
                 <div class="dictionaries-field">
                     <label for="dictionary-language" class="dictionaries-label">Language</label>
-                    <input
+                    <select
                         id="dictionary-language"
-                        type="text"
                         class="dictionaries-input"
-                        placeholder="e.g., Italian"
                         wire:model.defer="language"
                     >
+                        <option value="" disabled>Select language</option>
+                        <option value="English">English</option>
+                        <option value="Spanish">Spanish</option>
+                    </select>
                     @error('language')
                         <p class="dictionaries-error">{{ $message }}</p>
                     @enderror

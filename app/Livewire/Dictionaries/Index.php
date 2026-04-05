@@ -42,8 +42,7 @@ class Index extends Component
             ],
             'language' => [
                 'required',
-                'string',
-                'max:255',
+                Rule::in(['English', 'Spanish']),
             ],
         ]);
 

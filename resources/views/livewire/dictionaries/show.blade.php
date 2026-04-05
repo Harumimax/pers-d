@@ -11,24 +11,10 @@
         </header>
 
         <article class="dictionary-show-card" aria-label="Dictionary details">
-            <h2 class="dictionary-show-card__title">Details</h2>
+            <h2 class="dictionary-show-card__title">Word List
+            </h2>
 
-            <dl class="dictionary-show-meta">
-                <div class="dictionary-show-meta__item">
-                    <dt>Name</dt>
-                    <dd>{{ $dictionary->name }}</dd>
-                </div>
 
-                <div class="dictionary-show-meta__item">
-                    <dt>Language</dt>
-                    <dd>{{ $dictionary->language ?? 'Language not specified' }}</dd>
-                </div>
-
-                <div class="dictionary-show-meta__item">
-                    <dt>Created</dt>
-                    <dd>{{ $dictionary->created_at?->format('Y-m-d') ?? 'Unknown date' }}</dd>
-                </div>
-            </dl>
         </article>
     </section>
 </main>

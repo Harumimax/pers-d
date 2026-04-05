@@ -12,7 +12,7 @@
 
         <x-site-header label="Authentication links">
                 @auth
-                    <a href="{{ url('/dashboard') }}" class="btn btn-primary">Dashboard</a>
+                    <a href="{{ url('/dashboard') }}" class="btn btn-primary">Dictionaries</a>
                     <form method="POST" action="{{ route('logout') }}" style="display:inline">
                         @csrf
                         <button type="submit" class="btn btn-secondary">Log Out</button>
@@ -38,7 +38,7 @@
 
                 <div class="hero-actions">
                     @auth
-                        <a href="{{ url('/dashboard') }}" class="btn btn-primary btn-large">Dashboard</a>
+                        <a href="{{ url('/dashboard') }}" class="btn btn-primary btn-large">Dictionaries</a>
                     @else
                         <a href="{{ route('register') }}" class="btn btn-primary btn-large">Sign up</a>
                         <a href="{{ route('login') }}" class="btn btn-secondary btn-large">Log in</a>
