@@ -45,6 +45,23 @@
                     </div>
 
                     <div class="dictionaries-field">
+                        <label for="word-part-of-speech" class="dictionaries-label">Part of speech</label>
+                        <select
+                            id="word-part-of-speech"
+                            class="dictionaries-input"
+                            wire:model.defer="partOfSpeech"
+                        >
+                            <option value="">Select part of speech</option>
+                            @foreach ($partOfSpeechOptions as $partOfSpeechValue => $partOfSpeechLabel)
+                                <option value="{{ $partOfSpeechValue }}">{!! $partOfSpeechLabel !!}</option>
+                            @endforeach
+                        </select>
+                        @error('partOfSpeech')
+                            <p class="dictionaries-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="dictionaries-field">
                         <label for="word-translation" class="dictionaries-label">Translation</label>
                         <input
                             id="word-translation"

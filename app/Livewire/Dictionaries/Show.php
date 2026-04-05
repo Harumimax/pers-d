@@ -2,10 +2,11 @@
 
 namespace App\Livewire\Dictionaries;
 
-use App\Models\Word;
 use App\Models\UserDictionary;
+use App\Models\Word;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -18,9 +19,21 @@ class Show extends Component
     private const SORT_NEWEST = 'newest';
     private const SORT_OLDEST = 'oldest';
     private const SORT_A_TO_Z = 'a-z';
+    private const PARTS_OF_SPEECH = [
+        'noun',
+        'verb',
+        'adjective',
+        'adverb',
+        'pronoun',
+        'preposition',
+        'conjunction',
+        'interjection',
+        'stable_expression',
+    ];
 
     public UserDictionary $dictionary;
     public string $word = '';
+    public string $partOfSpeech = '';
     public string $translation = '';
     public string $comment = '';
     public string $sort = self::SORT_NEWEST;
@@ -51,11 +64,21 @@ class Show extends Component
             $wordsQuery->orderByDesc('user_dictionary_word.created_at');
         }
 
-        $words = $wordsQuery
-            ->paginate(20);
+        $words = $wordsQuery->paginate(20);
 
         return view('livewire.dictionaries.show', [
             'words' => $words,
+            'partOfSpeechOptions' => [
+                'noun' => '&#1057;&#1091;&#1097;&#1077;&#1089;&#1090;&#1074;&#1080;&#1090;&#1077;&#1083;&#1100;&#1085;&#1086;&#1077; (Noun)',
+                'verb' => '&#1043;&#1083;&#1072;&#1075;&#1086;&#1083; (Verb)',
+                'adjective' => '&#1055;&#1088;&#1080;&#1083;&#1072;&#1075;&#1072;&#1090;&#1077;&#1083;&#1100;&#1085;&#1086;&#1077; (Adjective)',
+                'adverb' => '&#1053;&#1072;&#1088;&#1077;&#1095;&#1080;&#1077; (Adverb)',
+                'pronoun' => '&#1052;&#1077;&#1089;&#1090;&#1086;&#1080;&#1084;&#1077;&#1085;&#1080;&#1077; (Pronoun)',
+                'preposition' => '&#1055;&#1088;&#1077;&#1076;&#1083;&#1086;&#1075; (Preposition)',
+                'conjunction' => '&#1057;&#1086;&#1102;&#1079; (Conjunction)',
+                'interjection' => '&#1052;&#1077;&#1078;&#1076;&#1086;&#1084;&#1077;&#1090;&#1080;&#1077; (Interjection)',
+                'stable_expression' => '&#1059;&#1089;&#1090;&#1086;&#1081;&#1095;&#1080;&#1074;&#1086;&#1077; &#1074;&#1099;&#1088;&#1072;&#1078;&#1077;&#1085;&#1080;&#1077; (Stable expression)',
+            ],
         ]);
     }
 
@@ -63,14 +86,21 @@ class Show extends Component
     {
         $validated = $this->validate([
             'word' => ['required', 'string', 'max:255'],
+            'partOfSpeech' => ['required', 'string', Rule::in(self::PARTS_OF_SPEECH)],
             'translation' => ['required', 'string', 'max:255'],
             'comment' => ['nullable', 'string', 'max:600'],
         ]);
 
-        $word = Word::create($validated);
+        $word = Word::create([
+            'word' => $validated['word'],
+            'part_of_speech' => $validated['partOfSpeech'],
+            'translation' => $validated['translation'],
+            'comment' => $validated['comment'],
+        ]);
+
         $this->dictionary->words()->attach($word->id);
 
-        $this->reset(['word', 'translation', 'comment']);
+        $this->reset(['word', 'partOfSpeech', 'translation', 'comment']);
         $this->resetValidation();
         $this->formRenderKey++;
         $this->showCreateForm = true;
@@ -97,7 +127,7 @@ class Show extends Component
 
     public function cancelCreate(): void
     {
-        $this->reset(['showCreateForm', 'word', 'translation', 'comment']);
+        $this->reset(['showCreateForm', 'word', 'partOfSpeech', 'translation', 'comment']);
         $this->resetValidation();
         $this->formRenderKey++;
     }
@@ -113,7 +143,6 @@ class Show extends Component
         $word = Word::query()->findOrFail($wordId);
         $this->pendingDeleteWordId = $wordId;
         $this->pendingDeleteWordLabel = $word->word;
-
     }
 
     public function cancelDeleteWord(): void

@@ -9,6 +9,7 @@ class Word extends Model
 {
     protected $fillable = [
         'word',
+        'part_of_speech',
         'translation',
         'comment',
     ];

@@ -66,11 +66,17 @@ class UserDictionaryTest extends TestCase
 
         $word = Word::create([
             'word' => 'Haus',
+            'part_of_speech' => 'noun',
             'translation' => 'House',
             'comment' => 'Common noun',
         ]);
 
         $dictionary->words()->attach($word);
+
+        $this->assertDatabaseHas('words', [
+            'id' => $word->id,
+            'part_of_speech' => 'noun',
+        ]);
 
         $this->assertDatabaseHas('user_dictionary_word', [
             'user_dictionary_id' => $dictionary->id,
@@ -91,6 +97,7 @@ class UserDictionaryTest extends TestCase
         ]);
         $word = Word::create([
             'word' => 'bonjour',
+            'part_of_speech' => 'interjection',
             'translation' => 'hello',
             'comment' => null,
         ]);
