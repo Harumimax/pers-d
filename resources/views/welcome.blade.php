@@ -8,11 +8,9 @@
     <link rel="stylesheet" href="{{ asset('css/welcome.css') }}">
 </head>
 <body>
-    <header class="site-header">
-        <div class="container header-inner">
-            <a href="{{ url('/') }}" class="logo">WordKeeper</a>
 
-            <nav class="header-actions">
+
+        <x-site-header label="Authentication links">
                 @auth
                     <a href="{{ url('/dashboard') }}" class="btn btn-primary">Dashboard</a>
                     <form method="POST" action="{{ route('logout') }}" style="display:inline">
@@ -23,9 +21,7 @@
                     <a href="{{ route('login') }}" class="btn btn-secondary">Log in</a>
                     <a href="{{ route('register') }}" class="btn btn-primary">Sign up</a>
                 @endauth
-            </nav>
-        </div>
-    </header>
+        </x-site-header>
 
     <main class="hero">
         <div class="container hero-inner">
