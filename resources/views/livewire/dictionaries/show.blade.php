@@ -16,7 +16,7 @@
             </div>
 
             <p class="dictionary-show__subtitle">
-                Language <b>{{ $dictionary->language ?? 'not specified' }}</b> &middot; Created on {{ $dictionary->created_at?->format('Y-m-d') ?? 'unknown date' }}
+                Language <b>{{ $dictionary->language ?? 'not specified' }}</b> &middot; Total words: <b> {{ $words->total() }} </b> &middot; Created on <b> {{ $dictionary->created_at?->format('Y-m-d') ?? 'unknown date' }} </b>
             </p>
         </header>
 
