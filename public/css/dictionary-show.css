@@ -1,0 +1,114 @@
+.dictionary-show-main {
+    padding-top: 48px;
+}
+
+.dictionary-show__header {
+    margin-bottom: 24px;
+}
+
+.dictionary-show__back-link {
+    display: inline-block;
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--muted-color);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.dictionary-show__back-link:hover {
+    color: var(--text-color);
+}
+
+.dictionary-show__eyebrow {
+    margin: 0 0 8px;
+    font-size: 0.9rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted-color);
+}
+
+.dictionary-show__title {
+    margin: 0 0 10px;
+    font-size: 2.8rem;
+    line-height: 1.06;
+    letter-spacing: -0.02em;
+    color: var(--text-color);
+}
+
+.dictionary-show__subtitle {
+    margin: 0;
+    max-width: 680px;
+    font-size: 1rem;
+    line-height: 1.55;
+    color: var(--muted-color);
+}
+
+.dictionary-show-card {
+    border: 1px solid #d8dce4;
+    border-radius: 16px;
+    background: var(--bg-color);
+    padding: 28px;
+}
+
+.dictionary-show-card__title {
+    margin: 0 0 20px;
+    font-size: 1.7rem;
+    letter-spacing: -0.01em;
+    color: var(--text-color);
+}
+
+.dictionary-show-meta {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.dictionary-show-meta__item {
+    margin: 0;
+    border: 1px solid #d8dce4;
+    border-radius: 12px;
+    background: #f8fafc;
+    padding: 14px 16px;
+}
+
+.dictionary-show-meta__item dt {
+    margin: 0 0 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--muted-color);
+}
+
+.dictionary-show-meta__item dd {
+    margin: 0;
+    font-size: 1.06rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+@media (max-width: 992px) {
+    .dictionary-show__title {
+        font-size: 2.2rem;
+    }
+
+    .dictionary-show-meta {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .dictionary-show-main {
+        padding-top: 34px;
+    }
+
+    .dictionary-show__title {
+        font-size: 1.95rem;
+    }
+
+    .dictionary-show-card {
+        padding: 20px;
+    }
+}
