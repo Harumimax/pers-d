@@ -120,6 +120,12 @@
                         <input type="text" placeholder="Search word or translation..." aria-label="Search words">
                     </label>
 
+                    <select class="word-list-select" aria-label="Filter words by part of speech" wire:model.live="partOfSpeechFilter">
+                        @foreach ($partOfSpeechFilterOptions as $partOfSpeechFilterValue => $partOfSpeechFilterLabel)
+                            <option value="{{ $partOfSpeechFilterValue }}">{!! $partOfSpeechFilterLabel !!}</option>
+                        @endforeach
+                    </select>
+
                     <select class="word-list-select" aria-label="Sort words" wire:model.live="sort">
                         <option value="newest">Newest first</option>
                         <option value="a-z">A-Z</option>
@@ -147,7 +153,11 @@
                                 <tr wire:key="word-row-{{ $wordItem->id }}-{{ $wordItem->pivot->created_at?->timestamp ?? 'na' }}">
                                     <td>
                                         <div class="word-list-main">{{ $wordItem->word }}</div>
-                                        <div class="word-list-meta">{{ $dictionary->language ?? 'Language not specified' }}</div>
+                                        <div class="word-list-meta">
+                                            {{ $dictionary->language ?? 'Language not specified' }}
+                                            &middot;
+                                            {{ $partOfSpeechDisplayMap[$wordItem->part_of_speech] ?? 'Part of speech not specified' }}
+                                        </div>
                                     </td>
                                     <td>
                                         <div class="word-list-translation">{{ $wordItem->translation }}</div>

@@ -16,6 +16,7 @@ class Show extends Component
 {
     use WithPagination;
 
+    private const PART_OF_SPEECH_FILTER_ALL = 'all';
     private const SORT_NEWEST = 'newest';
     private const SORT_OLDEST = 'oldest';
     private const SORT_A_TO_Z = 'a-z';
@@ -30,10 +31,22 @@ class Show extends Component
         'interjection',
         'stable_expression',
     ];
+    private const PARTS_OF_SPEECH_DISPLAY = [
+        'noun' => 'Noun',
+        'verb' => 'Verb',
+        'adjective' => 'Adjective',
+        'adverb' => 'Adverb',
+        'pronoun' => 'Pronoun',
+        'preposition' => 'Preposition',
+        'conjunction' => 'Conjunction',
+        'interjection' => 'Interjection',
+        'stable_expression' => 'Stable expression',
+    ];
 
     public UserDictionary $dictionary;
     public string $word = '';
     public string $partOfSpeech = '';
+    public string $partOfSpeechFilter = self::PART_OF_SPEECH_FILTER_ALL;
     public string $translation = '';
     public string $comment = '';
     public string $sort = self::SORT_NEWEST;
@@ -55,6 +68,11 @@ class Show extends Component
     public function render(): View
     {
         $wordsQuery = $this->dictionary->words();
+        $partOfSpeechOptions = $this->partOfSpeechOptions();
+
+        if ($this->partOfSpeechFilter !== self::PART_OF_SPEECH_FILTER_ALL) {
+            $wordsQuery->where('words.part_of_speech', $this->partOfSpeechFilter);
+        }
 
         if ($this->sort === self::SORT_OLDEST) {
             $wordsQuery->orderBy('user_dictionary_word.created_at');
@@ -68,17 +86,12 @@ class Show extends Component
 
         return view('livewire.dictionaries.show', [
             'words' => $words,
-            'partOfSpeechOptions' => [
-                'noun' => '&#1057;&#1091;&#1097;&#1077;&#1089;&#1090;&#1074;&#1080;&#1090;&#1077;&#1083;&#1100;&#1085;&#1086;&#1077; (Noun)',
-                'verb' => '&#1043;&#1083;&#1072;&#1075;&#1086;&#1083; (Verb)',
-                'adjective' => '&#1055;&#1088;&#1080;&#1083;&#1072;&#1075;&#1072;&#1090;&#1077;&#1083;&#1100;&#1085;&#1086;&#1077; (Adjective)',
-                'adverb' => '&#1053;&#1072;&#1088;&#1077;&#1095;&#1080;&#1077; (Adverb)',
-                'pronoun' => '&#1052;&#1077;&#1089;&#1090;&#1086;&#1080;&#1084;&#1077;&#1085;&#1080;&#1077; (Pronoun)',
-                'preposition' => '&#1055;&#1088;&#1077;&#1076;&#1083;&#1086;&#1075; (Preposition)',
-                'conjunction' => '&#1057;&#1086;&#1102;&#1079; (Conjunction)',
-                'interjection' => '&#1052;&#1077;&#1078;&#1076;&#1086;&#1084;&#1077;&#1090;&#1080;&#1077; (Interjection)',
-                'stable_expression' => '&#1059;&#1089;&#1090;&#1086;&#1081;&#1095;&#1080;&#1074;&#1086;&#1077; &#1074;&#1099;&#1088;&#1072;&#1078;&#1077;&#1085;&#1080;&#1077; (Stable expression)',
+            'partOfSpeechOptions' => $partOfSpeechOptions,
+            'partOfSpeechFilterOptions' => [
+                self::PART_OF_SPEECH_FILTER_ALL => '&#1042;&#1089;&#1077; (All)',
+                ...$partOfSpeechOptions,
             ],
+            'partOfSpeechDisplayMap' => self::PARTS_OF_SPEECH_DISPLAY,
         ]);
     }
 
@@ -120,6 +133,20 @@ class Show extends Component
             self::SORT_A_TO_Z,
         ], true)) {
             $this->sort = self::SORT_NEWEST;
+        }
+
+        $this->resetPage();
+    }
+
+    public function updatedPartOfSpeechFilter(string $value): void
+    {
+        $allowedValues = [
+            self::PART_OF_SPEECH_FILTER_ALL,
+            ...self::PARTS_OF_SPEECH,
+        ];
+
+        if (! in_array($value, $allowedValues, true)) {
+            $this->partOfSpeechFilter = self::PART_OF_SPEECH_FILTER_ALL;
         }
 
         $this->resetPage();
@@ -174,5 +201,20 @@ class Show extends Component
         if ($currentPage > $maxPage) {
             $this->setPage($maxPage);
         }
+    }
+
+    private function partOfSpeechOptions(): array
+    {
+        return [
+            'noun' => '&#1057;&#1091;&#1097;&#1077;&#1089;&#1090;&#1074;&#1080;&#1090;&#1077;&#1083;&#1100;&#1085;&#1086;&#1077; (Noun)',
+            'verb' => '&#1043;&#1083;&#1072;&#1075;&#1086;&#1083; (Verb)',
+            'adjective' => '&#1055;&#1088;&#1080;&#1083;&#1072;&#1075;&#1072;&#1090;&#1077;&#1083;&#1100;&#1085;&#1086;&#1077; (Adjective)',
+            'adverb' => '&#1053;&#1072;&#1088;&#1077;&#1095;&#1080;&#1077; (Adverb)',
+            'pronoun' => '&#1052;&#1077;&#1089;&#1090;&#1086;&#1080;&#1084;&#1077;&#1085;&#1080;&#1077; (Pronoun)',
+            'preposition' => '&#1055;&#1088;&#1077;&#1076;&#1083;&#1086;&#1075; (Preposition)',
+            'conjunction' => '&#1057;&#1086;&#1102;&#1079; (Conjunction)',
+            'interjection' => '&#1052;&#1077;&#1078;&#1076;&#1086;&#1084;&#1077;&#1090;&#1080;&#1077; (Interjection)',
+            'stable_expression' => '&#1059;&#1089;&#1090;&#1086;&#1081;&#1095;&#1080;&#1074;&#1086;&#1077; &#1074;&#1099;&#1088;&#1072;&#1078;&#1077;&#1085;&#1080;&#1077; (Stable expression)',
+        ];
     }
 }
