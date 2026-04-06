@@ -7,10 +7,8 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
-use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('layouts.dictionaries')]
 class Index extends Component
 {
     public string $name = '';
@@ -101,8 +99,15 @@ class Index extends Component
             ->orderByDesc('created_at')
             ->get();
 
+        /** @var Collection<int, \App\Models\UserDictionary> $headerDictionaries */
+        $headerDictionaries = $user->dictionaries()
+            ->orderByDesc('created_at')
+            ->get(['id', 'name']);
+
         return view('livewire.dictionaries.index', [
             'dictionaries' => $dictionaries,
+        ])->layout('layouts.dictionaries', [
+            'headerDictionaries' => $headerDictionaries,
         ]);
     }
 

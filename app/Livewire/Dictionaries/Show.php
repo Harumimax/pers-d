@@ -2,16 +2,16 @@
 
 namespace App\Livewire\Dictionaries;
 
+use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
-use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Layout('layouts.dictionaries')]
 class Show extends Component
 {
     use WithPagination;
@@ -67,9 +67,14 @@ class Show extends Component
 
     public function render(): View
     {
+        $user = $this->currentUser();
         $totalWordsCount = $this->dictionary->words()->count();
         $wordsQuery = $this->dictionary->words();
         $partOfSpeechOptions = $this->partOfSpeechOptions();
+        /** @var Collection<int, \App\Models\UserDictionary> $headerDictionaries */
+        $headerDictionaries = $user->dictionaries()
+            ->orderByDesc('created_at')
+            ->get(['id', 'name']);
 
         if ($this->partOfSpeechFilter !== self::PART_OF_SPEECH_FILTER_ALL) {
             $wordsQuery->where('words.part_of_speech', $this->partOfSpeechFilter);
@@ -94,6 +99,8 @@ class Show extends Component
                 ...$partOfSpeechOptions,
             ],
             'partOfSpeechDisplayMap' => self::PARTS_OF_SPEECH_DISPLAY,
+        ])->layout('layouts.dictionaries', [
+            'headerDictionaries' => $headerDictionaries,
         ]);
     }
 
@@ -218,5 +225,14 @@ class Show extends Component
             'interjection' => '&#1052;&#1077;&#1078;&#1076;&#1086;&#1084;&#1077;&#1090;&#1080;&#1077; (Interjection)',
             'stable_expression' => '&#1059;&#1089;&#1090;&#1086;&#1081;&#1095;&#1080;&#1074;&#1086;&#1077; &#1074;&#1099;&#1088;&#1072;&#1078;&#1077;&#1085;&#1080;&#1077; (Stable expression)',
         ];
+    }
+
+    private function currentUser(): User
+    {
+        $user = Auth::user();
+
+        abort_unless($user instanceof User, 401);
+
+        return $user;
     }
 }
