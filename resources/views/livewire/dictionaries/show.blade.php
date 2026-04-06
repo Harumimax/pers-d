@@ -113,12 +113,17 @@
                 </div>
 
                 <div class="word-list-controls">
-                    <label class="word-list-search">
+                    <form class="word-list-search" wire:submit.prevent="applySearch">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <path d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                         </svg>
-                        <input type="text" placeholder="Search word or translation..." aria-label="Search words">
-                    </label>
+                        <input
+                            type="text"
+                            placeholder="Search word or translation..."
+                            aria-label="Search words"
+                            wire:model.defer="search"
+                        >
+                    </form>
 
                     <select class="word-list-select" aria-label="Filter words by part of speech" wire:model.live="partOfSpeechFilter">
                         @foreach ($partOfSpeechFilterOptions as $partOfSpeechFilterValue => $partOfSpeechFilterLabel)

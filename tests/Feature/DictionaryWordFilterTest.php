@@ -105,4 +105,45 @@ class DictionaryWordFilterTest extends TestCase
             ->set('sort', 'a-z')
             ->assertSeeInOrder(['Alpha', 'Zebra']);
     }
+
+    public function test_search_finds_partial_matches_in_word_and_translation_within_selected_part_of_speech_filter(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'Mixed',
+            'language' => 'English',
+        ]);
+
+        $matchByWord = Word::create([
+            'word' => 'one two three',
+            'part_of_speech' => 'noun',
+            'translation' => 'sequence',
+            'comment' => null,
+        ]);
+        $matchByTranslation = Word::create([
+            'word' => 'cuatro',
+            'part_of_speech' => 'verb',
+            'translation' => 'two directions',
+            'comment' => null,
+        ]);
+        $nonMatch = Word::create([
+            'word' => 'apple',
+            'part_of_speech' => 'noun',
+            'translation' => 'fruit',
+            'comment' => null,
+        ]);
+
+        $dictionary->words()->attach([$matchByWord->id, $matchByTranslation->id, $nonMatch->id]);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['dictionary' => $dictionary])
+            ->set('partOfSpeechFilter', 'verb')
+            ->set('search', 'two')
+            ->call('applySearch')
+            ->assertSee('cuatro')
+            ->assertDontSee('one two three')
+            ->assertDontSee('apple')
+            ->assertSee('Showing 1-1 of 1 words');
+    }
 }

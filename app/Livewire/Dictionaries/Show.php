@@ -47,6 +47,7 @@ class Show extends Component
     public string $word = '';
     public string $partOfSpeech = '';
     public string $partOfSpeechFilter = self::PART_OF_SPEECH_FILTER_ALL;
+    public string $search = '';
     public string $translation = '';
     public string $comment = '';
     public string $sort = self::SORT_NEWEST;
@@ -71,6 +72,7 @@ class Show extends Component
         $totalWordsCount = $this->dictionary->words()->count();
         $wordsQuery = $this->dictionary->words();
         $partOfSpeechOptions = $this->partOfSpeechOptions();
+        $searchTerm = trim($this->search);
         /** @var Collection<int, \App\Models\UserDictionary> $headerDictionaries */
         $headerDictionaries = $user->dictionaries()
             ->orderByDesc('created_at')
@@ -78,6 +80,13 @@ class Show extends Component
 
         if ($this->partOfSpeechFilter !== self::PART_OF_SPEECH_FILTER_ALL) {
             $wordsQuery->where('words.part_of_speech', $this->partOfSpeechFilter);
+        }
+
+        if ($searchTerm !== '') {
+            $wordsQuery->where(function ($query) use ($searchTerm): void {
+                $query->where('words.word', 'like', '%'.$searchTerm.'%')
+                    ->orWhere('words.translation', 'like', '%'.$searchTerm.'%');
+            });
         }
 
         if ($this->sort === self::SORT_OLDEST) {
@@ -132,6 +141,12 @@ class Show extends Component
     public function openCreateForm(): void
     {
         $this->showCreateForm = true;
+    }
+
+    public function applySearch(): void
+    {
+        $this->search = trim($this->search);
+        $this->resetPage();
     }
 
     public function updatedSort(string $value): void
