@@ -67,6 +67,7 @@ class Show extends Component
 
     public function render(): View
     {
+        $totalWordsCount = $this->dictionary->words()->count();
         $wordsQuery = $this->dictionary->words();
         $partOfSpeechOptions = $this->partOfSpeechOptions();
 
@@ -86,6 +87,7 @@ class Show extends Component
 
         return view('livewire.dictionaries.show', [
             'words' => $words,
+            'totalWordsCount' => $totalWordsCount,
             'partOfSpeechOptions' => $partOfSpeechOptions,
             'partOfSpeechFilterOptions' => [
                 self::PART_OF_SPEECH_FILTER_ALL => '&#1042;&#1089;&#1077; (All)',

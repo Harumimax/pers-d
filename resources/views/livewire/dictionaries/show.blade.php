@@ -16,7 +16,7 @@
             </div>
 
             <p class="dictionary-show__subtitle">
-                Language <b>{{ $dictionary->language ?? 'not specified' }}</b> &middot; Total words: <b> {{ $words->total() }} </b> &middot; Created on <b> {{ $dictionary->created_at?->format('Y-m-d') ?? 'unknown date' }} </b>
+                Language <b>{{ $dictionary->language ?? 'not specified' }}</b> &middot; Total words: <b> {{ $totalWordsCount }} </b> &middot; Created on <b> {{ $dictionary->created_at?->format('Y-m-d') ?? 'unknown date' }} </b>
             </p>
         </header>
 
@@ -109,7 +109,7 @@
             <div class="word-list-header">
                 <div>
                     <h2 class="dictionary-show-card__title">Word List</h2>
-                    <p class="word-list-subtitle">{{ $words->total() }} words in this dictionary</p>
+                    <p class="word-list-subtitle">{{ $totalWordsCount }} words in this dictionary</p>
                 </div>
 
                 <div class="word-list-controls">

@@ -46,10 +46,12 @@ class DictionaryWordFilterTest extends TestCase
 
         Livewire::actingAs($user)
             ->test(Show::class, ['dictionary' => $dictionary])
+            ->assertSeeHtml('Total words: <b> 3 </b>')
             ->assertSee('casa')
             ->assertSee('hablar')
             ->assertSee('legacy')
             ->set('partOfSpeechFilter', 'verb')
+            ->assertSeeHtml('Total words: <b> 3 </b>')
             ->assertSee('hablar')
             ->assertDontSee('casa')
             ->assertDontSee('legacy')
