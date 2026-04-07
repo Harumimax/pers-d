@@ -24,84 +24,239 @@
             <section
                 class="dictionaries-create-card dictionary-show__create-card"
                 aria-label="Add word form"
+                x-data="{
+                    mode: 'manual',
+                    autoWord: '',
+                    autoPartOfSpeech: '',
+                    autoComment: '',
+                    translated: false,
+                    selectedTranslation: '',
+                    suggestions: [
+                        { value: 'good morning', meta: 'most common' },
+                        { value: 'hello', meta: 'general greeting' },
+                        { value: 'morning greeting', meta: 'literal' },
+                        { value: 'formal greeting', meta: 'dictionary style' },
+                    ],
+                    runTranslate() {
+                        this.translated = true;
+                        if (! this.selectedTranslation && this.suggestions.length) {
+                            this.selectedTranslation = this.suggestions[0].value;
+                        }
+                    },
+                    selectSuggestion(value) {
+                        this.selectedTranslation = value;
+                    },
+                    resetAutoForm() {
+                        this.autoWord = '';
+                        this.autoPartOfSpeech = '';
+                        this.autoComment = '';
+                        this.translated = false;
+                        this.selectedTranslation = '';
+                    }
+                }"
             >
-                <form
-                    class="dictionaries-create-form dictionary-show__create-form"
-                    wire:submit.prevent="addWord"
-                    wire:key="add-word-form-{{ $formRenderKey }}"
-                >
-                    <div class="dictionaries-field">
-                        <label for="word-name" class="dictionaries-label">Word</label>
-                        <input
-                            id="word-name"
-                            type="text"
-                            class="dictionaries-input"
-                            placeholder="e.g., buongiorno"
-                            wire:model.defer="word"
-                        >
-                        @error('word')
-                            <p class="dictionaries-error">{{ $message }}</p>
-                        @enderror
-                    </div>
+                <div class="dictionary-show__mode-switch" role="tablist" aria-label="Add word mode">
+                    <button
+                        type="button"
+                        class="dictionary-show__mode-chip"
+                        :class="{ 'dictionary-show__mode-chip--active': mode === 'automatic' }"
+                        x-on:click="mode = 'automatic'"
+                    >
+                        Translate automatically
+                    </button>
+                    <button
+                        type="button"
+                        class="dictionary-show__mode-chip"
+                        :class="{ 'dictionary-show__mode-chip--active': mode === 'manual' }"
+                        x-on:click="mode = 'manual'"
+                    >
+                        Enter manually
+                    </button>
+                </div>
 
-                    <div class="dictionaries-field">
-                        <label for="word-part-of-speech" class="dictionaries-label">Part of speech</label>
-                        <select
-                            id="word-part-of-speech"
-                            class="dictionaries-input"
-                            wire:model.defer="partOfSpeech"
-                        >
-                            <option value="">Select part of speech</option>
-                            @foreach ($partOfSpeechOptions as $partOfSpeechValue => $partOfSpeechLabel)
-                                <option value="{{ $partOfSpeechValue }}">{!! $partOfSpeechLabel !!}</option>
-                            @endforeach
-                        </select>
-                        @error('partOfSpeech')
-                            <p class="dictionaries-error">{{ $message }}</p>
-                        @enderror
-                    </div>
+                <div class="dictionary-show__mode-panel" x-show="mode === 'manual'" x-cloak>
+                    <form
+                        class="dictionaries-create-form dictionary-show__create-form"
+                        wire:submit.prevent="addWord"
+                        wire:key="add-word-form-{{ $formRenderKey }}"
+                    >
+                        <div class="dictionaries-field">
+                            <label for="word-name" class="dictionaries-label">Word</label>
+                            <input
+                                id="word-name"
+                                type="text"
+                                class="dictionaries-input"
+                                placeholder="e.g., buongiorno"
+                                wire:model.defer="word"
+                            >
+                            @error('word')
+                                <p class="dictionaries-error">{{ $message }}</p>
+                            @enderror
+                        </div>
 
-                    <div class="dictionaries-field">
-                        <label for="word-translation" class="dictionaries-label">Translation</label>
-                        <input
-                            id="word-translation"
-                            type="text"
-                            class="dictionaries-input"
-                            placeholder="e.g., good morning"
-                            wire:model.defer="translation"
-                        >
-                        @error('translation')
-                            <p class="dictionaries-error">{{ $message }}</p>
-                        @enderror
-                    </div>
+                        <div class="dictionaries-field">
+                            <label for="word-part-of-speech" class="dictionaries-label">Part of speech</label>
+                            <select
+                                id="word-part-of-speech"
+                                class="dictionaries-input"
+                                wire:model.defer="partOfSpeech"
+                            >
+                                <option value="">Select part of speech</option>
+                                @foreach ($partOfSpeechOptions as $partOfSpeechValue => $partOfSpeechLabel)
+                                    <option value="{{ $partOfSpeechValue }}">{!! $partOfSpeechLabel !!}</option>
+                                @endforeach
+                            </select>
+                            @error('partOfSpeech')
+                                <p class="dictionaries-error">{{ $message }}</p>
+                            @enderror
+                        </div>
 
-                    <div class="dictionaries-field dictionary-show__comment-field">
-                        <label for="word-comment" class="dictionaries-label">Comment</label>
-                        <input
-                            id="word-comment"
-                            type="text"
-                            class="dictionaries-input"
-                            placeholder="e.g., formal greeting"
-                            wire:model.defer="comment"
-                        >
-                        @error('comment')
-                            <p class="dictionaries-error">{{ $message }}</p>
-                        @enderror
-                    </div>
+                        <div class="dictionaries-field">
+                            <label for="word-translation" class="dictionaries-label">Translation</label>
+                            <input
+                                id="word-translation"
+                                type="text"
+                                class="dictionaries-input"
+                                placeholder="e.g., good morning"
+                                wire:model.defer="translation"
+                            >
+                            @error('translation')
+                                <p class="dictionaries-error">{{ $message }}</p>
+                            @enderror
+                        </div>
 
-                    <div class="dictionaries-create-actions dictionary-show__create-actions">
-                        <button type="submit" class="btn btn-primary dictionaries-action-btn">
-                            Add
-                        </button>
-                        <button
-                            type="button"
-                            class="btn btn-secondary dictionaries-action-btn"
-                            wire:click="cancelCreate"
+                        <div class="dictionaries-field dictionary-show__comment-field">
+                            <label for="word-comment" class="dictionaries-label">Comment</label>
+                            <input
+                                id="word-comment"
+                                type="text"
+                                class="dictionaries-input"
+                                placeholder="e.g., formal greeting"
+                                wire:model.defer="comment"
+                            >
+                            @error('comment')
+                                <p class="dictionaries-error">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div class="dictionaries-create-actions dictionary-show__create-actions">
+                            <button type="submit" class="btn btn-primary dictionaries-action-btn">
+                                Add
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-secondary dictionaries-action-btn"
+                                wire:click="cancelCreate"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="dictionary-show__mode-panel" x-show="mode === 'automatic'" x-cloak>
+                    <div class="dictionary-show__translate-panel">
+                        <div class="dictionary-show__translate-grid">
+                            <div class="dictionaries-field">
+                                <label for="auto-translate-word" class="dictionaries-label">Word</label>
+                                <input
+                                    id="auto-translate-word"
+                                    type="text"
+                                    class="dictionaries-input"
+                                    placeholder="e.g., buongiorno"
+                                    x-model="autoWord"
+                                >
+                            </div>
+
+                            <div class="dictionary-show__translate-button-wrap">
+                                <label class="dictionaries-label dictionary-show__translate-button-label">Action</label>
+                                <button
+                                    type="button"
+                                    class="btn btn-primary dictionaries-action-btn dictionary-show__translate-btn"
+                                    x-on:click="runTranslate()"
+                                >
+                                    Translate
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="dictionary-show__translation-suggestions" x-show="translated" x-cloak>
+                            <div class="dictionary-show__translation-suggestions-header">
+                                <h3 class="dictionary-show__translation-suggestions-title">Suggested translations</h3>
+                                <p class="dictionary-show__translation-suggestions-subtitle">
+                                    Choose the most suitable translation for this dictionary
+                                </p>
+                            </div>
+
+                            <div class="dictionary-show__translation-chip-list">
+                                <template x-for="suggestion in suggestions" :key="suggestion.value">
+                                    <button
+                                        type="button"
+                                        class="dictionary-show__translation-chip"
+                                        :class="{ 'dictionary-show__translation-chip--active': selectedTranslation === suggestion.value }"
+                                        x-on:click="selectSuggestion(suggestion.value)"
+                                    >
+                                        <span class="dictionary-show__translation-chip-main" x-text="suggestion.value"></span>
+                                        <span class="dictionary-show__translation-chip-meta" x-text="suggestion.meta"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div class="dictionary-show__translate-result" x-show="translated" x-cloak>
+                            <div class="dictionaries-field">
+                                <label class="dictionaries-label">Selected translation</label>
+                                <div class="dictionary-show__selected-translation" x-text="selectedTranslation || 'Choose a translation from the suggestions above'"></div>
+                            </div>
+
+                            <div class="dictionaries-field">
+                                <label for="auto-part-of-speech" class="dictionaries-label">Part of speech</label>
+                                <select
+                                    id="auto-part-of-speech"
+                                    class="dictionaries-input"
+                                    x-model="autoPartOfSpeech"
+                                >
+                                    <option value="">Select part of speech</option>
+                                    @foreach ($partOfSpeechOptions as $partOfSpeechValue => $partOfSpeechLabel)
+                                        <option value="{{ $partOfSpeechValue }}">{!! $partOfSpeechLabel !!}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <div
+                            class="dictionaries-field dictionary-show__auto-comment-field"
+                            x-show="translated"
+                            x-cloak
                         >
-                            Cancel
-                        </button>
+                            <label for="auto-comment" class="dictionaries-label">Comment</label>
+                            <input
+                                id="auto-comment"
+                                type="text"
+                                class="dictionaries-input"
+                                placeholder="e.g., formal greeting"
+                                x-model="autoComment"
+                            >
+                        </div>
+
+                        <div class="dictionaries-create-actions dictionary-show__create-actions dictionary-show__auto-actions">
+                            <button
+                                type="button"
+                                class="btn btn-primary dictionaries-action-btn"
+                                x-on:click.prevent
+                            >
+                                Add
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-secondary dictionaries-action-btn"
+                                x-on:click="resetAutoForm(); $wire.cancelCreate()"
+                            >
+                                Cancel
+                            </button>
+                        </div>
                     </div>
-                </form>
+                </div>
             </section>
         @endif
 
