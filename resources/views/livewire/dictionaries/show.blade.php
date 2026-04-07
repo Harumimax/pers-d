@@ -26,11 +26,11 @@
                 aria-label="Add word form"
                 x-data="{
                     mode: 'manual',
-                    autoWord: '',
-                    autoPartOfSpeech: '',
-                    autoComment: '',
+                    autoWord: @entangle('autoWord').defer,
+                    autoPartOfSpeech: @entangle('autoPartOfSpeech').defer,
+                    autoComment: @entangle('autoComment').defer,
                     translated: false,
-                    selectedTranslation: '',
+                    selectedTranslation: @entangle('autoTranslation').defer,
                     suggestions: [
                         { value: 'good morning', meta: 'most common' },
                         { value: 'hello', meta: 'general greeting' },
@@ -40,11 +40,12 @@
                     runTranslate() {
                         this.translated = true;
                         if (! this.selectedTranslation && this.suggestions.length) {
-                            this.selectedTranslation = this.suggestions[0].value;
+                            this.selectSuggestion(this.suggestions[0].value);
                         }
                     },
                     selectSuggestion(value) {
                         this.selectedTranslation = value;
+                        $wire.set('autoTranslation', value, false);
                     },
                     resetAutoForm() {
                         this.autoWord = '';
@@ -52,8 +53,10 @@
                         this.autoComment = '';
                         this.translated = false;
                         this.selectedTranslation = '';
+                        $wire.set('autoTranslation', '', false);
                     }
                 }"
+                x-on:reset-auto-add-word-form.window="resetAutoForm(); mode = 'automatic'"
             >
                 <div class="dictionary-show__mode-switch" role="tablist" aria-label="Add word mode">
                     <button
@@ -155,7 +158,7 @@
                 </div>
 
                 <div class="dictionary-show__mode-panel" x-show="mode === 'automatic'" x-cloak>
-                    <div class="dictionary-show__translate-panel">
+                    <form class="dictionary-show__translate-panel" wire:submit.prevent="addTranslatedWord">
                         <div class="dictionary-show__translate-grid">
                             <div class="dictionaries-field">
                                 <label for="auto-translate-word" class="dictionaries-label">Word</label>
@@ -165,7 +168,11 @@
                                     class="dictionaries-input"
                                     placeholder="e.g., buongiorno"
                                     x-model="autoWord"
+                                    wire:model.defer="autoWord"
                                 >
+                                @error('autoWord')
+                                    <p class="dictionaries-error">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <div class="dictionary-show__translate-button-wrap">
@@ -207,6 +214,9 @@
                             <div class="dictionaries-field">
                                 <label class="dictionaries-label">Selected translation</label>
                                 <div class="dictionary-show__selected-translation" x-text="selectedTranslation || 'Choose a translation from the suggestions above'"></div>
+                                @error('autoTranslation')
+                                    <p class="dictionaries-error">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <div class="dictionaries-field">
@@ -215,12 +225,16 @@
                                     id="auto-part-of-speech"
                                     class="dictionaries-input"
                                     x-model="autoPartOfSpeech"
+                                    wire:model.defer="autoPartOfSpeech"
                                 >
                                     <option value="">Select part of speech</option>
                                     @foreach ($partOfSpeechOptions as $partOfSpeechValue => $partOfSpeechLabel)
                                         <option value="{{ $partOfSpeechValue }}">{!! $partOfSpeechLabel !!}</option>
                                     @endforeach
                                 </select>
+                                @error('autoPartOfSpeech')
+                                    <p class="dictionaries-error">{{ $message }}</p>
+                                @enderror
                             </div>
                         </div>
 
@@ -236,14 +250,17 @@
                                 class="dictionaries-input"
                                 placeholder="e.g., formal greeting"
                                 x-model="autoComment"
+                                wire:model.defer="autoComment"
                             >
+                            @error('autoComment')
+                                <p class="dictionaries-error">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <div class="dictionaries-create-actions dictionary-show__create-actions dictionary-show__auto-actions">
                             <button
-                                type="button"
+                                type="submit"
                                 class="btn btn-primary dictionaries-action-btn"
-                                x-on:click.prevent
                             >
                                 Add
                             </button>
@@ -255,7 +272,7 @@
                                 Cancel
                             </button>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </section>
         @endif

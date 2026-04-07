@@ -146,4 +146,46 @@ class DictionaryWordFilterTest extends TestCase
             ->assertDontSee('apple')
             ->assertSee('Showing 1-1 of 1 words');
     }
+
+    public function test_user_can_add_word_from_translate_automatically_mode(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'Italian',
+            'language' => 'Italian',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['dictionary' => $dictionary])
+            ->set('showCreateForm', true)
+            ->set('autoWord', 'buongiorno')
+            ->set('autoTranslation', 'good morning')
+            ->set('autoPartOfSpeech', 'interjection')
+            ->set('autoComment', 'formal greeting')
+            ->call('addTranslatedWord')
+            ->assertHasNoErrors()
+            ->assertSet('autoWord', '')
+            ->assertSet('autoTranslation', '')
+            ->assertSet('autoPartOfSpeech', '')
+            ->assertSet('autoComment', '');
+
+        $this->assertDatabaseHas('words', [
+            'word' => 'buongiorno',
+            'translation' => 'good morning',
+            'part_of_speech' => 'interjection',
+            'comment' => 'formal greeting',
+        ]);
+
+        $wordId = Word::query()
+            ->where('word', 'buongiorno')
+            ->value('id');
+
+        $this->assertNotNull($wordId);
+
+        $this->assertDatabaseHas('user_dictionary_word', [
+            'user_dictionary_id' => $dictionary->id,
+            'word_id' => $wordId,
+        ]);
+    }
 }

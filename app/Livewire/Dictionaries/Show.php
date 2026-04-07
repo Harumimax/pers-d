@@ -46,6 +46,10 @@ class Show extends Component
     public UserDictionary $dictionary;
     public string $word = '';
     public string $partOfSpeech = '';
+    public string $autoWord = '';
+    public string $autoPartOfSpeech = '';
+    public string $autoTranslation = '';
+    public string $autoComment = '';
     public string $partOfSpeechFilter = self::PART_OF_SPEECH_FILTER_ALL;
     public string $search = '';
     public string $translation = '';
@@ -122,20 +126,39 @@ class Show extends Component
             'comment' => ['nullable', 'string', 'max:600'],
         ]);
 
-        $word = Word::create([
-            'word' => $validated['word'],
-            'part_of_speech' => $validated['partOfSpeech'],
-            'translation' => $validated['translation'],
-            'comment' => $validated['comment'],
-        ]);
-
-        $this->dictionary->words()->attach($word->id);
-
+        $this->storeWord(
+            $validated['word'],
+            $validated['partOfSpeech'],
+            $validated['translation'],
+            $validated['comment'] ?? null,
+        );
         $this->reset(['word', 'partOfSpeech', 'translation', 'comment']);
         $this->resetValidation();
         $this->formRenderKey++;
         $this->showCreateForm = true;
         $this->resetPage();
+    }
+
+    public function addTranslatedWord(): void
+    {
+        $validated = $this->validate([
+            'autoWord' => ['required', 'string', 'max:255'],
+            'autoPartOfSpeech' => ['required', 'string', Rule::in(self::PARTS_OF_SPEECH)],
+            'autoTranslation' => ['required', 'string', 'max:255'],
+            'autoComment' => ['nullable', 'string', 'max:600'],
+        ]);
+
+        $this->storeWord(
+            $validated['autoWord'],
+            $validated['autoPartOfSpeech'],
+            $validated['autoTranslation'],
+            $validated['autoComment'] ?? null,
+        );
+        $this->reset(['autoWord', 'autoPartOfSpeech', 'autoTranslation', 'autoComment']);
+        $this->resetValidation();
+        $this->showCreateForm = true;
+        $this->resetPage();
+        $this->dispatch('reset-auto-add-word-form');
     }
 
     public function openCreateForm(): void
@@ -178,7 +201,17 @@ class Show extends Component
 
     public function cancelCreate(): void
     {
-        $this->reset(['showCreateForm', 'word', 'partOfSpeech', 'translation', 'comment']);
+        $this->reset([
+            'showCreateForm',
+            'word',
+            'partOfSpeech',
+            'translation',
+            'comment',
+            'autoWord',
+            'autoPartOfSpeech',
+            'autoTranslation',
+            'autoComment',
+        ]);
         $this->resetValidation();
         $this->formRenderKey++;
     }
@@ -240,6 +273,22 @@ class Show extends Component
             'interjection' => 'Interjection (&#1052;&#1077;&#1078;&#1076;&#1086;&#1084;&#1077;&#1090;&#1080;&#1077;)',
             'stable_expression' => 'Stable expression (&#1059;&#1089;&#1090;&#1086;&#1081;&#1095;&#1080;&#1074;&#1086;&#1077; &#1074;&#1099;&#1088;&#1072;&#1078;&#1077;&#1085;&#1080;&#1077;)',
         ];
+    }
+
+    private function storeWord(
+        string $wordValue,
+        string $partOfSpeechValue,
+        string $translationValue,
+        ?string $commentValue,
+    ): void {
+        $word = Word::create([
+            'word' => $wordValue,
+            'part_of_speech' => $partOfSpeechValue,
+            'translation' => $translationValue,
+            'comment' => $commentValue,
+        ]);
+
+        $this->dictionary->words()->attach($word->id);
     }
 
     private function currentUser(): User
