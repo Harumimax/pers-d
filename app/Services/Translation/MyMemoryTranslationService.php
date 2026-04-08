@@ -43,7 +43,7 @@ class MyMemoryTranslationService implements TranslationServiceInterface
         $seen = [];
 
         $primaryTranslation = trim((string) Arr::get($payload, 'responseData.translatedText', ''));
-        if ($primaryTranslation !== '') {
+        if ($this->isRussianSuggestion($primaryTranslation)) {
             $seen[mb_strtolower($primaryTranslation)] = true;
             $suggestions[] = new TranslationSuggestion($primaryTranslation, 'top result');
         }
@@ -54,7 +54,7 @@ class MyMemoryTranslationService implements TranslationServiceInterface
             }
 
             $translation = trim((string) Arr::get($match, 'translation', ''));
-            if ($translation === '') {
+            if (! $this->isRussianSuggestion($translation)) {
                 continue;
             }
 
@@ -92,5 +92,18 @@ class MyMemoryTranslationService implements TranslationServiceInterface
         }
 
         return 'suggested';
+    }
+
+    private function isRussianSuggestion(string $translation): bool
+    {
+        if ($translation === '') {
+            return false;
+        }
+
+        if (! preg_match('/[А-Яа-яЁё]/u', $translation)) {
+            return false;
+        }
+
+        return ! preg_match('/[A-Za-z]/', $translation);
     }
 }

@@ -44,4 +44,44 @@ class MyMemoryTranslationServiceTest extends TestCase
             ['text' => 'утреннее приветствие', 'label' => 'suggested'],
         ], $result->toArray());
     }
+
+    public function test_service_filters_out_non_russian_suggestions(): void
+    {
+        Http::fake([
+            'https://api.mymemory.translated.net/get*' => Http::response([
+                'responseData' => [
+                    'translatedText' => 'consumer',
+                ],
+                'matches' => [
+                    [
+                        'translation' => 'потребитель',
+                        'match' => 1,
+                    ],
+                    [
+                        'translation' => 'Consumer Protection Law (2005).',
+                        'created-by' => 'tm',
+                        'match' => 0.99,
+                    ],
+                    [
+                        'translation' => 'consumidor',
+                        'created-by' => 'tm',
+                        'match' => 0.95,
+                    ],
+                    [
+                        'translation' => 'Отдел индекса потребительских цен',
+                        'created-by' => 'tm',
+                        'match' => 0.87,
+                    ],
+                ],
+            ]),
+        ]);
+
+        $service = $this->app->make(MyMemoryTranslationService::class);
+        $result = $service->translate('consumer', 'en', 'ru');
+
+        $this->assertSame([
+            ['text' => 'потребитель', 'label' => 'best match'],
+            ['text' => 'Отдел индекса потребительских цен', 'label' => 'memory match'],
+        ], $result->toArray());
+    }
 }
