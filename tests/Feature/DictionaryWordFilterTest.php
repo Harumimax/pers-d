@@ -148,6 +148,50 @@ class DictionaryWordFilterTest extends TestCase
             ->assertSee('Showing 1-1 of 1 words');
     }
 
+    public function test_search_is_case_insensitive_for_word_and_translation(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'Case Search',
+            'language' => 'English',
+        ]);
+
+        $matchByWord = Word::create([
+            'word' => 'Green',
+            'part_of_speech' => 'adjective',
+            'translation' => 'зелёный',
+            'comment' => null,
+        ]);
+        $matchByTranslation = Word::create([
+            'word' => 'blue',
+            'part_of_speech' => 'adjective',
+            'translation' => 'Bright SKY',
+            'comment' => null,
+        ]);
+        $nonMatch = Word::create([
+            'word' => 'red',
+            'part_of_speech' => 'adjective',
+            'translation' => 'warm tone',
+            'comment' => null,
+        ]);
+
+        $dictionary->words()->attach([$matchByWord->id, $matchByTranslation->id, $nonMatch->id]);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['dictionary' => $dictionary])
+            ->set('search', 'gReE')
+            ->call('applySearch')
+            ->assertSee('Green')
+            ->assertDontSee('blue')
+            ->assertDontSee('red')
+            ->set('search', 'sky')
+            ->call('applySearch')
+            ->assertSee('blue')
+            ->assertDontSee('Green')
+            ->assertDontSee('red');
+    }
+
     public function test_user_can_add_word_from_translate_automatically_mode(): void
     {
         $user = User::factory()->create();

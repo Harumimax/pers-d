@@ -89,6 +89,7 @@ class Show extends Component
         $wordsQuery = $this->dictionary->words();
         $partOfSpeechOptions = $this->partOfSpeechOptions();
         $searchTerm = trim($this->search);
+        $normalizedSearchTerm = mb_strtolower($searchTerm);
         /** @var Collection<int, \App\Models\UserDictionary> $headerDictionaries */
         $headerDictionaries = $user->dictionaries()
             ->orderByDesc('created_at')
@@ -99,9 +100,9 @@ class Show extends Component
         }
 
         if ($searchTerm !== '') {
-            $wordsQuery->where(function ($query) use ($searchTerm): void {
-                $query->where('words.word', 'like', '%'.$searchTerm.'%')
-                    ->orWhere('words.translation', 'like', '%'.$searchTerm.'%');
+            $wordsQuery->where(function ($query) use ($normalizedSearchTerm): void {
+                $query->whereRaw('LOWER(words.word) LIKE ?', ['%'.$normalizedSearchTerm.'%'])
+                    ->orWhereRaw('LOWER(words.translation) LIKE ?', ['%'.$normalizedSearchTerm.'%']);
             });
         }
 
