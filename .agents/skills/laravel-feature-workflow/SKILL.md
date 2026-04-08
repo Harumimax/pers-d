@@ -24,7 +24,8 @@ Follow this workflow exactly:
    - show verification commands
    - mention any manual steps
 9. When changing schema, remind the user to run migrations.
-10. If the task is large, do only the first safe slice and stop.
+10. If architecture, models, database structure, service boundaries, or other important code-organization decisions change, update `docs/architecture.md` in the same task.
+11. If the task is large, do only the first safe slice and stop.
 
 Project architecture reminders:
 - User creates dictionaries
