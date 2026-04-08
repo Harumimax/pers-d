@@ -24,39 +24,11 @@
             <section
                 class="dictionaries-create-card dictionary-show__create-card"
                 aria-label="Add word form"
+                wire:key="dictionary-add-card-{{ $formRenderKey }}"
                 x-data="{
                     mode: 'manual',
-                    autoWord: @entangle('autoWord').defer,
-                    autoPartOfSpeech: @entangle('autoPartOfSpeech').defer,
-                    autoComment: @entangle('autoComment').defer,
-                    translated: false,
-                    selectedTranslation: @entangle('autoTranslation').defer,
-                    suggestions: [
-                        { value: 'good morning', meta: 'most common' },
-                        { value: 'hello', meta: 'general greeting' },
-                        { value: 'morning greeting', meta: 'literal' },
-                        { value: 'formal greeting', meta: 'dictionary style' },
-                    ],
-                    runTranslate() {
-                        this.translated = true;
-                        if (! this.selectedTranslation && this.suggestions.length) {
-                            this.selectSuggestion(this.suggestions[0].value);
-                        }
-                    },
-                    selectSuggestion(value) {
-                        this.selectedTranslation = value;
-                        $wire.set('autoTranslation', value, false);
-                    },
-                    resetAutoForm() {
-                        this.autoWord = '';
-                        this.autoPartOfSpeech = '';
-                        this.autoComment = '';
-                        this.translated = false;
-                        this.selectedTranslation = '';
-                        $wire.set('autoTranslation', '', false);
-                    }
                 }"
-                x-on:reset-auto-add-word-form.window="resetAutoForm(); mode = 'automatic'"
+                x-on:reset-auto-add-word-form.window="mode = 'automatic'"
             >
                 <div class="dictionary-show__mode-switch" role="tablist" aria-label="Add word mode">
                     <button
@@ -167,7 +139,6 @@
                                     type="text"
                                     class="dictionaries-input"
                                     placeholder="e.g., buongiorno"
-                                    x-model="autoWord"
                                     wire:model.defer="autoWord"
                                 >
                                 @error('autoWord')
@@ -180,14 +151,31 @@
                                 <button
                                     type="button"
                                     class="btn btn-primary dictionaries-action-btn dictionary-show__translate-btn"
-                                    x-on:click="runTranslate()"
+                                    wire:click="translateAutomatically"
+                                    wire:loading.attr="disabled"
+                                    wire:target="translateAutomatically"
                                 >
-                                    Translate
+                                    <span wire:loading.remove wire:target="translateAutomatically">Translate</span>
+                                    <span wire:loading wire:target="translateAutomatically">Translating...</span>
                                 </button>
                             </div>
                         </div>
 
-                        <div class="dictionary-show__translation-suggestions" x-show="translated" x-cloak>
+                        @if ($autoTranslationError !== '')
+                            <div class="dictionary-show__translation-error" role="alert">
+                                <p class="dictionary-show__translation-error-text">{{ $autoTranslationUnavailableMessage }}</p>
+                                <button
+                                    type="button"
+                                    class="dictionary-show__translation-error-link"
+                                    x-on:click="mode = 'manual'"
+                                >
+                                    Switch to Enter manually
+                                </button>
+                            </div>
+                        @endif
+
+                        @if ($autoTranslated && $autoSuggestions !== [])
+                            <div class="dictionary-show__translation-suggestions">
                             <div class="dictionary-show__translation-suggestions-header">
                                 <h3 class="dictionary-show__translation-suggestions-title">Suggested translations</h3>
                                 <p class="dictionary-show__translation-suggestions-subtitle">
@@ -196,24 +184,28 @@
                             </div>
 
                             <div class="dictionary-show__translation-chip-list">
-                                <template x-for="suggestion in suggestions" :key="suggestion.value">
+                                @foreach ($autoSuggestions as $suggestionIndex => $suggestion)
                                     <button
                                         type="button"
-                                        class="dictionary-show__translation-chip"
-                                        :class="{ 'dictionary-show__translation-chip--active': selectedTranslation === suggestion.value }"
-                                        x-on:click="selectSuggestion(suggestion.value)"
+                                        wire:click="selectAutoTranslationByIndex({{ $suggestionIndex }})"
+                                        @class([
+                                            'dictionary-show__translation-chip',
+                                            'dictionary-show__translation-chip--active' => $autoTranslation === $suggestion['text'],
+                                        ])
                                     >
-                                        <span class="dictionary-show__translation-chip-main" x-text="suggestion.value"></span>
-                                        <span class="dictionary-show__translation-chip-meta" x-text="suggestion.meta"></span>
+                                        <span class="dictionary-show__translation-chip-main">{{ $suggestion['text'] }}</span>
+                                        <span class="dictionary-show__translation-chip-meta">{{ $suggestion['label'] }}</span>
                                     </button>
-                                </template>
+                                @endforeach
                             </div>
                         </div>
+                        @endif
 
-                        <div class="dictionary-show__translate-result" x-show="translated" x-cloak>
+                        @if ($autoTranslated)
+                            <div class="dictionary-show__translate-result">
                             <div class="dictionaries-field">
                                 <label class="dictionaries-label">Selected translation</label>
-                                <div class="dictionary-show__selected-translation" x-text="selectedTranslation || 'Choose a translation from the suggestions above'"></div>
+                                <div class="dictionary-show__selected-translation">{{ $autoTranslation !== '' ? $autoTranslation : 'Choose a translation from the suggestions above' }}</div>
                                 @error('autoTranslation')
                                     <p class="dictionaries-error">{{ $message }}</p>
                                 @enderror
@@ -224,7 +216,6 @@
                                 <select
                                     id="auto-part-of-speech"
                                     class="dictionaries-input"
-                                    x-model="autoPartOfSpeech"
                                     wire:model.defer="autoPartOfSpeech"
                                 >
                                     <option value="">Select part of speech</option>
@@ -237,11 +228,15 @@
                                 @enderror
                             </div>
                         </div>
+                        @endif
 
                         <div
                             class="dictionaries-field dictionary-show__auto-comment-field"
-                            x-show="translated"
-                            x-cloak
+                            @class([
+                                'dictionaries-field',
+                                'dictionary-show__auto-comment-field',
+                                'dictionary-show__auto-comment-field--visible' => $autoTranslated,
+                            ])
                         >
                             <label for="auto-comment" class="dictionaries-label">Comment</label>
                             <input
@@ -249,7 +244,6 @@
                                 type="text"
                                 class="dictionaries-input"
                                 placeholder="e.g., formal greeting"
-                                x-model="autoComment"
                                 wire:model.defer="autoComment"
                             >
                             @error('autoComment')
@@ -267,7 +261,7 @@
                             <button
                                 type="button"
                                 class="btn btn-secondary dictionaries-action-btn"
-                                x-on:click="resetAutoForm(); $wire.cancelCreate()"
+                                wire:click="cancelCreate"
                             >
                                 Cancel
                             </button>

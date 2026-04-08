@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -187,5 +188,97 @@ class DictionaryWordFilterTest extends TestCase
             'user_dictionary_id' => $dictionary->id,
             'word_id' => $wordId,
         ]);
+    }
+
+    public function test_translate_automatically_loads_suggestions_from_service(): void
+    {
+        Http::fake([
+            'https://api.mymemory.translated.net/get*' => Http::response([
+                'responseData' => [
+                    'translatedText' => 'доброе утро',
+                ],
+                'matches' => [
+                    [
+                        'translation' => 'здравствуйте',
+                        'created-by' => 'memory',
+                        'match' => 0.87,
+                    ],
+                ],
+            ]),
+        ]);
+
+        $user = User::factory()->create();
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English',
+            'language' => 'English',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['dictionary' => $dictionary])
+            ->set('showCreateForm', true)
+            ->set('autoWord', 'good morning')
+            ->call('translateAutomatically')
+            ->assertSet('autoTranslated', true)
+            ->assertSet('autoTranslation', 'доброе утро')
+            ->assertSet('showCreateForm', true)
+            ->assertSee('доброе утро')
+            ->assertSee('здравствуйте')
+            ->assertSet('autoTranslationError', '');
+    }
+
+    public function test_translate_automatically_shows_fallback_message_when_translation_is_unavailable(): void
+    {
+        Http::fake([
+            'https://api.mymemory.translated.net/get*' => Http::response([
+                'responseData' => [
+                    'translatedText' => '',
+                ],
+                'matches' => [],
+            ]),
+        ]);
+
+        $user = User::factory()->create();
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'Spanish',
+            'language' => 'Spanish',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['dictionary' => $dictionary])
+            ->set('showCreateForm', true)
+            ->set('autoWord', 'hola')
+            ->call('translateAutomatically')
+            ->assertSet('autoTranslated', false)
+            ->assertSet('autoTranslation', '')
+            ->assertSet('autoTranslationError', 'Translation is currently unavailable. Please switch to Enter manually.')
+            ->assertSee('Translation is currently unavailable. Please switch to Enter manually.')
+            ->assertSee('Switch to Enter manually');
+    }
+
+    public function test_user_can_switch_selected_auto_translation_chip_by_index(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English',
+            'language' => 'English',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['dictionary' => $dictionary])
+            ->set('showCreateForm', true)
+            ->set('autoSuggestions', [
+                ['text' => 'потребитель', 'label' => 'top result'],
+                ['text' => 'Consumer Protection Law (2005).', 'label' => 'memory match'],
+                ['text' => 'Отдел индекса потребительских цен', 'label' => 'memory match'],
+            ])
+            ->set('autoTranslated', true)
+            ->set('autoTranslation', 'потребитель')
+            ->call('selectAutoTranslationByIndex', 1)
+            ->assertSet('autoTranslation', 'Consumer Protection Law (2005).')
+            ->call('selectAutoTranslationByIndex', 2)
+            ->assertSet('autoTranslation', 'Отдел индекса потребительских цен');
     }
 }

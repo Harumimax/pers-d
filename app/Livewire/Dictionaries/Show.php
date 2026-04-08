@@ -5,8 +5,11 @@ namespace App\Livewire\Dictionaries;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
+use App\Services\Translation\TranslationServiceInterface;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
@@ -20,6 +23,7 @@ class Show extends Component
     private const SORT_NEWEST = 'newest';
     private const SORT_OLDEST = 'oldest';
     private const SORT_A_TO_Z = 'a-z';
+    private const TARGET_LANGUAGE = 'ru';
     private const PARTS_OF_SPEECH = [
         'noun',
         'verb',
@@ -42,6 +46,10 @@ class Show extends Component
         'interjection' => 'Interjection',
         'stable_expression' => 'Stable expression',
     ];
+    private const DICTIONARY_LANGUAGE_CODES = [
+        'English' => 'en',
+        'Spanish' => 'es',
+    ];
 
     public UserDictionary $dictionary;
     public string $word = '';
@@ -50,6 +58,10 @@ class Show extends Component
     public string $autoPartOfSpeech = '';
     public string $autoTranslation = '';
     public string $autoComment = '';
+    /** @var array<int, array{text: string, label: string}> */
+    public array $autoSuggestions = [];
+    public bool $autoTranslated = false;
+    public string $autoTranslationError = '';
     public string $partOfSpeechFilter = self::PART_OF_SPEECH_FILTER_ALL;
     public string $search = '';
     public string $translation = '';
@@ -112,6 +124,7 @@ class Show extends Component
                 ...$partOfSpeechOptions,
             ],
             'partOfSpeechDisplayMap' => self::PARTS_OF_SPEECH_DISPLAY,
+            'autoTranslationUnavailableMessage' => 'Translation is currently unavailable. Please switch to Enter manually.',
         ])->layout('layouts.dictionaries', [
             'headerDictionaries' => $headerDictionaries,
         ]);
@@ -155,10 +168,77 @@ class Show extends Component
             $validated['autoComment'] ?? null,
         );
         $this->reset(['autoWord', 'autoPartOfSpeech', 'autoTranslation', 'autoComment']);
+        $this->autoSuggestions = [];
+        $this->autoTranslated = false;
+        $this->autoTranslationError = '';
         $this->resetValidation();
+        $this->formRenderKey++;
         $this->showCreateForm = true;
         $this->resetPage();
         $this->dispatch('reset-auto-add-word-form');
+    }
+
+    public function translateAutomatically(TranslationServiceInterface $translationService): void
+    {
+        $validated = $this->validate([
+            'autoWord' => ['required', 'string', 'max:255'],
+        ]);
+
+        $this->resetValidation(['autoTranslation', 'autoPartOfSpeech', 'autoComment']);
+        $this->autoTranslationError = '';
+        $this->autoSuggestions = [];
+        $this->autoTranslated = false;
+        $this->autoTranslation = '';
+
+        $sourceLanguage = $this->sourceLanguageCode();
+        if ($sourceLanguage === null) {
+            $this->autoTranslationError = 'Translation is currently unavailable. Please switch to Enter manually.';
+            $this->dispatch('auto-translation-unavailable');
+
+            return;
+        }
+
+        try {
+            $result = $translationService->translate(
+                $validated['autoWord'],
+                $sourceLanguage,
+                self::TARGET_LANGUAGE,
+            );
+        } catch (ConnectionException|RequestException) {
+            $this->autoTranslationError = 'Translation is currently unavailable. Please switch to Enter manually.';
+            $this->dispatch('auto-translation-unavailable');
+
+            return;
+        }
+
+        $this->autoSuggestions = $result->toArray();
+
+        if ($this->autoSuggestions === []) {
+            $this->autoTranslationError = 'Translation is currently unavailable. Please switch to Enter manually.';
+            $this->dispatch('auto-translation-unavailable');
+
+            return;
+        }
+
+        $this->autoTranslated = true;
+        $this->autoTranslation = $this->autoSuggestions[0]['text'];
+        $this->dispatch('auto-translation-ready', selectedTranslation: $this->autoTranslation);
+    }
+
+    public function selectAutoTranslationByIndex(int $index): void
+    {
+        if (! isset($this->autoSuggestions[$index])) {
+            return;
+        }
+
+        $translation = trim((string) ($this->autoSuggestions[$index]['text'] ?? ''));
+        if ($translation === '') {
+            return;
+        }
+
+        $this->autoTranslation = $translation;
+        $this->resetValidation('autoTranslation');
+        $this->dispatch('auto-translation-selected', selectedTranslation: $translation);
     }
 
     public function openCreateForm(): void
@@ -212,8 +292,12 @@ class Show extends Component
             'autoTranslation',
             'autoComment',
         ]);
+        $this->autoSuggestions = [];
+        $this->autoTranslated = false;
+        $this->autoTranslationError = '';
         $this->resetValidation();
         $this->formRenderKey++;
+        $this->dispatch('reset-auto-add-word-form');
     }
 
     public function confirmDeleteWord(int $wordId): void
@@ -289,6 +373,13 @@ class Show extends Component
         ]);
 
         $this->dictionary->words()->attach($word->id);
+    }
+
+    private function sourceLanguageCode(): ?string
+    {
+        $language = trim((string) $this->dictionary->language);
+
+        return self::DICTIONARY_LANGUAGE_CODES[$language] ?? null;
     }
 
     private function currentUser(): User

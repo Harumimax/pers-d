@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'mymemory' => [
+        'base_url' => env('MYMEMORY_BASE_URL', 'https://api.mymemory.translated.net'),
+        'timeout' => env('MYMEMORY_TIMEOUT', 10),
+        'mt' => env('MYMEMORY_MT', true),
+    ],
+
 ];

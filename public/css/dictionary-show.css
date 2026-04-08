@@ -146,6 +146,34 @@
     padding: 18px 18px 16px;
 }
 
+.dictionary-show__translation-error {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 18px;
+    border: 1px solid rgba(220, 38, 38, 0.16);
+    border-radius: 18px;
+    background: rgba(254, 242, 242, 0.85);
+}
+
+.dictionary-show__translation-error-text {
+    margin: 0;
+    font-size: 0.94rem;
+    line-height: 1.45;
+    color: #991b1b;
+}
+
+.dictionary-show__translation-error-link {
+    border: 0;
+    background: transparent;
+    color: var(--primary-color);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
 .dictionary-show__translation-suggestions-header {
     margin-bottom: 14px;
 }
@@ -229,7 +257,12 @@
 }
 
 .dictionary-show__auto-comment-field {
+    display: none;
     max-width: 100%;
+}
+
+.dictionary-show__auto-comment-field--visible {
+    display: flex;
 }
 
 .dictionary-show__auto-actions {
@@ -597,6 +630,11 @@
     .dictionary-show__translate-grid,
     .dictionary-show__translate-result {
         grid-template-columns: 1fr;
+    }
+
+    .dictionary-show__translation-error {
+        flex-direction: column;
+        align-items: flex-start;
     }
 
     .dictionary-show__translate-button-wrap {
