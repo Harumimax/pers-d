@@ -257,12 +257,7 @@
 }
 
 .dictionary-show__auto-comment-field {
-    display: none;
     max-width: 100%;
-}
-
-.dictionary-show__auto-comment-field--visible {
-    display: flex;
 }
 
 .dictionary-show__auto-actions {

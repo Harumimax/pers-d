@@ -230,26 +230,21 @@
                         </div>
                         @endif
 
-                        <div
-                            class="dictionaries-field dictionary-show__auto-comment-field"
-                            @class([
-                                'dictionaries-field',
-                                'dictionary-show__auto-comment-field',
-                                'dictionary-show__auto-comment-field--visible' => $autoTranslated,
-                            ])
-                        >
-                            <label for="auto-comment" class="dictionaries-label">Comment</label>
-                            <input
-                                id="auto-comment"
-                                type="text"
-                                class="dictionaries-input"
-                                placeholder="e.g., formal greeting"
-                                wire:model.defer="autoComment"
-                            >
-                            @error('autoComment')
-                                <p class="dictionaries-error">{{ $message }}</p>
-                            @enderror
-                        </div>
+                        @if ($autoTranslated)
+                            <div class="dictionaries-field dictionary-show__auto-comment-field">
+                                <label for="auto-comment" class="dictionaries-label">Comment</label>
+                                <input
+                                    id="auto-comment"
+                                    type="text"
+                                    class="dictionaries-input"
+                                    placeholder="e.g., formal greeting"
+                                    wire:model.defer="autoComment"
+                                >
+                                @error('autoComment')
+                                    <p class="dictionaries-error">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        @endif
 
                         <div class="dictionaries-create-actions dictionary-show__create-actions dictionary-show__auto-actions">
                             <button
