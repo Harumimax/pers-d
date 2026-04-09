@@ -117,6 +117,7 @@
 .about-status-table thead th:last-child,
 .about-status-table tbody td:last-child {
     width: 180px;
+    text-align: center;
 }
 
 .about-status-table tbody td {
@@ -191,6 +192,7 @@
     .about-status-table thead th:last-child,
     .about-status-table tbody td:last-child {
         width: 140px;
+        text-align: center;
     }
 
     .about-status-badge {

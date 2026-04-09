@@ -10,7 +10,7 @@
             <section class="about-hero">
                 <div class="about-hero__image-wrap">
                     <img
-                        src="{{ asset('images/welcome-book.jpg') }}"
+                        src="{{ asset('images/about-study-desk.jpg') }}"
                         alt="Open dictionary book"
                         class="about-hero__image"
                     >

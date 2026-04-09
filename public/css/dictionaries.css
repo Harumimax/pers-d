@@ -1,7 +1,13 @@
 .dictionaries-shell {
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     background-color: var(--bg-color);
     --dictionaries-text-scale: 0.80;
+}
+
+.dictionaries-page {
+    flex: 1 0 auto;
 }
 
 .dictionaries-header-nav {

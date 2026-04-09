@@ -12,6 +12,7 @@
         <link rel="stylesheet" href="{{ asset('css/welcome.css') }}">
         <link rel="stylesheet" href="{{ asset('css/dictionaries.css') }}">
         <link rel="stylesheet" href="{{ asset('css/dictionary-show.css') }}">
+        <link rel="stylesheet" href="{{ asset('css/footer.css') }}">
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles
@@ -50,7 +51,11 @@
             </form>
         </x-site-header>
 
-        {{ $slot }}
+        <div class="dictionaries-page">
+            {{ $slot }}
+        </div>
+
+        <x-site-footer :link-href="route('about')" />
 
         @livewireScripts
     </body>
