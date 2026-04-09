@@ -1,0 +1,32 @@
+.site-footer {
+    margin-top: auto;
+    background-color: #ffffff;
+    border-top: 1px solid #e5e7eb;
+}
+
+.footer-inner {
+    min-height: 78px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.footer-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    padding: 0 18px;
+    border: 1px solid #1e3a8a;
+    border-radius: 999px;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #334155;
+    text-decoration: none;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.footer-link:hover {
+    color: #1e3a8a;
+    background-color: var(--bg-color);
+}

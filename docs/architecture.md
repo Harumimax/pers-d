@@ -15,6 +15,7 @@
 - Authenticated routes:
   - `/dashboard` -> redirects to dictionaries index
   - `/profile` -> `ProfileController`
+  - `/about` -> auth-only informational page rendered from `about` view
   - `/dictionaries` -> `App\Livewire\Dictionaries\Index`
   - `/dictionaries/{dictionary}` -> `App\Livewire\Dictionaries\Show`
 
@@ -43,15 +44,22 @@
 
 ### Views and Layouts
 - Shared dictionaries layout: `resources/views/layouts/dictionaries.blade.php`
+- Shared profile-style authenticated layout: `resources/views/layouts/profile.blade.php`
 - Dictionary pages:
   - `resources/views/livewire/dictionaries/index.blade.php`
   - `resources/views/livewire/dictionaries/show.blade.php`
+- Informational page:
+  - `resources/views/about.blade.php`
 - Key styling:
   - `public/css/dictionaries.css`
   - `public/css/dictionary-show.css`
+  - `public/css/profile.css`
+  - `public/css/footer.css`
+  - `public/css/about.css`
 - Important design choice:
   - the shared dictionaries layout is intentionally "dumb" and does not query the database itself
   - data needed by the layout is passed from Livewire components
+  - the shared profile-style layout is reused by both `/profile` and `/about`, and the footer there links to the auth-only About page
 
 ### Services
 - Translation integration lives under `app/Services/Translation`

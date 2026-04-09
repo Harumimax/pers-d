@@ -10,6 +10,26 @@ class ProfileTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_guest_is_redirected_from_about_page(): void
+    {
+        $this->get('/about')
+            ->assertRedirect('/login');
+    }
+
+    public function test_about_page_is_displayed_for_authenticated_user(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->get('/about');
+
+        $response
+            ->assertOk()
+            ->assertSee('About WordKeeper')
+            ->assertSee('Create a word repetition mode');
+    }
+
     public function test_profile_page_is_displayed(): void
     {
         $user = User::factory()->create();

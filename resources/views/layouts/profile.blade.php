@@ -11,15 +11,21 @@
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
         <link rel="stylesheet" href="{{ asset('css/welcome.css') }}">
         <link rel="stylesheet" href="{{ asset('css/profile.css') }}">
+        <link rel="stylesheet" href="{{ asset('css/footer.css') }}">
+        @stack('styles')
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
+    @php($activeNav = $activeNav ?? null)
     <body class="profile-shell">
         <x-site-header nav-class="profile-header-nav" label="Profile navigation">
             <a href="{{ route('dictionaries.index') }}" class="profile-header-nav__link">
                 Dictionaries
             </a>
-            <a href="{{ route('profile.edit') }}" class="profile-header-nav__link profile-header-nav__link--active">
+            <a
+                href="{{ route('profile.edit') }}"
+                class="profile-header-nav__link {{ $activeNav === 'profile' ? 'profile-header-nav__link--active' : '' }}"
+            >
                 Profile
             </a>
 
@@ -29,6 +35,10 @@
             </form>
         </x-site-header>
 
-        @yield('content')
+        <div class="profile-page">
+            @yield('content')
+        </div>
+
+        <x-site-footer :link-href="route('about')" />
     </body>
 </html>

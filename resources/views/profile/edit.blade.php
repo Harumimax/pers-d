@@ -1,4 +1,4 @@
-@extends('layouts.profile')
+@extends('layouts.profile', ['activeNav' => 'profile'])
 
 @section('content')
     <main class="profile-main">

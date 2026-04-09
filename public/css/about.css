@@ -1,0 +1,200 @@
+.about-main {
+    padding: 56px 0 72px;
+}
+
+.about-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.about-hero,
+.about-status-card {
+    border: 1px solid #d8dce4;
+    border-radius: 18px;
+    background: var(--white);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.04);
+}
+
+.about-hero {
+    display: grid;
+    grid-template-columns: 0.95fr 1.05fr;
+    gap: 36px;
+    align-items: center;
+    padding: 28px;
+}
+
+.about-hero__image-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.about-hero__image {
+    width: 100%;
+    max-width: 520px;
+    height: 340px;
+    object-fit: cover;
+    border-radius: 20px;
+}
+
+.about-hero__content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.about-hero__eyebrow {
+    margin: 0;
+    font-size: 0.92rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--primary-color);
+}
+
+.about-hero__title {
+    margin: 0;
+    max-width: 620px;
+    font-size: 3rem;
+    line-height: 1.04;
+    letter-spacing: -0.03em;
+    color: var(--text-color);
+}
+
+.about-hero__description {
+    margin: 0;
+    max-width: 620px;
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--muted-color);
+}
+
+.about-status-card {
+    padding: 28px;
+}
+
+.about-status-card__header {
+    margin-bottom: 18px;
+}
+
+.about-status-card__title {
+    margin: 0 0 8px;
+    font-size: 1.8rem;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--text-color);
+}
+
+.about-status-card__subtitle {
+    margin: 0;
+    font-size: 0.98rem;
+    line-height: 1.55;
+    color: var(--muted-color);
+}
+
+.about-status-table-wrap {
+    overflow-x: auto;
+}
+
+.about-status-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.about-status-table thead th {
+    padding: 0 0 14px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    text-align: left;
+    font-size: 0.84rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted-color);
+}
+
+.about-status-table thead th:last-child,
+.about-status-table tbody td:last-child {
+    width: 180px;
+}
+
+.about-status-table tbody td {
+    padding: 18px 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    font-size: 1rem;
+    line-height: 1.55;
+    color: var(--text-color);
+    vertical-align: middle;
+}
+
+.about-status-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.about-status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.about-status-badge--done {
+    background: rgba(15, 118, 110, 0.12);
+    color: #0f766e;
+}
+
+.about-status-badge--progress {
+    background: rgba(30, 58, 138, 0.1);
+    color: var(--primary-color);
+}
+
+@media (max-width: 992px) {
+    .about-main {
+        padding: 42px 0 56px;
+    }
+
+    .about-hero {
+        grid-template-columns: 1fr;
+        gap: 24px;
+        padding: 22px;
+    }
+
+    .about-hero__title {
+        font-size: 2.3rem;
+    }
+
+    .about-status-card {
+        padding: 22px;
+    }
+}
+
+@media (max-width: 640px) {
+    .about-main {
+        padding: 34px 0 48px;
+    }
+
+    .about-hero__title {
+        font-size: 1.95rem;
+    }
+
+    .about-status-card__title {
+        font-size: 1.5rem;
+    }
+
+    .about-status-table thead th:last-child,
+    .about-status-table tbody td:last-child {
+        width: 140px;
+    }
+
+    .about-status-badge {
+        min-width: 108px;
+        font-size: 0.84rem;
+    }
+}
