@@ -1,58 +1,124 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# WordKeeper
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+> A calm, modern workspace for building your personal foreign-word dictionaries.
 
-## About Laravel
+WordKeeper is a focused vocabulary app for people who want one neat place to collect words, keep translations close at hand, and organize learning by separate dictionaries instead of scattering vocabulary across notes, chats, and browser tabs.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Why this project exists
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+WordKeeper is designed to keep the learning flow simple:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- create personal dictionaries
+- add words manually or through assisted translation
+- store part of speech and comments
+- search, sort, and filter vocabulary inside each dictionary
+- keep everything in one clean authenticated workspace
 
-## Learning Laravel
+The product is intentionally lightweight, practical, and built around personal use first.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Current functionality
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+| Functionality | Status |
+| --- | --- |
+| Create and manage personal dictionaries | `done` |
+| Add words manually with translation, part of speech, and comment | `done` |
+| Search, filter, sort, and paginate words inside a dictionary | `done` |
+| Automatic translation suggestions during word creation | `done` |
+| Delete dictionaries and words with confirmation dialogs | `done` |
+| Create a word repetition mode | `in progress` |
+| Create a Telegram bot | `planning` |
+| Connect site functionality to the Telegram bot | `planning` |
+| Create a mode for sending words to the Telegram bot | `planning` |
+| Switch to another local translation provider | `planning` |
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## Product feel
 
-## Agentic Development
+WordKeeper aims to feel:
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+- minimal, not overloaded
+- fast to navigate
+- comfortable for everyday vocabulary work
+- structured enough to grow into stronger learning workflows later
+
+## Tech stack
+
+- Laravel 13
+- Blade
+- Livewire 4
+- PostgreSQL
+
+Translation suggestions are integrated through a service abstraction, so external translation logic stays outside the UI layer.
+
+## Main app areas
+
+### Welcome page
+A simple entry point that introduces the product and routes users to authentication.
+
+### Dictionaries
+Authenticated users can:
+
+- create dictionaries
+- choose a dictionary language
+- open a dictionary page
+- browse all words in a structured table
+
+### Words
+Inside a dictionary, users can:
+
+- add words manually
+- use assisted translation mode
+- choose part of speech
+- save comments
+- search by word or translation
+- filter by part of speech
+- sort results
+- paginate large word lists
+
+### Profile and About
+Authenticated users can:
+
+- update profile information
+- change password
+- delete account
+- read an About page describing the project and roadmap
+
+## Quick start
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone https://github.com/Harumimax/pers-d.git
+cd pers-d
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+If you use frontend assets locally as part of your workflow:
 
-## Contributing
+```bash
+npm install
+npm run dev
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Tests
 
-## Code of Conduct
+Run the test suite with:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+php artisan test
+```
 
-## Security Vulnerabilities
+## Project notes
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- authentication is required for the main product flows
+- dictionary and word management are the core of the current product
+- architecture decisions are documented in [`docs/architecture.md`](docs/architecture.md)
 
-## License
+## Roadmap direction
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+The next major step is turning stored vocabulary into active practice, starting with a dedicated repetition mode for words. After that, the product can grow toward Telegram-based workflows and deeper spaced learning scenarios.
+
+---
+
+Built as a personal vocabulary product with a clean Laravel + Livewire architecture and room to grow.
