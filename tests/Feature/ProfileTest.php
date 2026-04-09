@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Models\UserDictionary;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -28,6 +29,35 @@ class ProfileTest extends TestCase
             ->assertOk()
             ->assertSee('About WordKeeper')
             ->assertSee('Create a word repetition mode');
+    }
+
+    public function test_profile_and_about_pages_render_dictionaries_dropdown_links(): void
+    {
+        $user = User::factory()->create();
+
+        UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English Core',
+            'language' => 'English',
+        ]);
+
+        UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'Spanish Travel',
+            'language' => 'Spanish',
+        ]);
+
+        $this->actingAs($user)
+            ->get('/profile')
+            ->assertOk()
+            ->assertSee('English Core')
+            ->assertSee('Spanish Travel');
+
+        $this->actingAs($user)
+            ->get('/about')
+            ->assertOk()
+            ->assertSee('English Core')
+            ->assertSee('Spanish Travel');
     }
 
     public function test_profile_page_is_displayed(): void

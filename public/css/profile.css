@@ -15,6 +15,12 @@
     gap: 34px;
 }
 
+.profile-header-nav__dropdown {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
 .profile-header-nav__link {
     font-size: 1rem;
     font-weight: 500;
@@ -24,6 +30,46 @@
 
 .profile-header-nav__link:hover {
     color: var(--text-color);
+}
+
+.profile-header-nav__menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 30;
+    display: none;
+    min-width: 240px;
+    max-width: 320px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 10px;
+    border: 1px solid #d8dce4;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 20px 48px rgba(15, 23, 42, 0.16);
+}
+
+.profile-header-nav__dropdown:hover .profile-header-nav__menu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.profile-header-nav__menu-link {
+    display: block;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 0.96rem;
+    font-weight: 500;
+    line-height: 1.35;
+    color: var(--text-color);
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.profile-header-nav__menu-link:hover {
+    background: rgba(30, 58, 138, 0.08);
+    color: var(--primary-color);
 }
 
 .profile-header-nav__link--active {
@@ -293,6 +339,13 @@
         width: 100%;
         justify-content: center;
         gap: 20px;
+    }
+
+    .profile-header-nav__menu {
+        left: 50%;
+        transform: translateX(-50%);
+        min-width: 220px;
+        max-width: min(280px, calc(100vw - 32px));
     }
 
     .profile-header-nav .btn {

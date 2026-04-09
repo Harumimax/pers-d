@@ -156,6 +156,11 @@
     color: var(--primary-color);
 }
 
+.about-status-badge--planning {
+    background: rgba(51, 65, 85, 0.1);
+    color: var(--muted-color);
+}
+
 @media (max-width: 992px) {
     .about-main {
         padding: 42px 0 56px;

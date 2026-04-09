@@ -30,6 +30,29 @@ class UserDictionaryCrudTest extends TestCase
         $response->assertSee('My Dictionaries');
     }
 
+    public function test_dictionaries_index_page_renders_dropdown_with_user_dictionaries(): void
+    {
+        $user = User::factory()->create();
+
+        UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English Core',
+            'language' => 'English',
+        ]);
+
+        UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'Spanish Travel',
+            'language' => 'Spanish',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dictionaries.index'));
+
+        $response->assertOk();
+        $response->assertSee('English Core');
+        $response->assertSee('Spanish Travel');
+    }
+
     public function test_user_sees_only_their_own_dictionaries(): void
     {
         $user = User::factory()->create();

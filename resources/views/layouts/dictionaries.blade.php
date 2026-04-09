@@ -19,28 +19,22 @@
     </head>
     <body class="dictionaries-shell">
         <x-site-header nav-class="dictionaries-header-nav" label="Dictionaries navigation">
-            @if (request()->routeIs('dictionaries.show'))
-                <div class="dictionaries-header-nav__dropdown">
-                    <a href="{{ route('dictionaries.index') }}" class="dictionaries-header-nav__link">
-                        Dictionaries
-                    </a>
-
-                    <div class="dictionaries-header-nav__menu" aria-label="Your dictionaries">
-                        @foreach (($headerDictionaries ?? collect()) as $headerDictionary)
-                            <a
-                                href="{{ route('dictionaries.show', $headerDictionary) }}"
-                                class="dictionaries-header-nav__menu-link"
-                            >
-                                {{ $headerDictionary->name }}
-                            </a>
-                        @endforeach
-                    </div>
-                </div>
-            @else
+            <div class="dictionaries-header-nav__dropdown">
                 <a href="{{ route('dictionaries.index') }}" class="dictionaries-header-nav__link">
                     Dictionaries
                 </a>
-            @endif
+
+                <div class="dictionaries-header-nav__menu" aria-label="Your dictionaries">
+                    @foreach (($headerDictionaries ?? collect()) as $headerDictionary)
+                        <a
+                            href="{{ route('dictionaries.show', $headerDictionary) }}"
+                            class="dictionaries-header-nav__menu-link"
+                        >
+                            {{ $headerDictionary->name }}
+                        </a>
+                    @endforeach
+                </div>
+            </div>
             <a href="{{ route('profile.edit') }}" class="dictionaries-header-nav__link">
                 Profile
             </a>

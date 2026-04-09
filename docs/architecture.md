@@ -60,6 +60,7 @@
   - the shared dictionaries layout is intentionally "dumb" and does not query the database itself
   - data needed by the layout is passed from Livewire components
   - the shared profile-style layout is reused by both `/profile` and `/about`, and the footer there links to the auth-only About page
+  - both authenticated layouts render the same dictionaries hover-dropdown in the header, and the dropdown data is passed from controllers/Livewire rather than queried inside Blade
 
 ### Services
 - Translation integration lives under `app/Services/Translation`

@@ -71,6 +71,22 @@
                                 <td>Create a word repetition mode</td>
                                 <td><span class="about-status-badge about-status-badge--progress">in progress</span></td>
                             </tr>
+                            <tr>
+                                <td>Create a Telegram bot</td>
+                                <td><span class="about-status-badge about-status-badge--planning">planning</span></td>
+                            </tr>
+                            <tr>
+                                <td>Connect site functionality to the Telegram bot</td>
+                                <td><span class="about-status-badge about-status-badge--planning">planning</span></td>
+                            </tr>
+                            <tr>
+                                <td>Create a mode for sending words to the Telegram bot</td>
+                                <td><span class="about-status-badge about-status-badge--planning">planning</span></td>
+                            </tr>
+                            <tr>
+                                <td>Switch to another local translation provider</td>
+                                <td><span class="about-status-badge about-status-badge--planning">planning</span></td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>

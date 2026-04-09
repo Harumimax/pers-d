@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\UserDictionary;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -18,6 +20,7 @@ class ProfileController extends Controller
     {
         return view('profile.edit', [
             'user' => $request->user(),
+            'headerDictionaries' => $this->headerDictionaries($request),
         ]);
     }
 
@@ -56,5 +59,15 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    /**
+     * @return Collection<int, UserDictionary>
+     */
+    private function headerDictionaries(Request $request): Collection
+    {
+        return $request->user()?->dictionaries()
+            ->orderByDesc('created_at')
+            ->get(['id', 'name']) ?? collect();
     }
 }

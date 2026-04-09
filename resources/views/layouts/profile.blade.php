@@ -19,9 +19,22 @@
     @php($activeNav = $activeNav ?? null)
     <body class="profile-shell">
         <x-site-header nav-class="profile-header-nav" label="Profile navigation">
-            <a href="{{ route('dictionaries.index') }}" class="profile-header-nav__link">
-                Dictionaries
-            </a>
+            <div class="profile-header-nav__dropdown">
+                <a href="{{ route('dictionaries.index') }}" class="profile-header-nav__link">
+                    Dictionaries
+                </a>
+
+                <div class="profile-header-nav__menu" aria-label="Your dictionaries">
+                    @foreach (($headerDictionaries ?? collect()) as $headerDictionary)
+                        <a
+                            href="{{ route('dictionaries.show', $headerDictionary) }}"
+                            class="profile-header-nav__menu-link"
+                        >
+                            {{ $headerDictionary->name }}
+                        </a>
+                    @endforeach
+                </div>
+            </div>
             <a
                 href="{{ route('profile.edit') }}"
                 class="profile-header-nav__link {{ $activeNav === 'profile' ? 'profile-header-nav__link--active' : '' }}"
