@@ -19,6 +19,12 @@
     @php($activeNav = $activeNav ?? null)
     <body class="profile-shell">
         <x-site-header nav-class="profile-header-nav" label="Profile navigation">
+            <a
+                href="{{ route('remainder') }}"
+                class="profile-header-nav__link {{ $activeNav === 'remainder' ? 'profile-header-nav__link--active' : '' }}"
+            >
+                Remainder
+            </a>
             <div class="profile-header-nav__dropdown">
                 <a href="{{ route('dictionaries.index') }}" class="profile-header-nav__link">
                     Dictionaries

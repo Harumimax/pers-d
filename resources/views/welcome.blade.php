@@ -12,6 +12,7 @@
 
         <x-site-header label="Authentication links">
                 @auth
+                    <a href="{{ route('remainder') }}" class="btn btn-secondary">Remainder</a>
                     <a href="{{ url('/dashboard') }}" class="btn btn-primary">Dictionaries</a>
                     <form method="POST" action="{{ route('logout') }}" style="display:inline">
                         @csrf

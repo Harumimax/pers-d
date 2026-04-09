@@ -24,6 +24,13 @@ Route::middleware('auth')->group(function () {
                 ->get(['id', 'name']) ?? collect(),
         ]);
     })->name('about');
+    Route::get('/remainder', function (Request $request) {
+        return view('remainder', [
+            'headerDictionaries' => $request->user()?->dictionaries()
+                ->orderByDesc('created_at')
+                ->get(['id', 'name']) ?? collect(),
+        ]);
+    })->name('remainder');
 
     Route::get('/dictionaries', Index::class)->name('dictionaries.index');
     Route::get('/dictionaries/{dictionary}', Show::class)->name('dictionaries.show');

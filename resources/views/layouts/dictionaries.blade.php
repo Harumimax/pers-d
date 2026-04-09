@@ -19,6 +19,9 @@
     </head>
     <body class="dictionaries-shell">
         <x-site-header nav-class="dictionaries-header-nav" label="Dictionaries navigation">
+            <a href="{{ route('remainder') }}" class="dictionaries-header-nav__link">
+                Remainder
+            </a>
             <div class="dictionaries-header-nav__dropdown">
                 <a href="{{ route('dictionaries.index') }}" class="dictionaries-header-nav__link">
                     Dictionaries

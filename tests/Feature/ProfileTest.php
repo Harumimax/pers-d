@@ -17,6 +17,12 @@ class ProfileTest extends TestCase
             ->assertRedirect('/login');
     }
 
+    public function test_guest_is_redirected_from_remainder_page(): void
+    {
+        $this->get('/remainder')
+            ->assertRedirect('/login');
+    }
+
     public function test_about_page_is_displayed_for_authenticated_user(): void
     {
         $user = User::factory()->create();
@@ -29,6 +35,19 @@ class ProfileTest extends TestCase
             ->assertOk()
             ->assertSee('About WordKeeper')
             ->assertSee('Create a word repetition mode');
+    }
+
+    public function test_remainder_page_is_displayed_for_authenticated_user(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->get('/remainder');
+
+        $response
+            ->assertOk()
+            ->assertSee('Remainder is a game for reminding words.');
     }
 
     public function test_profile_and_about_pages_render_dictionaries_dropdown_links(): void
