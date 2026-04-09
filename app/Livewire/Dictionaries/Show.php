@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -24,6 +25,8 @@ class Show extends Component
     private const SORT_OLDEST = 'oldest';
     private const SORT_A_TO_Z = 'a-z';
     private const TARGET_LANGUAGE = 'ru';
+    private const CONTROL_CHARACTER_PATTERN = '/[\p{Cc}\p{Cf}]/u';
+    private const ZERO_WIDTH_CHARACTER_PATTERN = '/[\x{200B}\x{200C}\x{200D}\x{2060}\x{FEFF}]/u';
     private const PARTS_OF_SPEECH = [
         'noun',
         'verb',
@@ -133,11 +136,15 @@ class Show extends Component
 
     public function addWord(): void
     {
+        $this->word = $this->sanitizeTextInput($this->word);
+        $this->translation = $this->sanitizeTextInput($this->translation);
+        $this->comment = $this->sanitizeTextInput($this->comment);
+
         $validated = $this->validate([
-            'word' => ['required', 'string', 'max:255'],
+            'word' => ['required', 'string', 'max:255', 'not_regex:'.self::CONTROL_CHARACTER_PATTERN],
             'partOfSpeech' => ['required', 'string', Rule::in(self::PARTS_OF_SPEECH)],
-            'translation' => ['required', 'string', 'max:255'],
-            'comment' => ['nullable', 'string', 'max:600'],
+            'translation' => ['required', 'string', 'max:255', 'not_regex:'.self::CONTROL_CHARACTER_PATTERN],
+            'comment' => ['nullable', 'string', 'max:600', 'not_regex:'.self::CONTROL_CHARACTER_PATTERN],
         ]);
 
         $this->storeWord(
@@ -155,11 +162,15 @@ class Show extends Component
 
     public function addTranslatedWord(): void
     {
+        $this->autoWord = $this->sanitizeTextInput($this->autoWord);
+        $this->autoTranslation = $this->sanitizeTextInput($this->autoTranslation);
+        $this->autoComment = $this->sanitizeTextInput($this->autoComment);
+
         $validated = $this->validate([
-            'autoWord' => ['required', 'string', 'max:255'],
+            'autoWord' => ['required', 'string', 'max:255', 'not_regex:'.self::CONTROL_CHARACTER_PATTERN],
             'autoPartOfSpeech' => ['required', 'string', Rule::in(self::PARTS_OF_SPEECH)],
-            'autoTranslation' => ['required', 'string', 'max:255'],
-            'autoComment' => ['nullable', 'string', 'max:600'],
+            'autoTranslation' => ['required', 'string', 'max:255', 'not_regex:'.self::CONTROL_CHARACTER_PATTERN],
+            'autoComment' => ['nullable', 'string', 'max:600', 'not_regex:'.self::CONTROL_CHARACTER_PATTERN],
         ]);
 
         $this->storeWord(
@@ -181,8 +192,10 @@ class Show extends Component
 
     public function translateAutomatically(TranslationServiceInterface $translationService): void
     {
+        $this->autoWord = $this->sanitizeTextInput($this->autoWord);
+
         $validated = $this->validate([
-            'autoWord' => ['required', 'string', 'max:255'],
+            'autoWord' => ['required', 'string', 'max:255', 'not_regex:'.self::CONTROL_CHARACTER_PATTERN],
         ]);
 
         $this->resetValidation(['autoTranslation', 'autoPartOfSpeech', 'autoComment']);
@@ -366,14 +379,23 @@ class Show extends Component
         string $translationValue,
         ?string $commentValue,
     ): void {
-        $word = Word::create([
-            'word' => $wordValue,
-            'part_of_speech' => $partOfSpeechValue,
-            'translation' => $translationValue,
-            'comment' => $commentValue,
-        ]);
+        DB::transaction(function () use ($wordValue, $partOfSpeechValue, $translationValue, $commentValue): void {
+            $word = Word::create([
+                'word' => $wordValue,
+                'part_of_speech' => $partOfSpeechValue,
+                'translation' => $translationValue,
+                'comment' => $commentValue,
+            ]);
 
-        $this->dictionary->words()->attach($word->id);
+            $this->dictionary->words()->attach($word->id);
+        });
+    }
+
+    private function sanitizeTextInput(?string $value): string
+    {
+        $normalized = preg_replace(self::ZERO_WIDTH_CHARACTER_PATTERN, '', (string) $value) ?? (string) $value;
+
+        return trim($normalized);
     }
 
     private function sourceLanguageCode(): ?string

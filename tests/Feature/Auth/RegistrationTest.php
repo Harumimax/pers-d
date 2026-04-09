@@ -28,4 +28,21 @@ class RegistrationTest extends TestCase
         $this->assertAuthenticated();
         $response->assertRedirect(route('dictionaries.index', absolute: false));
     }
+
+    public function test_registration_input_is_trimmed_and_zero_width_characters_are_removed(): void
+    {
+        $response = $this->post('/register', [
+            'name' => " \u{200B}Test User\u{200D} ",
+            'email' => " \u{FEFF}Test@Example.com ",
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('dictionaries.index', absolute: false));
+        $this->assertDatabaseHas('users', [
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+        ]);
+    }
 }

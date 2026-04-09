@@ -234,6 +234,56 @@ class DictionaryWordFilterTest extends TestCase
         ]);
     }
 
+    public function test_word_input_is_trimmed_and_zero_width_characters_are_removed_before_save(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'Normalization',
+            'language' => 'English',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['dictionary' => $dictionary])
+            ->set('showCreateForm', true)
+            ->set('word', " \u{200B}green\u{200D} ")
+            ->set('partOfSpeech', 'adjective')
+            ->set('translation', " \u{FEFF}зелёный ")
+            ->set('comment', " \u{2060}basic color ")
+            ->call('addWord')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('words', [
+            'word' => 'green',
+            'translation' => 'зелёный',
+            'comment' => 'basic color',
+            'part_of_speech' => 'adjective',
+        ]);
+    }
+
+    public function test_word_input_with_control_characters_is_rejected(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'Control Chars',
+            'language' => 'English',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['dictionary' => $dictionary])
+            ->set('showCreateForm', true)
+            ->set('word', "bad\x07word")
+            ->set('partOfSpeech', 'noun')
+            ->set('translation', 'test')
+            ->call('addWord')
+            ->assertHasErrors(['word']);
+
+        $this->assertDatabaseMissing('words', [
+            'translation' => 'test',
+        ]);
+    }
+
     public function test_translate_automatically_loads_suggestions_from_service(): void
     {
         Http::fake([

@@ -93,6 +93,30 @@ class ProfileTest extends TestCase
         $this->assertNull($user->email_verified_at);
     }
 
+    public function test_profile_information_is_trimmed_and_zero_width_characters_are_removed(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Original Name',
+            'email' => 'original@example.com',
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->patch('/profile', [
+                'name' => " \u{200B}Test User\u{200D} ",
+                'email' => " \u{FEFF}Test@Example.com ",
+            ]);
+
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect('/profile');
+
+        $user->refresh();
+
+        $this->assertSame('Test User', $user->name);
+        $this->assertSame('test@example.com', $user->email);
+    }
+
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
     {
         $user = User::factory()->create();
