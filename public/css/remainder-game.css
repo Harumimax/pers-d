@@ -157,6 +157,10 @@
     justify-content: flex-end;
 }
 
+.remainder-game-summary-card__actions {
+    margin-top: 24px;
+}
+
 .remainder-game-action-btn {
     min-width: 148px;
     height: 52px;
