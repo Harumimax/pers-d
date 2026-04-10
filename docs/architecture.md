@@ -263,6 +263,7 @@
   - `adjective`
   - `adverb`
   - `pronoun`
+  - `cardinal`
   - `preposition`
   - `conjunction`
   - `interjection`

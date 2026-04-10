@@ -87,6 +87,18 @@
                                 <td>Switch to another local translation provider</td>
                                 <td><span class="about-status-badge about-status-badge--planning">planning</span></td>
                             </tr>
+                            <tr>
+                                <td>Add an interface language switcher for Russian and English</td>
+                                <td><span class="about-status-badge about-status-badge--planning">planning</span></td>
+                            </tr>
+                            <tr>
+                                <td>Make the game interface more varied with alternate progress images and memes</td>
+                                <td><span class="about-status-badge about-status-badge--planning">planning</span></td>
+                            </tr>
+                            <tr>
+                                <td>Create a WordKeeper logo</td>
+                                <td><span class="about-status-badge about-status-badge--planning">planning</span></td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>

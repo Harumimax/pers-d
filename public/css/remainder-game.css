@@ -197,6 +197,26 @@
     color: var(--text-color);
 }
 
+.remainder-game-reveal-answer {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 6px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.75);
+    color: transparent;
+    text-shadow: 0 0 10px rgba(15, 23, 42, 0.55);
+    filter: blur(4px);
+    transition: filter 0.18s ease, color 0.18s ease, text-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+.remainder-game-reveal-answer:hover,
+.remainder-game-reveal-answer:focus-visible {
+    color: var(--text-color);
+    text-shadow: none;
+    filter: none;
+    background: rgba(255, 255, 255, 0.98);
+}
+
 .remainder-game-errors {
     display: flex;
     flex-direction: column;

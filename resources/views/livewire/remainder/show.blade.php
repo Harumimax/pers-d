@@ -24,7 +24,10 @@
                             <article class="remainder-game-error-item">
                                 <p class="remainder-game-error-item__prompt">Prompt: {{ $item->prompt_text }}</p>
                                 <p class="remainder-game-error-item__answer">Your answer: {{ $item->user_answer }}</p>
-                                <p class="remainder-game-error-item__answer">Correct answer: {{ $item->correct_answer }}</p>
+                                <p class="remainder-game-error-item__answer">
+                                    Correct answer:
+                                    <span class="remainder-game-reveal-answer">{{ $item->correct_answer }}</span>
+                                </p>
                             </article>
                         @endforeach
                     </div>
@@ -60,7 +63,10 @@
                     <p class="remainder-game-feedback-card__text">Your answer: {{ $lastUserAnswer }}</p>
 
                     @unless ($lastAnswerCorrect)
-                        <p class="remainder-game-feedback-card__text">Correct answer: {{ $lastCorrectAnswer }}</p>
+                        <p class="remainder-game-feedback-card__text">
+                            Correct answer:
+                            <span class="remainder-game-reveal-answer">{{ $lastCorrectAnswer }}</span>
+                        </p>
                     @endunless
 
                     <button type="button" class="btn btn-primary remainder-game-action-btn" wire:click="continueToNext">

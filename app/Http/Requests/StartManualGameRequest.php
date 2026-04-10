@@ -16,6 +16,7 @@ class StartManualGameRequest extends FormRequest
         'adjective',
         'adverb',
         'pronoun',
+        'cardinal',
         'preposition',
         'conjunction',
         'interjection',

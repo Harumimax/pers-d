@@ -56,10 +56,15 @@ img {
 }
 
 .logo {
-    font-size: 1.75rem;
-    font-weight: 500;
-    letter-spacing: -0.02em;
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
     color: var(--text-color);
+}
+
+.logo__image {
+    height: 42px;
+    width: auto;
 }
 
 .header-actions {
@@ -202,8 +207,8 @@ img {
         min-height: 80px;
     }
 
-    .logo {
-        font-size: 1.75rem;
+    .logo__image {
+        height: 40px;
     }
 
     .header-actions .btn {

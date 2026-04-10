@@ -236,6 +236,7 @@
                                 'adjective' => 'Adjective',
                                 'adverb' => 'Adverb',
                                 'pronoun' => 'Pronoun',
+                                'cardinal' => 'Cardinal',
                                 'preposition' => 'Preposition',
                                 'conjunction' => 'Conjunction',
                                 'interjection' => 'Interjection',

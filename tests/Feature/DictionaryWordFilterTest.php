@@ -284,6 +284,21 @@ class DictionaryWordFilterTest extends TestCase
         ]);
     }
 
+    public function test_dictionary_page_displays_cardinal_part_of_speech_option(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English',
+            'language' => 'English',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['dictionary' => $dictionary])
+            ->assertSeeHtml('Cardinal (&#1063;&#1080;&#1089;&#1083;&#1080;&#1090;&#1077;&#1083;&#1100;&#1085;&#1086;&#1077;)')
+            ->assertSee('Cardinal');
+    }
+
     public function test_translate_automatically_loads_suggestions_from_service(): void
     {
         Http::fake([
