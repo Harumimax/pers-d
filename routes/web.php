@@ -25,10 +25,16 @@ Route::middleware('auth')->group(function () {
         ]);
     })->name('about');
     Route::get('/remainder', function (Request $request) {
+        $user = $request->user();
+
         return view('remainder', [
-            'headerDictionaries' => $request->user()?->dictionaries()
+            'headerDictionaries' => $user?->dictionaries()
                 ->orderByDesc('created_at')
                 ->get(['id', 'name']) ?? collect(),
+            'remainderDictionaries' => $user?->dictionaries()
+                ->withCount('words')
+                ->orderByDesc('created_at')
+                ->get(['id', 'name', 'language']) ?? collect(),
         ]);
     })->name('remainder');
 
@@ -37,3 +43,4 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+

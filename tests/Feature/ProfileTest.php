@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Models\UserDictionary;
+use App\Models\Word;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -41,13 +42,41 @@ class ProfileTest extends TestCase
     {
         $user = User::factory()->create();
 
+        $englishDictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English Core',
+            'language' => 'English',
+        ]);
+
+        $word = Word::create([
+            'word' => 'apple',
+            'translation' => '€блоко',
+            'part_of_speech' => 'noun',
+            'comment' => 'fruit',
+        ]);
+
+        $englishDictionary->words()->attach($word->id);
+
         $response = $this
             ->actingAs($user)
             ->get('/remainder');
 
         $response
             ->assertOk()
-            ->assertSee('Remainder is a game for reminding words.');
+            ->assertSee('Remainder')
+            ->assertSee('Configure your next repetition session')
+            ->assertSee('Game type')
+            ->assertSee('Translation direction')
+            ->assertSee('Dictionaries')
+            ->assertSee('Parts of speech')
+            ->assertSee('Words count')
+            ->assertSee('English Core')
+            ->assertSee('English')
+            ->assertSee('1 word')
+            ->assertSee('Manual translation input')
+            ->assertSee('Choose from 6 options')
+            ->assertSee('Start')
+            ->assertSee('Reset');
     }
 
     public function test_profile_and_about_pages_render_dictionaries_dropdown_links(): void
