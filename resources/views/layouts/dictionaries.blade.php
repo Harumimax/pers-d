@@ -17,13 +17,17 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles
     </head>
+    @php($dictionariesNavActive = request()->routeIs('dictionaries.index') || request()->routeIs('dictionaries.show'))
     <body class="dictionaries-shell">
         <x-site-header nav-class="dictionaries-header-nav" label="Dictionaries navigation">
             <a href="{{ route('remainder') }}" class="dictionaries-header-nav__link">
                 Remainder
             </a>
             <div class="dictionaries-header-nav__dropdown">
-                <a href="{{ route('dictionaries.index') }}" class="dictionaries-header-nav__link">
+                <a
+                    href="{{ route('dictionaries.index') }}"
+                    class="dictionaries-header-nav__link {{ $dictionariesNavActive ? 'dictionaries-header-nav__link--active' : '' }}"
+                >
                     Dictionaries
                 </a>
 

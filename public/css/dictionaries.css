@@ -27,6 +27,11 @@
     color: var(--text-color);
 }
 
+.dictionaries-header-nav__link--active {
+    font-weight: 700;
+    color: var(--text-color);
+}
+
 .dictionaries-header-nav__dropdown {
     position: relative;
     display: inline-flex;
