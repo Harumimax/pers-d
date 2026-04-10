@@ -90,13 +90,19 @@
 .remainder-setup-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    align-items: stretch;
     gap: 20px;
     margin-bottom: 20px;
+}
+
+.remainder-setup-grid--secondary {
+    margin-top: 20px;
 }
 
 .remainder-section {
     display: flex;
     flex-direction: column;
+    height: 100%;
     gap: 16px;
     padding: 22px;
     border: 1px solid rgba(148, 163, 184, 0.14);
@@ -119,10 +125,6 @@
     font-size: 1.25rem;
     line-height: 1.25;
     color: var(--text-color);
-}
-
-.remainder-section__title--with-top-offset {
-    margin-top: 6px;
 }
 
 .remainder-section__description {
@@ -164,9 +166,9 @@
 }
 
 .remainder-option-card--active {
-    border-color: rgba(30, 58, 138, 0.26);
-    background: rgba(30, 58, 138, 0.06);
-    box-shadow: inset 0 0 0 1px rgba(30, 58, 138, 0.08);
+    border-color: rgba(30, 58, 138, 0.42);
+    background: rgba(30, 58, 138, 0.12);
+    box-shadow: inset 0 0 0 1px rgba(30, 58, 138, 0.12);
 }
 
 .remainder-option-card__title {
@@ -214,9 +216,9 @@
 }
 
 .remainder-dictionary-item--active {
-    border-color: rgba(30, 58, 138, 0.26);
-    background: rgba(30, 58, 138, 0.06);
-    box-shadow: inset 0 0 0 1px rgba(30, 58, 138, 0.08);
+    border-color: rgba(30, 58, 138, 0.42);
+    background: rgba(30, 58, 138, 0.12);
+    box-shadow: inset 0 0 0 1px rgba(30, 58, 138, 0.12);
 }
 
 .remainder-dictionary-item__main {
@@ -252,7 +254,7 @@
 .remainder-dictionary-item--active .remainder-dictionary-item__status {
     border-color: var(--primary-color);
     background: var(--primary-color);
-    box-shadow: inset 0 0 0 4px #fff;
+    box-shadow: inset 0 0 0 3px #fff;
 }
 
 .remainder-empty-state {
@@ -300,8 +302,8 @@
 }
 
 .remainder-chip--active {
-    border-color: rgba(30, 58, 138, 0.26);
-    background: rgba(30, 58, 138, 0.08);
+    border-color: rgba(30, 58, 138, 0.42);
+    background: rgba(30, 58, 138, 0.14);
     color: var(--primary-color);
 }
 

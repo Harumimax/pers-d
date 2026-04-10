@@ -9,7 +9,6 @@
         <div class="container remainder-container">
             <section class="remainder-hero">
                 <div class="remainder-copy">
-                    <p class="remainder-eyebrow">Word practice</p>
                     <h1 class="remainder-title">Remainder</h1>
                     <p class="remainder-description">is a game for reminding words.</p>
                 </div>
@@ -180,10 +179,10 @@
                     @endif
                 </section>
 
-                <div class="remainder-setup-grid">
+                <div class="remainder-setup-grid remainder-setup-grid--secondary">
                     <section class="remainder-section" aria-labelledby="remainder-parts-title">
                         <div class="remainder-section__header">
-                            <h3 id="remainder-parts-title" class="remainder-section__title remainder-section__title--with-top-offset">Parts of speech</h3>
+                            <h3 id="remainder-parts-title" class="remainder-section__title">Parts of speech</h3>
                             <p class="remainder-section__description">Focus the round on the categories you want to revisit.</p>
                         </div>
 
