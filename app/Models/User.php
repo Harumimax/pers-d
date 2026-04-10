@@ -23,6 +23,11 @@ class User extends Authenticatable
         return $this->hasMany(UserDictionary::class);
     }
 
+    public function gameSessions(): HasMany
+    {
+        return $this->hasMany(GameSession::class);
+    }
+
     /**
      * Get the attributes that should be cast.
      *

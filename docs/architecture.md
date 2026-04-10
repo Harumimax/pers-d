@@ -2,9 +2,12 @@
 
 ## Summary
 - Stack: Laravel 13 + Blade + Livewire 4 + PostgreSQL
-- Main domain: authenticated users create personal dictionaries and add words to them
-- UI architecture: page-level dictionary screens are implemented as Livewire components, while auth/profile flows use classic Laravel controllers + Blade views
-- Translation integration: external translation is isolated behind a service abstraction and is not called directly from Blade or controllers
+- Main domain: authenticated users create personal dictionaries, add words to them, and can launch a remainder game session for repetition
+- UI architecture:
+  - dictionary pages are implemented as Livewire page components
+  - auth/profile/about/remainder settings pages use classic Laravel controllers + Blade views
+  - active game play is rendered through an embedded Livewire component inside a Blade page
+- Translation integration is isolated behind a service abstraction and is not called directly from Blade or controllers
 
 ## Main Layers
 
@@ -16,7 +19,9 @@
   - `/dashboard` -> redirects to dictionaries index
   - `/profile` -> `ProfileController`
   - `/about` -> auth-only informational page rendered from `about` view
-  - `/remainder` -> auth-only placeholder page rendered from `remainder` view
+  - `/remainder` -> `RemainderController@index`
+  - `POST /remainder/sessions` -> `RemainderController@store`
+  - `GET /remainder/sessions/{gameSession}` -> `RemainderController@showSession`
   - `/dictionaries` -> `App\Livewire\Dictionaries\Index`
   - `/dictionaries/{dictionary}` -> `App\Livewire\Dictionaries\Show`
 
@@ -25,10 +30,14 @@
   - edits profile
   - updates profile
   - deletes account
+- `App\Http\Controllers\RemainderController`
+  - renders remainder settings page
+  - starts manual game sessions
+  - renders the game session page shell
 - Auth controllers are the standard Breeze-style controllers under `app/Http/Controllers/Auth`
 - Dictionaries are not handled by traditional controllers; they are handled by Livewire page components
 
-### Livewire Pages
+### Livewire Components
 - `App\Livewire\Dictionaries\Index`
   - lists current user dictionaries
   - creates dictionaries
@@ -42,6 +51,10 @@
   - supports automatic translation flow
   - deletes words with confirmation modal state
   - passes `headerDictionaries` into the shared dictionaries layout
+- `App\Livewire\Remainder\Show`
+  - drives one active game session on the remainder game page
+  - renders either the current question, immediate feedback, or the final result summary
+  - delegates answer checking and session transitions to `ManualGameEngineService`
 
 ### Views and Layouts
 - Shared dictionaries layout: `resources/views/layouts/dictionaries.blade.php`
@@ -49,9 +62,12 @@
 - Dictionary pages:
   - `resources/views/livewire/dictionaries/index.blade.php`
   - `resources/views/livewire/dictionaries/show.blade.php`
-- Informational page:
+- Informational pages:
   - `resources/views/about.blade.php`
   - `resources/views/remainder.blade.php`
+  - `resources/views/remainder-show.blade.php`
+- Remainder game UI:
+  - `resources/views/livewire/remainder/show.blade.php`
 - Key styling:
   - `public/css/dictionaries.css`
   - `public/css/dictionary-show.css`
@@ -59,29 +75,38 @@
   - `public/css/footer.css`
   - `public/css/about.css`
   - `public/css/remainder.css`
+  - `public/css/remainder-game.css`
 - Important design choice:
-  - the shared dictionaries layout is intentionally "dumb" and does not query the database itself
-  - data needed by the layout is passed from Livewire components
-  - the shared profile-style layout is reused by both `/profile` and `/about`, and the footer there links to the auth-only About page
-  - both authenticated layouts render the same dictionaries hover-dropdown in the header, and the dropdown data is passed from controllers/Livewire rather than queried inside Blade
+  - shared layouts do not query dictionaries directly
+  - data needed by authenticated layouts is passed from controllers/Livewire
+  - the game page keeps the existing profile layout and embeds a Livewire component inside a Blade page instead of turning the whole authenticated layout into a Livewire layout
 
 ### Services
 - Translation integration lives under `app/Services/Translation`
-- Current abstraction:
+- Current translation abstraction:
   - `TranslationServiceInterface`
   - `MyMemoryTranslationService`
-- Supporting DTOs:
   - `TranslationResult`
   - `TranslationSuggestion`
-- Service binding is registered in `AppServiceProvider`
-- External service configuration is stored in `config/services.php`
+- Remainder game services live under `app/Services/Remainder`
+  - `PrepareManualGameService`
+    - validates dictionary ownership at the domain layer
+    - collects words using the selected configuration
+    - removes duplicates
+    - creates the snapshot session and session items
+  - `ManualGameEngineService`
+    - finds the current unanswered item
+    - checks manual answers
+    - updates progress counters and finished status
+    - produces final result summaries
 
 ## Domain Model
 
 ### User
 - Model: `App\Models\User`
-- Relationship:
+- Relationships:
   - `hasMany(UserDictionary::class)` via `dictionaries()`
+  - `hasMany(GameSession::class)` via `gameSessions()`
 
 ### UserDictionary
 - Model: `App\Models\UserDictionary`
@@ -102,6 +127,39 @@
   - `comment`
 - Relationship:
   - `belongsToMany(UserDictionary::class)` via `dictionaries()`
+
+### GameSession
+- Model: `App\Models\GameSession`
+- Purpose: stores one immutable snapshot of a started game
+- Core fields:
+  - `user_id`
+  - `mode`
+  - `direction`
+  - `total_words`
+  - `correct_answers`
+  - `status`
+  - `started_at`
+  - `finished_at`
+  - `config_snapshot`
+- Relationships:
+  - `belongsTo(User::class)`
+  - `hasMany(GameSessionItem::class)->orderBy('order_index')`
+
+### GameSessionItem
+- Model: `App\Models\GameSessionItem`
+- Purpose: stores one concrete prompt/answer step inside a snapshot
+- Core fields:
+  - `game_session_id`
+  - `word_id`
+  - `order_index`
+  - `prompt_text`
+  - `correct_answer`
+  - `user_answer`
+  - `is_correct`
+  - `answered_at`
+- Relationships:
+  - `belongsTo(GameSession::class)`
+  - `belongsTo(Word::class)`
 
 ## Database Structure
 
@@ -157,6 +215,39 @@
   - composite primary key on `user_dictionary_id + word_id`
   - index on `word_id`
 
+#### `game_sessions`
+- Created in `2026_04_10_000008_create_game_sessions_table.php`
+- Purpose: stores one started game snapshot
+- Fields:
+  - `id`
+  - `user_id` -> FK to `users.id`
+  - `mode`
+  - `direction`
+  - `total_words`
+  - `correct_answers`
+  - `status`
+  - `started_at`
+  - `finished_at` nullable
+  - `config_snapshot` jsonb
+  - `created_at`
+  - `updated_at`
+
+#### `game_session_items`
+- Created in `2026_04_10_000009_create_game_session_items_table.php`
+- Purpose: stores the concrete ordered steps for one game snapshot
+- Fields:
+  - `id`
+  - `game_session_id` -> FK to `game_sessions.id`
+  - `word_id` -> FK to `words.id`
+  - `order_index`
+  - `prompt_text`
+  - `correct_answer`
+  - `user_answer` nullable
+  - `is_correct` nullable
+  - `answered_at` nullable
+  - `created_at`
+  - `updated_at`
+
 ## Current Product Decisions
 
 ### Dictionary Language
@@ -181,6 +272,18 @@
 - Database structure is currently `many-to-many` between dictionaries and words
 - Product behavior currently acts closer to "word created inside a dictionary"
 - This is a known architectural tension and should be revisited only if reuse across dictionaries becomes a confirmed product feature
+
+### Remainder Game Modes
+- Current implemented mode:
+  - `manual`
+- Planned but not implemented yet:
+  - `multiple choice`
+- Current direction values:
+  - `foreign_to_ru`
+  - `ru_to_foreign`
+- Current session statuses:
+  - `active`
+  - `finished`
 
 ## Automatic Translation Flow
 
@@ -216,18 +319,36 @@
 - This is intended to suppress obvious English/Spanish noise from MyMemory
 - Additional semantic noise filtering may still be needed later
 
+## Remainder Manual Game Flow
+- Settings page (`/remainder`) uses Blade + Alpine for configuration UI
+- Start action posts configuration to `RemainderController@store`
+- `StartManualGameRequest` validates request shape
+- `PrepareManualGameService`:
+  - verifies dictionary ownership
+  - filters available words by selected dictionaries and parts of speech
+  - deduplicates words across many-to-many dictionary selection
+  - randomizes order
+  - creates `GameSession`
+  - creates `GameSessionItem` snapshot rows
+- Game page (`/remainder/sessions/{gameSession}`) renders a Blade shell with embedded `App\Livewire\Remainder\Show`
+- `ManualGameEngineService` validates and checks each manual answer, updates counters, and finishes the session after the last item
+- Result screen is rendered by the same Livewire component when the session status becomes `finished`
+
 ## Important Implementation Notes
 - Dictionary page totals show the total number of words in the dictionary, independent of active filters
 - Search, sorting, part-of-speech filter, and pagination are all handled inside `App\Livewire\Dictionaries\Show`
-- Dictionary header dropdown data is passed from Livewire into the layout; the layout should not query dictionaries directly
+- Dictionary header dropdown data is passed from Livewire/controllers into the layout; the layout should not query dictionaries directly
 - External API access should continue to go through service abstractions, not be embedded into Livewire components
+- Remainder game sessions always use snapshot semantics: once a game is created, item order and answers are read from `game_session_items`, not recalculated from live dictionary data
 
 ## Key Files To Read First
 - `routes/web.php`
-- `app/Livewire/Dictionaries/Index.php`
-- `app/Livewire/Dictionaries/Show.php`
-- `app/Models/UserDictionary.php`
-- `app/Models/Word.php`
-- `app/Services/Translation/MyMemoryTranslationService.php`
-- `resources/views/livewire/dictionaries/index.blade.php`
-- `resources/views/livewire/dictionaries/show.blade.php`
+- `app/Http/Controllers/RemainderController.php`
+- `app/Livewire/Remainder/Show.php`
+- `app/Services/Remainder/PrepareManualGameService.php`
+- `app/Services/Remainder/ManualGameEngineService.php`
+- `app/Models/GameSession.php`
+- `app/Models/GameSessionItem.php`
+- `resources/views/remainder.blade.php`
+- `resources/views/remainder-show.blade.php`
+- `resources/views/livewire/remainder/show.blade.php`

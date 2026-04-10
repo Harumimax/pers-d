@@ -1,0 +1,98 @@
+<?php
+
+namespace App\Livewire\Remainder;
+
+use App\Models\GameSession;
+use App\Models\GameSessionItem;
+use App\Services\Remainder\ManualGameEngineService;
+use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
+use Livewire\Component;
+
+class Show extends Component
+{
+    public GameSession $gameSession;
+    public string $answer = '';
+    public bool $showFeedback = false;
+    public ?bool $lastAnswerCorrect = null;
+    public string $lastCorrectAnswer = '';
+    public string $lastUserAnswer = '';
+    public string $lastPromptText = '';
+    public int $lastOrderIndex = 1;
+
+    public function mount(GameSession $gameSession): void
+    {
+        abort_unless(auth()->check(), 401);
+        abort_if($gameSession->user_id !== auth()->id(), 403);
+
+        $this->gameSession = $gameSession;
+    }
+
+    public function render(): View
+    {
+        $this->gameSession->refresh();
+
+        $engine = app(ManualGameEngineService::class);
+        $currentItem = null;
+        $resultSummary = null;
+        $progressLabel = null;
+
+        if ($this->gameSession->status === GameSession::STATUS_FINISHED) {
+            $resultSummary = $engine->resultSummary($this->gameSession);
+        } elseif ($this->showFeedback) {
+            $progressLabel = sprintf('Word %d of %d', $this->lastOrderIndex, $this->gameSession->total_words);
+        } else {
+            $currentItem = $engine->currentItem($this->gameSession);
+            $progressLabel = $currentItem !== null
+                ? sprintf('Word %d of %d', $currentItem->order_index, $this->gameSession->total_words)
+                : null;
+        }
+
+        return view('livewire.remainder.show', [
+            'currentItem' => $currentItem,
+            'progressLabel' => $progressLabel,
+            'resultSummary' => $resultSummary,
+            'gameNotice' => session('gameNotice'),
+        ]);
+    }
+
+    public function submitAnswer(ManualGameEngineService $manualGameEngineService): void
+    {
+        $validated = $this->validate([
+            'answer' => ['required', 'string', 'max:255'],
+        ]);
+
+        $result = $manualGameEngineService->submitAnswer($this->gameSession, $validated['answer']);
+        $answeredItem = $result['item'];
+
+        $this->gameSession->refresh();
+        $this->answer = '';
+
+        if ($result['finished']) {
+            $this->showFeedback = false;
+            $this->lastAnswerCorrect = null;
+            $this->lastCorrectAnswer = '';
+            $this->lastUserAnswer = '';
+            $this->lastPromptText = '';
+
+            return;
+        }
+
+        $this->showFeedback = true;
+        $this->lastAnswerCorrect = (bool) $answeredItem->is_correct;
+        $this->lastCorrectAnswer = $answeredItem->correct_answer;
+        $this->lastUserAnswer = (string) $answeredItem->user_answer;
+        $this->lastPromptText = $answeredItem->prompt_text;
+        $this->lastOrderIndex = (int) $answeredItem->order_index;
+    }
+
+    public function continueToNext(): void
+    {
+        $this->showFeedback = false;
+        $this->lastAnswerCorrect = null;
+        $this->lastCorrectAnswer = '';
+        $this->lastUserAnswer = '';
+        $this->lastPromptText = '';
+        $this->answer = '';
+    }
+}

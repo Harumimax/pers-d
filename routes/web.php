@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RemainderController;
 use App\Livewire\Dictionaries\Index;
 use App\Livewire\Dictionaries\Show;
 use Illuminate\Http\Request;
@@ -24,19 +25,9 @@ Route::middleware('auth')->group(function () {
                 ->get(['id', 'name']) ?? collect(),
         ]);
     })->name('about');
-    Route::get('/remainder', function (Request $request) {
-        $user = $request->user();
-
-        return view('remainder', [
-            'headerDictionaries' => $user?->dictionaries()
-                ->orderByDesc('created_at')
-                ->get(['id', 'name']) ?? collect(),
-            'remainderDictionaries' => $user?->dictionaries()
-                ->withCount('words')
-                ->orderByDesc('created_at')
-                ->get(['id', 'name', 'language']) ?? collect(),
-        ]);
-    })->name('remainder');
+    Route::get('/remainder', [RemainderController::class, 'index'])->name('remainder');
+    Route::post('/remainder/sessions', [RemainderController::class, 'store'])->name('remainder.sessions.store');
+    Route::get('/remainder/sessions/{gameSession}', [RemainderController::class, 'showSession'])->name('remainder.sessions.show');
 
     Route::get('/dictionaries', Index::class)->name('dictionaries.index');
     Route::get('/dictionaries/{dictionary}', Show::class)->name('dictionaries.show');

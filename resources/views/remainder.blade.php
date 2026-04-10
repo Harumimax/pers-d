@@ -5,6 +5,18 @@
 @endpush
 
 @section('content')
+    @php
+        $initialDictionaryIds = collect(old('dictionary_ids', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->values();
+        $initialPartsOfSpeech = collect(old('parts_of_speech', ['all']))
+            ->map(fn ($value) => (string) $value)
+            ->filter()
+            ->values();
+        $initialPartsOfSpeech = $initialPartsOfSpeech->isEmpty() ? collect(['all']) : $initialPartsOfSpeech;
+    @endphp
+
     <main class="remainder-main">
         <div class="container remainder-container">
             <section class="remainder-hero">
@@ -14,17 +26,19 @@
                 </div>
             </section>
 
-            <section
+            <form
+                method="POST"
+                action="{{ route('remainder.sessions.store') }}"
                 class="remainder-setup-card"
                 x-data="{
                     defaultGameType: 'manual',
-                    defaultDirection: 'foreign_to_russian',
+                    defaultDirection: 'foreign_to_ru',
                     defaultWordsCount: '10',
-                    gameType: 'manual',
-                    direction: 'foreign_to_russian',
-                    selectedDictionaries: [],
-                    selectedPartsOfSpeech: ['all'],
-                    wordsCount: '10',
+                    gameType: @js(old('mode', 'manual')),
+                    direction: @js(old('direction', 'foreign_to_ru')),
+                    selectedDictionaries: @js($initialDictionaryIds->all()),
+                    selectedPartsOfSpeech: @js($initialPartsOfSpeech->all()),
+                    wordsCount: @js((string) old('words_count', '10')),
                     toggleDictionary(id) {
                         if (this.selectedDictionaries.includes(id)) {
                             this.selectedDictionaries = this.selectedDictionaries.filter(dictionaryId => dictionaryId !== id);
@@ -74,6 +88,19 @@
                     }
                 }"
             >
+                @csrf
+
+                <input type="hidden" name="mode" :value="gameType">
+                <input type="hidden" name="direction" :value="direction">
+
+                <template x-for="dictionaryId in selectedDictionaries" :key="`dictionary-${dictionaryId}`">
+                    <input type="hidden" name="dictionary_ids[]" :value="dictionaryId">
+                </template>
+
+                <template x-for="part in selectedPartsOfSpeech" :key="`part-${part}`">
+                    <input type="hidden" name="parts_of_speech[]" :value="part">
+                </template>
+
                 <header class="remainder-setup-card__header">
                     <div>
                         <p class="remainder-setup-card__eyebrow">Remainder setup</p>
@@ -83,6 +110,17 @@
                         Choose how you want to practice, which dictionaries to include, and how focused the round should be.
                     </p>
                 </header>
+
+                @if ($errors->any())
+                    <div class="remainder-errors" role="alert">
+                        <p class="remainder-errors__title">We could not start the game yet.</p>
+                        <ul class="remainder-errors__list">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
 
                 <div class="remainder-setup-grid">
                     <section class="remainder-section" aria-labelledby="remainder-game-type-title">
@@ -109,9 +147,13 @@
                                 @click="gameType = 'choice'"
                             >
                                 <span class="remainder-option-card__title">Choose from 6 options</span>
-                                <span class="remainder-option-card__meta">Use multiple choice when you want a faster session.</span>
+                                <span class="remainder-option-card__meta">This mode is planned next and is not available yet.</span>
                             </button>
                         </div>
+
+                        <p class="remainder-section__note" x-show="gameType === 'choice'" x-cloak>
+                            Multiple choice mode will be added later. Manual translation input is available now.
+                        </p>
                     </section>
 
                     <section class="remainder-section" aria-labelledby="remainder-direction-title">
@@ -124,8 +166,8 @@
                             <button
                                 type="button"
                                 class="remainder-option-card"
-                                :class="{ 'remainder-option-card--active': direction === 'foreign_to_russian' }"
-                                @click="direction = 'foreign_to_russian'"
+                                :class="{ 'remainder-option-card--active': direction === 'foreign_to_ru' }"
+                                @click="direction = 'foreign_to_ru'"
                             >
                                 <span class="remainder-option-card__title">Foreign language to Russian</span>
                                 <span class="remainder-option-card__meta">See the original word first and recall the Russian meaning.</span>
@@ -134,8 +176,8 @@
                             <button
                                 type="button"
                                 class="remainder-option-card"
-                                :class="{ 'remainder-option-card--active': direction === 'russian_to_foreign' }"
-                                @click="direction = 'russian_to_foreign'"
+                                :class="{ 'remainder-option-card--active': direction === 'ru_to_foreign' }"
+                                @click="direction = 'ru_to_foreign'"
                             >
                                 <span class="remainder-option-card__title">Russian to foreign language</span>
                                 <span class="remainder-option-card__meta">Flip the direction and reproduce the foreign word yourself.</span>
@@ -221,6 +263,7 @@
                             <label for="remainder-words-count" class="remainder-count-label">Words count</label>
                             <input
                                 id="remainder-words-count"
+                                name="words_count"
                                 type="text"
                                 inputmode="numeric"
                                 pattern="[0-9]*"
@@ -237,10 +280,17 @@
                 </div>
 
                 <footer class="remainder-actions">
-                    <button type="button" class="btn btn-primary remainder-actions__start">Start</button>
+                    <button
+                        type="submit"
+                        class="btn btn-primary remainder-actions__start"
+                        :disabled="gameType !== 'manual'"
+                        :class="{ 'remainder-actions__start--disabled': gameType !== 'manual' }"
+                    >
+                        Start
+                    </button>
                     <button type="button" class="btn btn-secondary remainder-actions__reset" @click="resetSettings()">Reset</button>
                 </footer>
-            </section>
+            </form>
         </div>
     </main>
 @endsection
