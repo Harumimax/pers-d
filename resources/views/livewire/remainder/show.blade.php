@@ -87,7 +87,12 @@
                 <div class="remainder-game-prompt-card">
                     <div class="remainder-game-prompt-card__body">
                         <p class="remainder-game-prompt-card__label">Translate this</p>
-                        <p class="remainder-game-prompt-card__word">{{ $currentItem->prompt_text }}</p>
+                        <div class="remainder-game-prompt-card__word-row">
+                            <p class="remainder-game-prompt-card__word">{{ $currentItem->prompt_text }}</p>
+                            @if ($currentPartOfSpeechLabel)
+                                <span class="remainder-game-prompt-card__meta">({{ $currentPartOfSpeechLabel }})</span>
+                            @endif
+                        </div>
                     </div>
                 </div>
 

@@ -416,6 +416,31 @@ class RemainderGameTest extends TestCase
         $this->assertSame(1, $gameSession->correct_answers);
     }
 
+    public function test_game_screen_displays_part_of_speech_for_manual_and_choice_modes(): void
+    {
+        $manualUser = User::factory()->create();
+
+        $manualSession = $this->startGameForWords($manualUser, [
+            ['word' => 'apple', 'translation' => 'apple', 'part_of_speech' => 'cardinal'],
+        ]);
+
+        $this->actingAs($manualUser)
+            ->get(route('remainder.sessions.show', $manualSession))
+            ->assertOk()
+            ->assertSee('Cardinal');
+
+        $choiceUser = User::factory()->create();
+        $choiceSession = $this->startGameForWords($choiceUser, [
+            ['word' => 'phrase one', 'translation' => 'alpha', 'part_of_speech' => 'stable_expression'],
+            ['word' => 'phrase two', 'translation' => 'beta', 'part_of_speech' => 'stable_expression'],
+        ], GameSession::MODE_CHOICE);
+
+        $this->actingAs($choiceUser)
+            ->get(route('remainder.sessions.show', $choiceSession))
+            ->assertOk()
+            ->assertSee('Stable expression');
+    }
+
     public function test_manual_answer_is_checked_case_insensitively_and_last_answer_finishes_session(): void
     {
         $user = User::factory()->create();

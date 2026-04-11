@@ -7,6 +7,7 @@ use App\Models\GameSessionItem;
 use App\Services\Remainder\GameEngineService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Livewire\Component;
 
 class Show extends Component
@@ -35,6 +36,7 @@ class Show extends Component
 
         $engine = app(GameEngineService::class);
         $currentItem = null;
+        $currentPartOfSpeechLabel = null;
         $resultSummary = null;
         $progressLabel = null;
         $sessionWarnings = collect($this->gameSession->config_snapshot['warnings'] ?? [])
@@ -47,6 +49,8 @@ class Show extends Component
             $progressLabel = sprintf('Word %d of %d', $this->lastOrderIndex, $this->gameSession->total_words);
         } else {
             $currentItem = $engine->currentItem($this->gameSession);
+            $currentItem?->loadMissing('word');
+            $currentPartOfSpeechLabel = $this->partOfSpeechLabel($currentItem?->word?->part_of_speech);
             $progressLabel = $currentItem !== null
                 ? sprintf('Word %d of %d', $currentItem->order_index, $this->gameSession->total_words)
                 : null;
@@ -54,6 +58,7 @@ class Show extends Component
 
         return view('livewire.remainder.show', [
             'currentItem' => $currentItem,
+            'currentPartOfSpeechLabel' => $currentPartOfSpeechLabel,
             'progressLabel' => $progressLabel,
             'resultSummary' => $resultSummary,
             'gameNotice' => session('gameNotice'),
@@ -111,5 +116,26 @@ class Show extends Component
         $this->lastPromptText = '';
         $this->answer = '';
         $this->selectedChoice = '';
+    }
+
+    private function partOfSpeechLabel(?string $partOfSpeech): ?string
+    {
+        if ($partOfSpeech === null || trim($partOfSpeech) === '') {
+            return null;
+        }
+
+        return match ($partOfSpeech) {
+            'noun' => 'Noun',
+            'verb' => 'Verb',
+            'adjective' => 'Adjective',
+            'adverb' => 'Adverb',
+            'pronoun' => 'Pronoun',
+            'cardinal' => 'Cardinal',
+            'preposition' => 'Preposition',
+            'conjunction' => 'Conjunction',
+            'interjection' => 'Interjection',
+            'stable_expression' => 'Stable expression',
+            default => Str::headline(str_replace('_', ' ', $partOfSpeech)),
+        };
     }
 }
