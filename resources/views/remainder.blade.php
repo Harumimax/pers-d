@@ -151,9 +151,6 @@
                             </button>
                         </div>
 
-                        <p class="remainder-section__note" x-show="gameType === 'choice'" x-cloak>
-                            Multiple choice uses the prepared game snapshot. Some questions may show fewer than 6 options if the selected words do not contain enough unique answers.
-                        </p>
                     </section>
 
                     <section class="remainder-section" aria-labelledby="remainder-direction-title">

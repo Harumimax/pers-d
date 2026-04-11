@@ -5,16 +5,6 @@
         </div>
     @endif
 
-    @if ($sessionWarnings->isNotEmpty())
-        <div class="remainder-game-banners">
-            @foreach ($sessionWarnings as $warning)
-                <div class="remainder-game-banner remainder-game-banner--warning">
-                    {{ $warning }}
-                </div>
-            @endforeach
-        </div>
-    @endif
-
     @if ($gameSession->status === \App\Models\GameSession::STATUS_FINISHED)
         <section class="remainder-game-summary-card">
             <div class="remainder-game-summary-card__header">
@@ -92,12 +82,6 @@
                         <p class="remainder-game-prompt-card__word">{{ $currentItem->prompt_text }}</p>
                     </div>
                 </div>
-
-                @if ($currentItemOptionsWarning)
-                    <div class="remainder-game-banner remainder-game-banner--warning">
-                        {{ $currentItemOptionsWarning }}
-                    </div>
-                @endif
 
                 <form wire:submit="submitAnswer" class="remainder-game-form">
                     @if ($gameSession->mode === \App\Models\GameSession::MODE_CHOICE)

@@ -37,11 +37,6 @@ class Show extends Component
         $currentItem = null;
         $resultSummary = null;
         $progressLabel = null;
-        $sessionWarnings = collect($this->gameSession->config_snapshot['warnings'] ?? [])
-            ->map(static fn ($warning): string => (string) $warning)
-            ->filter()
-            ->values();
-        $currentItemOptionsWarning = null;
 
         if ($this->gameSession->status === GameSession::STATUS_FINISHED) {
             $resultSummary = $engine->resultSummary($this->gameSession);
@@ -52,19 +47,6 @@ class Show extends Component
             $progressLabel = $currentItem !== null
                 ? sprintf('Word %d of %d', $currentItem->order_index, $this->gameSession->total_words)
                 : null;
-
-            if (
-                $this->gameSession->mode === GameSession::MODE_CHOICE
-                && $currentItem !== null
-                && is_array($currentItem->options_json)
-                && count($currentItem->options_json) < 6
-            ) {
-                $currentItemOptionsWarning = sprintf(
-                    'This question has %d answer %s available.',
-                    count($currentItem->options_json),
-                    count($currentItem->options_json) === 1 ? 'option' : 'options',
-                );
-            }
         }
 
         return view('livewire.remainder.show', [
@@ -72,8 +54,6 @@ class Show extends Component
             'progressLabel' => $progressLabel,
             'resultSummary' => $resultSummary,
             'gameNotice' => session('gameNotice'),
-            'sessionWarnings' => $sessionWarnings,
-            'currentItemOptionsWarning' => $currentItemOptionsWarning,
         ]);
     }
 
