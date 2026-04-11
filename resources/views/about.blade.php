@@ -68,8 +68,20 @@
                                 <td><span class="about-status-badge about-status-badge--done">done</span></td>
                             </tr>
                             <tr>
+                                <td>Play Remainder sessions with manual translation input</td>
+                                <td><span class="about-status-badge about-status-badge--done">done</span></td>
+                            </tr>
+                            <tr>
+                                <td>Play Remainder sessions in multiple choice mode</td>
+                                <td><span class="about-status-badge about-status-badge--done">done</span></td>
+                            </tr>
+                            <tr>
+                                <td>Track personal Remainder statistics on the profile page</td>
+                                <td><span class="about-status-badge about-status-badge--done">done</span></td>
+                            </tr>
+                            <tr>
                                 <td>Create a word repetition mode</td>
-                                <td><span class="about-status-badge about-status-badge--progress">in progress</span></td>
+                                <td><span class="about-status-badge about-status-badge--done">done</span></td>
                             </tr>
                             <tr>
                                 <td>Create a Telegram bot</td>
@@ -97,7 +109,7 @@
                             </tr>
                             <tr>
                                 <td>Create a WordKeeper logo</td>
-                                <td><span class="about-status-badge about-status-badge--planning">planning</span></td>
+                                <td><span class="about-status-badge about-status-badge--done">done</span></td>
                             </tr>
                         </tbody>
                     </table>
