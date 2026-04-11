@@ -13,6 +13,7 @@ class GameSessionItem extends Model
         'order_index',
         'prompt_text',
         'correct_answer',
+        'options_json',
         'user_answer',
         'is_correct',
         'answered_at',
@@ -21,6 +22,7 @@ class GameSessionItem extends Model
     protected function casts(): array
     {
         return [
+            'options_json' => 'array',
             'is_correct' => 'boolean',
             'answered_at' => 'datetime',
         ];

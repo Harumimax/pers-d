@@ -54,7 +54,7 @@
 - `App\Livewire\Remainder\Show`
   - drives one active game session on the remainder game page
   - renders either the current question, immediate feedback, or the final result summary
-  - delegates answer checking and session transitions to `ManualGameEngineService`
+  - delegates answer checking and session transitions to `GameEngineService`
 
 ### Views and Layouts
 - Shared dictionaries layout: `resources/views/layouts/dictionaries.blade.php`
@@ -89,14 +89,17 @@
   - `TranslationResult`
   - `TranslationSuggestion`
 - Remainder game services live under `app/Services/Remainder`
-  - `PrepareManualGameService`
+  - `PrepareGameService`
     - validates dictionary ownership at the domain layer
     - collects words using the selected configuration
     - removes duplicates
     - creates the snapshot session and session items
-  - `ManualGameEngineService`
+  - `ChoiceOptionsBuilder`
+    - builds unique multiple choice options from the already selected snapshot word set
+    - persists up to 6 shuffled options per question
+  - `GameEngineService`
     - finds the current unanswered item
-    - checks manual answers
+    - checks manual answers and selected choice answers
     - updates progress counters and finished status
     - produces final result summaries
 
@@ -154,6 +157,7 @@
   - `order_index`
   - `prompt_text`
   - `correct_answer`
+  - `options_json`
   - `user_answer`
   - `is_correct`
   - `answered_at`
@@ -242,6 +246,7 @@
   - `order_index`
   - `prompt_text`
   - `correct_answer`
+  - `options_json` nullable jsonb
   - `user_answer` nullable
   - `is_correct` nullable
   - `answered_at` nullable
@@ -275,10 +280,9 @@
 - This is a known architectural tension and should be revisited only if reuse across dictionaries becomes a confirmed product feature
 
 ### Remainder Game Modes
-- Current implemented mode:
+- Current implemented modes:
   - `manual`
-- Planned but not implemented yet:
-  - `multiple choice`
+  - `choice`
 - Current direction values:
   - `foreign_to_ru`
   - `ru_to_foreign`
@@ -320,19 +324,21 @@
 - This is intended to suppress obvious English/Spanish noise from MyMemory
 - Additional semantic noise filtering may still be needed later
 
-## Remainder Manual Game Flow
+## Remainder Game Flow
 - Settings page (`/remainder`) uses Blade + Alpine for configuration UI
 - Start action posts configuration to `RemainderController@store`
-- `StartManualGameRequest` validates request shape
-- `PrepareManualGameService`:
+- `StartGameRequest` validates request shape
+- `PrepareGameService`:
   - verifies dictionary ownership
   - filters available words by selected dictionaries and parts of speech
   - deduplicates words across many-to-many dictionary selection
   - randomizes order
   - creates `GameSession`
   - creates `GameSessionItem` snapshot rows
+- if mode is `choice`, `ChoiceOptionsBuilder` also precomputes `options_json` for every session item from the same snapshot selection
 - Game page (`/remainder/sessions/{gameSession}`) renders a Blade shell with embedded `App\Livewire\Remainder\Show`
-- `ManualGameEngineService` validates and checks each manual answer, updates counters, and finishes the session after the last item
+- `GameEngineService` validates and checks each answer, updates counters, and finishes the session after the last item
+- choice-mode warnings about incomplete option sets are stored in `config_snapshot['warnings']` and shown on the game screen
 - Result screen is rendered by the same Livewire component when the session status becomes `finished`
 
 ## Important Implementation Notes
@@ -341,13 +347,15 @@
 - Dictionary header dropdown data is passed from Livewire/controllers into the layout; the layout should not query dictionaries directly
 - External API access should continue to go through service abstractions, not be embedded into Livewire components
 - Remainder game sessions always use snapshot semantics: once a game is created, item order and answers are read from `game_session_items`, not recalculated from live dictionary data
+- multiple choice distractors are built only from the already selected snapshot words, never from live dictionary queries during play
 
 ## Key Files To Read First
 - `routes/web.php`
 - `app/Http/Controllers/RemainderController.php`
 - `app/Livewire/Remainder/Show.php`
-- `app/Services/Remainder/PrepareManualGameService.php`
-- `app/Services/Remainder/ManualGameEngineService.php`
+- `app/Services/Remainder/PrepareGameService.php`
+- `app/Services/Remainder/ChoiceOptionsBuilder.php`
+- `app/Services/Remainder/GameEngineService.php`
 - `app/Models/GameSession.php`
 - `app/Models/GameSessionItem.php`
 - `resources/views/remainder.blade.php`

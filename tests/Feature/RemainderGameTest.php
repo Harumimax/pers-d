@@ -188,23 +188,179 @@ class RemainderGameTest extends TestCase
         $this->assertDatabaseCount('game_sessions', 0);
     }
 
-    public function test_choice_mode_cannot_start_a_game(): void
+    public function test_authenticated_user_can_start_choice_game(): void
     {
         $user = User::factory()->create();
         $dictionary = $this->createDictionaryForUser($user, 'English Core', 'English');
-        $this->attachWord($dictionary, 'apple', 'apple', 'noun');
+        $this->attachWord($dictionary, 'apple', 'red', 'noun');
+        $this->attachWord($dictionary, 'book', 'blue', 'noun');
+        $this->attachWord($dictionary, 'cloud', 'green', 'noun');
 
-        $response = $this->actingAs($user)->from(route('remainder'))->post(route('remainder.sessions.store'), [
-            'mode' => 'choice',
+        $response = $this->actingAs($user)->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_CHOICE,
             'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
             'dictionary_ids' => [$dictionary->id],
             'parts_of_speech' => ['all'],
-            'words_count' => 5,
+            'words_count' => 3,
+        ]);
+
+        $gameSession = GameSession::query()->firstOrFail();
+
+        $response->assertRedirect(route('remainder.sessions.show', $gameSession));
+        $this->assertSame(GameSession::MODE_CHOICE, $gameSession->mode);
+        $this->assertSame(3, $gameSession->items()->count());
+    }
+
+    public function test_choice_game_uses_existing_dictionary_ownership_restrictions(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $foreignDictionary = $this->createDictionaryForUser($otherUser, 'Private', 'English');
+        $this->attachWord($foreignDictionary, 'secret', 'red', 'noun');
+        $this->attachWord($foreignDictionary, 'hidden', 'blue', 'noun');
+
+        $response = $this->actingAs($user)->from(route('remainder'))->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_CHOICE,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'dictionary_ids' => [$foreignDictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 2,
         ]);
 
         $response->assertRedirect(route('remainder'));
-        $response->assertSessionHasErrors('mode');
+        $response->assertSessionHasErrors('dictionary_ids');
         $this->assertDatabaseCount('game_sessions', 0);
+    }
+
+    public function test_choice_items_store_options_without_duplicates_and_include_correct_answer(): void
+    {
+        $user = User::factory()->create();
+        $gameSession = $this->startGameForWords($user, [
+            ['word' => 'apple', 'translation' => 'red', 'part_of_speech' => 'noun'],
+            ['word' => 'book', 'translation' => 'blue', 'part_of_speech' => 'noun'],
+            ['word' => 'cloud', 'translation' => 'green', 'part_of_speech' => 'noun'],
+            ['word' => 'desk', 'translation' => 'yellow', 'part_of_speech' => 'noun'],
+            ['word' => 'earth', 'translation' => 'orange', 'part_of_speech' => 'noun'],
+            ['word' => 'flame', 'translation' => 'violet', 'part_of_speech' => 'noun'],
+        ], GameSession::MODE_CHOICE);
+
+        foreach ($gameSession->items as $item) {
+            $this->assertIsArray($item->options_json);
+            $this->assertContains($item->correct_answer, $item->options_json);
+            $this->assertCount(count(array_unique($item->options_json)), $item->options_json);
+            $this->assertCount(6, $item->options_json);
+        }
+    }
+
+    public function test_choice_game_does_not_fail_when_there_are_fewer_than_six_unique_options_and_warning_is_visible(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = $this->createDictionaryForUser($user, 'Compact deck', 'English');
+        $this->attachWord($dictionary, 'apple', 'red', 'noun');
+        $this->attachWord($dictionary, 'book', 'blue', 'noun');
+        $this->attachWord($dictionary, 'cloud', 'green', 'noun');
+
+        $response = $this->actingAs($user)->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_CHOICE,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'dictionary_ids' => [$dictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 3,
+        ]);
+
+        $gameSession = GameSession::query()->firstOrFail();
+        $warnings = $gameSession->config_snapshot['warnings'] ?? [];
+
+        $response->assertRedirect(route('remainder.sessions.show', $gameSession));
+        $this->assertNotEmpty($warnings);
+
+        foreach ($gameSession->items as $item) {
+            $this->assertLessThan(6, count($item->options_json));
+            $this->assertGreaterThanOrEqual(2, count($item->options_json));
+        }
+
+        $this->actingAs($user)
+            ->get(route('remainder.sessions.show', $gameSession))
+            ->assertOk()
+            ->assertSee('Only 3 answer options were available for some questions because the selected words did not contain enough unique answers.');
+    }
+
+    public function test_choice_game_is_not_created_if_it_cannot_build_two_unique_options(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = $this->createDictionaryForUser($user, 'Too small', 'English');
+        $this->attachWord($dictionary, 'apple', 'same', 'noun');
+        $this->attachWord($dictionary, 'book', 'same', 'noun');
+
+        $response = $this->actingAs($user)->from(route('remainder'))->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_CHOICE,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'dictionary_ids' => [$dictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 2,
+        ]);
+
+        $response->assertRedirect(route('remainder'));
+        $response->assertSessionHasErrors('dictionary_ids');
+        $this->assertDatabaseCount('game_sessions', 0);
+    }
+
+    public function test_choice_answer_is_recorded_as_correct_when_selected_option_matches(): void
+    {
+        $user = User::factory()->create();
+        $gameSession = $this->startGameForWords($user, [
+            ['word' => 'apple', 'translation' => 'red', 'part_of_speech' => 'noun'],
+            ['word' => 'book', 'translation' => 'blue', 'part_of_speech' => 'noun'],
+        ], GameSession::MODE_CHOICE);
+
+        $firstItem = $gameSession->items()->orderBy('order_index')->firstOrFail();
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['gameSession' => $gameSession])
+            ->set('selectedChoice', $firstItem->correct_answer)
+            ->call('submitAnswer')
+            ->assertSet('showFeedback', true);
+
+        $firstItem->refresh();
+        $gameSession->refresh();
+
+        $this->assertTrue((bool) $firstItem->is_correct);
+        $this->assertSame($firstItem->correct_answer, $firstItem->user_answer);
+        $this->assertSame(1, $gameSession->correct_answers);
+    }
+
+    public function test_choice_answer_is_recorded_as_incorrect_when_selected_option_does_not_match_and_last_answer_finishes_session(): void
+    {
+        $user = User::factory()->create();
+        $gameSession = $this->startGameForWords($user, [
+            ['word' => 'apple', 'translation' => 'red', 'part_of_speech' => 'noun'],
+            ['word' => 'book', 'translation' => 'blue', 'part_of_speech' => 'noun'],
+        ], GameSession::MODE_CHOICE);
+
+        $items = $gameSession->items()->orderBy('order_index')->get();
+        $firstItem = $items[0];
+        $secondItem = $items[1];
+        $wrongOption = collect($secondItem->options_json)
+            ->first(fn (string $option): bool => $option !== $secondItem->correct_answer);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['gameSession' => $gameSession])
+            ->set('selectedChoice', $firstItem->correct_answer)
+            ->call('submitAnswer')
+            ->call('continueToNext')
+            ->set('selectedChoice', $wrongOption)
+            ->call('submitAnswer')
+            ->assertSet('showFeedback', false);
+
+        $gameSession->refresh();
+        $firstItem->refresh();
+        $secondItem->refresh();
+
+        $this->assertSame(GameSession::STATUS_FINISHED, $gameSession->status);
+        $this->assertTrue((bool) $firstItem->is_correct);
+        $this->assertFalse((bool) $secondItem->is_correct);
+        $this->assertSame($wrongOption, $secondItem->user_answer);
+        $this->assertSame(1, $gameSession->correct_answers);
     }
 
     public function test_manual_answer_is_checked_case_insensitively_and_last_answer_finishes_session(): void
@@ -277,7 +433,7 @@ class RemainderGameTest extends TestCase
     /**
      * @param array<int, array{word:string,translation:string,part_of_speech:?string}> $words
      */
-    private function startGameForWords(User $user, array $words): GameSession
+    private function startGameForWords(User $user, array $words, string $mode = GameSession::MODE_MANUAL): GameSession
     {
         $dictionary = $this->createDictionaryForUser($user, 'Training deck', 'English');
 
@@ -291,7 +447,7 @@ class RemainderGameTest extends TestCase
         }
 
         $this->actingAs($user)->post(route('remainder.sessions.store'), [
-            'mode' => GameSession::MODE_MANUAL,
+            'mode' => $mode,
             'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
             'dictionary_ids' => [$dictionary->id],
             'parts_of_speech' => ['all'],

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StartManualGameRequest;
+use App\Http\Requests\StartGameRequest;
 use App\Models\GameSession;
 use App\Models\UserDictionary;
-use App\Services\Remainder\PrepareManualGameService;
+use App\Services\Remainder\PrepareGameService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,9 +26,9 @@ class RemainderController extends Controller
         ]);
     }
 
-    public function store(StartManualGameRequest $request, PrepareManualGameService $prepareManualGameService): RedirectResponse
+    public function store(StartGameRequest $request, PrepareGameService $prepareGameService): RedirectResponse
     {
-        $result = $prepareManualGameService->prepare($request->user(), $request->validated());
+        $result = $prepareGameService->prepare($request->user(), $request->validated());
 
         $redirect = redirect()->route('remainder.sessions.show', $result['gameSession']);
 

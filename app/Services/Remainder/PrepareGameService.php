@@ -10,7 +10,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
-class PrepareManualGameService
+class PrepareGameService
 {
     /**
      * @param array{mode:string,direction:string,dictionary_ids:array<int,int|string>,parts_of_speech:array<int,string>,words_count:int} $config
@@ -64,11 +64,39 @@ class PrepareManualGameService
             );
         }
 
+        $baseItemPayloads = $selectedWords
+            ->values()
+            ->map(function (Word $word, int $index) use ($config): array {
+                return [
+                    'word_id' => $word->id,
+                    'order_index' => $index + 1,
+                    'prompt_text' => $config['direction'] === GameSession::DIRECTION_FOREIGN_TO_RU
+                        ? $word->word
+                        : $word->translation,
+                    'correct_answer' => $config['direction'] === GameSession::DIRECTION_FOREIGN_TO_RU
+                        ? $word->translation
+                        : $word->word,
+                    'options_json' => null,
+                    'user_answer' => null,
+                    'is_correct' => null,
+                    'answered_at' => null,
+                ];
+            });
+
+        $warnings = [];
+        $itemPayloads = $baseItemPayloads;
+
+        if ($config['mode'] === GameSession::MODE_CHOICE) {
+            $choicePayload = app(ChoiceOptionsBuilder::class)->build($baseItemPayloads);
+            $itemPayloads = $choicePayload['items'];
+            $warnings = $choicePayload['warnings'];
+        }
+
         /** @var GameSession $gameSession */
-        $gameSession = DB::transaction(function () use ($user, $config, $dictionaryIds, $partsOfSpeech, $requestedWordsCount, $selectedWords): GameSession {
+        $gameSession = DB::transaction(function () use ($user, $config, $dictionaryIds, $partsOfSpeech, $requestedWordsCount, $selectedWords, $warnings, $itemPayloads): GameSession {
             $session = GameSession::create([
                 'user_id' => $user->id,
-                'mode' => GameSession::MODE_MANUAL,
+                'mode' => $config['mode'],
                 'direction' => $config['direction'],
                 'total_words' => $selectedWords->count(),
                 'correct_answers' => 0,
@@ -76,31 +104,32 @@ class PrepareManualGameService
                 'started_at' => now(),
                 'finished_at' => null,
                 'config_snapshot' => [
-                    'mode' => GameSession::MODE_MANUAL,
+                    'mode' => $config['mode'],
                     'direction' => $config['direction'],
                     'requested_words_count' => $requestedWordsCount,
                     'actual_words_count' => $selectedWords->count(),
                     'dictionary_ids' => $dictionaryIds,
                     'parts_of_speech' => $partsOfSpeech,
+                    'warnings' => $warnings,
+                    'options_target_count' => $config['mode'] === GameSession::MODE_CHOICE ? 6 : null,
                 ],
             ]);
 
-            $items = $selectedWords
+            $items = $itemPayloads
                 ->values()
-                ->map(function (Word $word, int $index) use ($session, $config): array {
+                ->map(function (array $item) use ($session): array {
                     return [
                         'game_session_id' => $session->id,
-                        'word_id' => $word->id,
-                        'order_index' => $index + 1,
-                        'prompt_text' => $config['direction'] === GameSession::DIRECTION_FOREIGN_TO_RU
-                            ? $word->word
-                            : $word->translation,
-                        'correct_answer' => $config['direction'] === GameSession::DIRECTION_FOREIGN_TO_RU
-                            ? $word->translation
-                            : $word->word,
-                        'user_answer' => null,
-                        'is_correct' => null,
-                        'answered_at' => null,
+                        'word_id' => $item['word_id'],
+                        'order_index' => $item['order_index'],
+                        'prompt_text' => $item['prompt_text'],
+                        'correct_answer' => $item['correct_answer'],
+                        'options_json' => $item['options_json'] !== null
+                            ? json_encode($item['options_json'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+                            : null,
+                        'user_answer' => $item['user_answer'],
+                        'is_correct' => $item['is_correct'],
+                        'answered_at' => $item['answered_at'],
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];

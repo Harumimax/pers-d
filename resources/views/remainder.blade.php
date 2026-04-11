@@ -147,12 +147,12 @@
                                 @click="gameType = 'choice'"
                             >
                                 <span class="remainder-option-card__title">Choose from 6 options</span>
-                                <span class="remainder-option-card__meta">This mode is planned next and is not available yet.</span>
+                                <span class="remainder-option-card__meta">See up to 6 prepared answer options for each word and choose the correct one.</span>
                             </button>
                         </div>
 
                         <p class="remainder-section__note" x-show="gameType === 'choice'" x-cloak>
-                            Multiple choice mode will be added later. Manual translation input is available now.
+                            Multiple choice uses the prepared game snapshot. Some questions may show fewer than 6 options if the selected words do not contain enough unique answers.
                         </p>
                     </section>
 
@@ -281,12 +281,7 @@
                 </div>
 
                 <footer class="remainder-actions">
-                    <button
-                        type="submit"
-                        class="btn btn-primary remainder-actions__start"
-                        :disabled="gameType !== 'manual'"
-                        :class="{ 'remainder-actions__start--disabled': gameType !== 'manual' }"
-                    >
+                    <button type="submit" class="btn btn-primary remainder-actions__start">
                         Start
                     </button>
                     <button type="button" class="btn btn-secondary remainder-actions__reset" @click="resetSettings()">Reset</button>

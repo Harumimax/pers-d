@@ -5,6 +5,16 @@
         </div>
     @endif
 
+    @if ($sessionWarnings->isNotEmpty())
+        <div class="remainder-game-banners">
+            @foreach ($sessionWarnings as $warning)
+                <div class="remainder-game-banner remainder-game-banner--warning">
+                    {{ $warning }}
+                </div>
+            @endforeach
+        </div>
+    @endif
+
     @if ($gameSession->status === \App\Models\GameSession::STATUS_FINISHED)
         <section class="remainder-game-summary-card">
             <div class="remainder-game-summary-card__header">
@@ -46,7 +56,9 @@
         <section class="remainder-game-card">
             <header class="remainder-game-card__header">
                 <div>
-                    <p class="remainder-game-eyebrow">Manual translation input</p>
+                    <p class="remainder-game-eyebrow">
+                        {{ $gameSession->mode === \App\Models\GameSession::MODE_CHOICE ? 'Multiple choice' : 'Manual translation input' }}
+                    </p>
                     <h1 class="remainder-game-title">Remainder</h1>
                 </div>
                 @if ($progressLabel)
@@ -81,20 +93,48 @@
                     </div>
                 </div>
 
-                <form wire:submit="submitAnswer" class="remainder-game-form">
-                    <div class="remainder-game-field">
-                        <label for="manual-answer" class="remainder-game-label">Your translation</label>
-                        <input
-                            id="manual-answer"
-                            type="text"
-                            wire:model.defer="answer"
-                            class="remainder-game-input"
-                            autocomplete="off"
-                        >
-                        @error('answer')
-                            <p class="remainder-game-error">{{ $message }}</p>
-                        @enderror
+                @if ($currentItemOptionsWarning)
+                    <div class="remainder-game-banner remainder-game-banner--warning">
+                        {{ $currentItemOptionsWarning }}
                     </div>
+                @endif
+
+                <form wire:submit="submitAnswer" class="remainder-game-form">
+                    @if ($gameSession->mode === \App\Models\GameSession::MODE_CHOICE)
+                        <div class="remainder-game-field">
+                            <span class="remainder-game-label">Choose the correct answer</span>
+
+                            <div class="remainder-game-choice-grid">
+                                @foreach (($currentItem->options_json ?? []) as $option)
+                                    <button
+                                        type="button"
+                                        class="remainder-game-choice-option {{ $selectedChoice === $option ? 'remainder-game-choice-option--active' : '' }}"
+                                        wire:click="$set('selectedChoice', @js($option))"
+                                    >
+                                        {{ $option }}
+                                    </button>
+                                @endforeach
+                            </div>
+
+                            @error('selectedChoice')
+                                <p class="remainder-game-error">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    @else
+                        <div class="remainder-game-field">
+                            <label for="manual-answer" class="remainder-game-label">Your translation</label>
+                            <input
+                                id="manual-answer"
+                                type="text"
+                                wire:model.defer="answer"
+                                class="remainder-game-input"
+                                autocomplete="off"
+                            >
+                            @error('answer')
+                                <p class="remainder-game-error">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    @endif
 
                     <div class="remainder-game-form__actions">
                         <button type="submit" class="btn btn-primary remainder-game-action-btn">Submit</button>

@@ -7,7 +7,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class StartManualGameRequest extends FormRequest
+class StartGameRequest extends FormRequest
 {
     private const PARTS_OF_SPEECH = [
         'all',
@@ -48,7 +48,10 @@ class StartManualGameRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'mode' => ['required', 'string', Rule::in([GameSession::MODE_MANUAL])],
+            'mode' => ['required', 'string', Rule::in([
+                GameSession::MODE_MANUAL,
+                GameSession::MODE_CHOICE,
+            ])],
             'direction' => ['required', 'string', Rule::in([
                 GameSession::DIRECTION_FOREIGN_TO_RU,
                 GameSession::DIRECTION_RU_TO_FOREIGN,
@@ -67,7 +70,6 @@ class StartManualGameRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'mode.in' => 'Only manual translation input is available right now.',
             'dictionary_ids.required' => 'Choose at least one dictionary to start the game.',
             'words_count.max' => 'Words count cannot be greater than 20.',
         ];

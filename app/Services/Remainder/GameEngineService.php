@@ -8,7 +8,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
-class ManualGameEngineService
+class GameEngineService
 {
     private const ZERO_WIDTH_CHARACTER_PATTERN = '/[\x{200B}\x{200C}\x{200D}\x{2060}\x{FEFF}]/u';
 
@@ -25,16 +25,8 @@ class ManualGameEngineService
      */
     public function submitAnswer(GameSession $gameSession, string $answer): array
     {
-        $sanitizedAnswer = $this->sanitizeAnswer($answer);
-
-        if ($sanitizedAnswer === '') {
-            throw ValidationException::withMessages([
-                'answer' => 'Enter your translation before submitting.',
-            ]);
-        }
-
         /** @var array{item: GameSessionItem, finished: bool} $result */
-        $result = DB::transaction(function () use ($gameSession, $sanitizedAnswer): array {
+        $result = DB::transaction(function () use ($gameSession, $answer): array {
             /** @var GameSession $session */
             $session = GameSession::query()
                 ->whereKey($gameSession->id)
@@ -66,10 +58,10 @@ class ManualGameEngineService
                 ]);
             }
 
-            $isCorrect = $this->normalizeForComparison($sanitizedAnswer) === $this->normalizeForComparison($currentItem->correct_answer);
+            [$storedAnswer, $isCorrect] = $this->evaluateAnswer($session, $currentItem, $answer);
 
             $currentItem->forceFill([
-                'user_answer' => $sanitizedAnswer,
+                'user_answer' => $storedAnswer,
                 'is_correct' => $isCorrect,
                 'answered_at' => now(),
             ])->save();
@@ -115,6 +107,50 @@ class ManualGameEngineService
             'correct_answers' => (int) $gameSession->correct_answers,
             'total_words' => (int) $gameSession->total_words,
             'incorrect_items' => $incorrectItems,
+        ];
+    }
+
+    /**
+     * @return array{0: string, 1: bool}
+     */
+    private function evaluateAnswer(GameSession $gameSession, GameSessionItem $currentItem, string $answer): array
+    {
+        if ($gameSession->mode === GameSession::MODE_CHOICE) {
+            $selectedChoice = $this->sanitizeAnswer($answer);
+
+            if ($selectedChoice === '') {
+                throw ValidationException::withMessages([
+                    'selectedChoice' => 'Choose one answer option before submitting.',
+                ]);
+            }
+
+            $options = collect($currentItem->options_json ?? [])
+                ->map(static fn ($option): string => (string) $option)
+                ->values();
+
+            if (! $options->contains($selectedChoice)) {
+                throw ValidationException::withMessages([
+                    'selectedChoice' => 'Choose one of the available answer options.',
+                ]);
+            }
+
+            return [
+                $selectedChoice,
+                $selectedChoice === $currentItem->correct_answer,
+            ];
+        }
+
+        $sanitizedAnswer = $this->sanitizeAnswer($answer);
+
+        if ($sanitizedAnswer === '') {
+            throw ValidationException::withMessages([
+                'answer' => 'Enter your translation before submitting.',
+            ]);
+        }
+
+        return [
+            $sanitizedAnswer,
+            $this->normalizeForComparison($sanitizedAnswer) === $this->normalizeForComparison($currentItem->correct_answer),
         ];
     }
 

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class GameSession extends Model
 {
     public const MODE_MANUAL = 'manual';
+    public const MODE_CHOICE = 'choice';
     public const DIRECTION_FOREIGN_TO_RU = 'foreign_to_ru';
     public const DIRECTION_RU_TO_FOREIGN = 'ru_to_foreign';
     public const STATUS_ACTIVE = 'active';
