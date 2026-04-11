@@ -104,6 +104,10 @@
     margin-bottom: 26px;
 }
 
+.profile-page-header--spacious {
+    margin-top: 40px;
+}
+
 .profile-title {
     margin: 0;
     font-size: 3rem;
@@ -118,6 +122,11 @@
     border-radius: 16px;
     background: var(--bg-color);
     padding: 28px;
+}
+
+.profile-statistics-card {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.96) 100%);
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.05);
 }
 
 .profile-card--danger {
@@ -149,6 +158,46 @@
     font-size: 1rem;
     line-height: 1.5;
     color: var(--muted-color);
+}
+
+.profile-statistics-table-wrap {
+    overflow-x: auto;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 16px;
+    background: #fff;
+}
+
+.profile-statistics-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.profile-statistics-table th,
+.profile-statistics-table td {
+    padding: 18px 20px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+    text-align: left;
+    vertical-align: middle;
+}
+
+.profile-statistics-table tr:last-child th,
+.profile-statistics-table tr:last-child td {
+    border-bottom: 0;
+}
+
+.profile-statistics-table th {
+    width: 48%;
+    font-size: 0.96rem;
+    font-weight: 700;
+    color: var(--text-color);
+    background: rgba(248, 250, 252, 0.8);
+}
+
+.profile-statistics-table td {
+    font-size: 0.98rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.95);
 }
 
 .profile-form {
@@ -320,6 +369,11 @@
         padding: 22px;
     }
 
+    .profile-statistics-table th,
+    .profile-statistics-table td {
+        padding: 16px 18px;
+    }
+
     .profile-actions {
         flex-direction: column;
         align-items: stretch;
@@ -364,6 +418,23 @@
 
     .profile-section__title {
         font-size: 1.65rem;
+    }
+
+    .profile-statistics-table th,
+    .profile-statistics-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .profile-statistics-table th {
+        padding-bottom: 6px;
+        border-bottom: 0;
+        background: rgba(248, 250, 252, 0.92);
+    }
+
+    .profile-statistics-table td {
+        padding-top: 0;
+        padding-bottom: 18px;
     }
 
     .profile-modal-actions {

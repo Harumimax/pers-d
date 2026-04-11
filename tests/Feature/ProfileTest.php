@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\GameSession;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
@@ -50,7 +51,7 @@ class ProfileTest extends TestCase
 
         $word = Word::create([
             'word' => 'apple',
-            'translation' => 'ÿáëîêî',
+            'translation' => 'ÑÐ±Ð»Ð¾ÐºÐ¾',
             'part_of_speech' => 'noun',
             'comment' => 'fruit',
         ]);
@@ -117,6 +118,87 @@ class ProfileTest extends TestCase
             ->get('/profile');
 
         $response->assertOk();
+    }
+
+    public function test_profile_page_displays_remainder_statistics_for_finished_sessions(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        GameSession::create([
+            'user_id' => $user->id,
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'total_words' => 10,
+            'correct_answers' => 7,
+            'status' => GameSession::STATUS_FINISHED,
+            'started_at' => '2026-04-01 10:00:00',
+            'finished_at' => '2026-04-01 10:10:00',
+            'config_snapshot' => ['mode' => GameSession::MODE_MANUAL],
+        ]);
+
+        GameSession::create([
+            'user_id' => $user->id,
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_RU_TO_FOREIGN,
+            'total_words' => 8,
+            'correct_answers' => 5,
+            'status' => GameSession::STATUS_FINISHED,
+            'started_at' => '2026-04-04 10:00:00',
+            'finished_at' => '2026-04-04 10:08:00',
+            'config_snapshot' => ['mode' => GameSession::MODE_MANUAL],
+        ]);
+
+        GameSession::create([
+            'user_id' => $user->id,
+            'mode' => GameSession::MODE_CHOICE,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'total_words' => 12,
+            'correct_answers' => 9,
+            'status' => GameSession::STATUS_FINISHED,
+            'started_at' => '2026-04-06 10:00:00',
+            'finished_at' => '2026-04-06 10:09:00',
+            'config_snapshot' => ['mode' => GameSession::MODE_CHOICE],
+        ]);
+
+        GameSession::create([
+            'user_id' => $user->id,
+            'mode' => GameSession::MODE_CHOICE,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'total_words' => 20,
+            'correct_answers' => 14,
+            'status' => GameSession::STATUS_ACTIVE,
+            'started_at' => '2026-04-09 10:00:00',
+            'finished_at' => null,
+            'config_snapshot' => ['mode' => GameSession::MODE_CHOICE],
+        ]);
+
+        GameSession::create([
+            'user_id' => $otherUser->id,
+            'mode' => GameSession::MODE_CHOICE,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'total_words' => 50,
+            'correct_answers' => 50,
+            'status' => GameSession::STATUS_FINISHED,
+            'started_at' => '2026-04-07 10:00:00',
+            'finished_at' => '2026-04-07 10:20:00',
+            'config_snapshot' => ['mode' => GameSession::MODE_CHOICE],
+        ]);
+
+        $this->actingAs($user)
+            ->get('/profile')
+            ->assertOk()
+            ->assertSee('Remainder Statistic')
+            ->assertSee('Completed sessions')
+            ->assertSee('3')
+            ->assertSee('01 Apr 2026')
+            ->assertSee('06 Apr 2026')
+            ->assertSee('Manual translation input')
+            ->assertSee('Foreign language to Russian')
+            ->assertSee('30')
+            ->assertSee('21')
+            ->assertSee('9')
+            ->assertSee('70%');
     }
 
     public function test_profile_information_can_be_updated(): void
