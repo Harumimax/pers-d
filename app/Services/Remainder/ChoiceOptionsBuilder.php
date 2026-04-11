@@ -12,12 +12,12 @@ class ChoiceOptionsBuilder
 
     /**
      * @param Collection<int, array<string, mixed>> $itemPayloads
+     * @param Collection<int, string> $availableAnswers
      * @return array{items: Collection<int, array<string, mixed>>, warnings: array<int, string>}
      */
-    public function build(Collection $itemPayloads): array
+    public function build(Collection $itemPayloads, Collection $availableAnswers): array
     {
-        $normalizedAnswerMap = $itemPayloads
-            ->pluck('correct_answer')
+        $normalizedAnswerMap = $availableAnswers
             ->map(function ($answer): array {
                 $answer = (string) $answer;
 
@@ -32,7 +32,7 @@ class ChoiceOptionsBuilder
 
         if ($normalizedAnswerMap->count() < 2) {
             throw ValidationException::withMessages([
-                'dictionary_ids' => 'Multiple choice mode requires at least 2 unique answers in the selected word set.',
+                'dictionary_ids' => 'Multiple choice mode requires at least 2 unique answers in the selected dictionaries and filters.',
             ]);
         }
 
@@ -40,7 +40,7 @@ class ChoiceOptionsBuilder
 
         if ($normalizedAnswerMap->count() < self::OPTIONS_TARGET_COUNT) {
             $warnings[] = sprintf(
-                'Only %d answer %s were available for some questions because the selected words did not contain enough unique answers.',
+                'Only %d answer %s were available for some questions because the selected dictionaries and filters did not contain enough unique answers.',
                 $normalizedAnswerMap->count(),
                 $normalizedAnswerMap->count() === 1 ? 'option' : 'options',
             );

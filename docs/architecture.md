@@ -95,7 +95,7 @@
     - removes duplicates
     - creates the snapshot session and session items
   - `ChoiceOptionsBuilder`
-    - builds unique multiple choice options from the already selected snapshot word set
+    - builds unique multiple choice options from the full filtered answer pool used to prepare the session
     - persists up to 6 shuffled options per question
   - `GameEngineService`
     - finds the current unanswered item
@@ -335,7 +335,7 @@
   - randomizes order
   - creates `GameSession`
   - creates `GameSessionItem` snapshot rows
-- if mode is `choice`, `ChoiceOptionsBuilder` also precomputes `options_json` for every session item from the same snapshot selection
+- if mode is `choice`, `ChoiceOptionsBuilder` also precomputes `options_json` for every session item from the full filtered answer pool, while `words_count` still controls only the number of rounds
 - Game page (`/remainder/sessions/{gameSession}`) renders a Blade shell with embedded `App\Livewire\Remainder\Show`
 - `GameEngineService` validates and checks each answer, updates counters, and finishes the session after the last item
 - choice-mode warnings about incomplete option sets are stored in `config_snapshot['warnings']` and shown on the game screen
@@ -347,7 +347,7 @@
 - Dictionary header dropdown data is passed from Livewire/controllers into the layout; the layout should not query dictionaries directly
 - External API access should continue to go through service abstractions, not be embedded into Livewire components
 - Remainder game sessions always use snapshot semantics: once a game is created, item order and answers are read from `game_session_items`, not recalculated from live dictionary data
-- multiple choice distractors are built only from the already selected snapshot words, never from live dictionary queries during play
+- multiple choice distractors are built from the full filtered answer pool captured during preparation, never from live dictionary queries during play
 
 ## Key Files To Read First
 - `routes/web.php`

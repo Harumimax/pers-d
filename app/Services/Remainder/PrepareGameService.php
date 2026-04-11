@@ -87,7 +87,15 @@ class PrepareGameService
         $itemPayloads = $baseItemPayloads;
 
         if ($config['mode'] === GameSession::MODE_CHOICE) {
-            $choicePayload = app(ChoiceOptionsBuilder::class)->build($baseItemPayloads);
+            $availableAnswers = $availableWords
+                ->map(function (Word $word) use ($config): string {
+                    return $config['direction'] === GameSession::DIRECTION_FOREIGN_TO_RU
+                        ? $word->translation
+                        : $word->word;
+                })
+                ->values();
+
+            $choicePayload = app(ChoiceOptionsBuilder::class)->build($baseItemPayloads, $availableAnswers);
             $itemPayloads = $choicePayload['items'];
             $warnings = $choicePayload['warnings'];
         }

@@ -37,6 +37,9 @@ class Show extends Component
         $currentItem = null;
         $resultSummary = null;
         $progressLabel = null;
+        $sessionWarnings = collect($this->gameSession->config_snapshot['warnings'] ?? [])
+            ->filter(static fn ($warning): bool => is_string($warning) && trim($warning) !== '')
+            ->values();
 
         if ($this->gameSession->status === GameSession::STATUS_FINISHED) {
             $resultSummary = $engine->resultSummary($this->gameSession);
@@ -54,6 +57,7 @@ class Show extends Component
             'progressLabel' => $progressLabel,
             'resultSummary' => $resultSummary,
             'gameNotice' => session('gameNotice'),
+            'sessionWarnings' => $sessionWarnings,
         ]);
     }
 

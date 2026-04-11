@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Livewire\Remainder\Show;
 use App\Models\GameSession;
+use App\Models\GameSessionItem;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
@@ -252,7 +253,55 @@ class RemainderGameTest extends TestCase
         }
     }
 
-    public function test_choice_game_does_not_fail_when_there_are_fewer_than_six_unique_options_and_warning_is_visible(): void
+    public function test_choice_options_use_the_full_filtered_answer_pool_and_not_only_the_selected_round_words(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = $this->createDictionaryForUser($user, 'Wide pool', 'English');
+
+        $words = [
+            ['word' => 'word-1', 'translation' => 'answer-1', 'part_of_speech' => 'noun'],
+            ['word' => 'word-2', 'translation' => 'answer-2', 'part_of_speech' => 'noun'],
+            ['word' => 'word-3', 'translation' => 'answer-3', 'part_of_speech' => 'noun'],
+            ['word' => 'word-4', 'translation' => 'answer-4', 'part_of_speech' => 'noun'],
+            ['word' => 'word-5', 'translation' => 'answer-5', 'part_of_speech' => 'noun'],
+            ['word' => 'word-6', 'translation' => 'answer-6', 'part_of_speech' => 'noun'],
+            ['word' => 'word-7', 'translation' => 'answer-7', 'part_of_speech' => 'noun'],
+            ['word' => 'word-8', 'translation' => 'answer-8', 'part_of_speech' => 'noun'],
+            ['word' => 'word-9', 'translation' => 'answer-9', 'part_of_speech' => 'noun'],
+            ['word' => 'word-10', 'translation' => 'answer-10', 'part_of_speech' => 'noun'],
+        ];
+
+        foreach ($words as $wordData) {
+            $this->attachWord($dictionary, $wordData['word'], $wordData['translation'], $wordData['part_of_speech']);
+        }
+
+        $this->actingAs($user)->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_CHOICE,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'dictionary_ids' => [$dictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 4,
+        ]);
+
+        $gameSession = GameSession::query()->firstOrFail();
+        $questionAnswers = $gameSession->items->pluck('correct_answer')->all();
+        $fullAnswerPool = collect($words)->pluck('translation')->all();
+
+        $this->assertCount(4, $questionAnswers);
+
+        $usedExternalDistractor = $gameSession->items->contains(function (GameSessionItem $item) use ($questionAnswers, $fullAnswerPool): bool {
+            $distractors = collect($item->options_json)
+                ->reject(fn (string $option): bool => $option === $item->correct_answer);
+
+            return $distractors->contains(function (string $option) use ($questionAnswers, $fullAnswerPool): bool {
+                return in_array($option, $fullAnswerPool, true) && ! in_array($option, $questionAnswers, true);
+            });
+        });
+
+        $this->assertTrue($usedExternalDistractor);
+    }
+
+    public function test_choice_game_does_not_fail_when_there_are_fewer_than_six_unique_options_and_warning_is_formed(): void
     {
         $user = User::factory()->create();
         $dictionary = $this->createDictionaryForUser($user, 'Compact deck', 'English');
@@ -273,6 +322,10 @@ class RemainderGameTest extends TestCase
 
         $response->assertRedirect(route('remainder.sessions.show', $gameSession));
         $this->assertNotEmpty($warnings);
+        $this->assertSame(
+            'Only 3 answer options were available for some questions because the selected dictionaries and filters did not contain enough unique answers.',
+            $warnings[0],
+        );
 
         foreach ($gameSession->items as $item) {
             $this->assertLessThan(6, count($item->options_json));
@@ -282,7 +335,7 @@ class RemainderGameTest extends TestCase
         $this->actingAs($user)
             ->get(route('remainder.sessions.show', $gameSession))
             ->assertOk()
-            ->assertSee('Only 3 answer options were available for some questions because the selected words did not contain enough unique answers.');
+            ->assertSee($warnings[0]);
     }
 
     public function test_choice_game_is_not_created_if_it_cannot_build_two_unique_options(): void
