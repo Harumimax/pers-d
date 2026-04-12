@@ -28,6 +28,7 @@
 ### Controllers
 - `App\Http\Controllers\ProfileController`
   - edits profile
+  - delegates remainder statistics aggregation to `RemainderStatisticsService`
   - updates profile
   - deletes account
 - `App\Http\Controllers\RemainderController`
@@ -88,6 +89,10 @@
   - `MyMemoryTranslationService`
   - `TranslationResult`
   - `TranslationSuggestion`
+- Profile read-model services live under `app/Services/Profile`
+  - `RemainderStatisticsService`
+    - aggregates finished game sessions for the authenticated user's profile page
+    - computes preferred mode, preferred direction, totals, and answer accuracy
 - Remainder game services live under `app/Services/Remainder`
   - `PrepareGameService`
     - validates dictionary ownership at the domain layer
