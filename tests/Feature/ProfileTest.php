@@ -36,7 +36,26 @@ class ProfileTest extends TestCase
         $response
             ->assertOk()
             ->assertSee('About WordKeeper')
+            ->assertSee('Contact form')
+            ->assertSee('Contact email')
+            ->assertSee('Subject')
+            ->assertSee('Message')
+            ->assertSee('Send')
+            ->assertSee('Clear all')
             ->assertSee('Create a word repetition mode');
+    }
+
+    public function test_about_contact_placeholder_route_redirects_back_to_about_page(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('about.contact.store'), [
+                'contact_email' => 'user@example.com',
+                'subject' => 'Local placeholder',
+                'message' => 'This should not send anything yet.',
+            ])
+            ->assertRedirect(route('about'));
     }
 
     public function test_remainder_page_is_displayed_for_authenticated_user(): void

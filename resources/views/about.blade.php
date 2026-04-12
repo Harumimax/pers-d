@@ -32,6 +32,61 @@
                 </div>
             </section>
 
+            <section class="about-contact-card" aria-label="Contact form">
+                <header class="about-contact-card__header">
+                    <h2 class="about-contact-card__title">Contact form</h2>
+                    <p class="about-contact-card__subtitle">Share a question, suggestion, or bug report. The form design is ready, and the mail backend will be connected later.</p>
+                </header>
+
+                <form method="POST" action="{{ route('about.contact.store') }}" class="about-contact-form">
+                    @csrf
+
+                    <div class="about-contact-form__grid">
+                        <div class="about-contact-field">
+                            <label for="contact-email" class="about-contact-field__label">Contact email</label>
+                            <input
+                                id="contact-email"
+                                name="contact_email"
+                                type="email"
+                                class="about-contact-field__input"
+                                placeholder="you@example.com"
+                                required
+                            >
+                        </div>
+
+                        <div class="about-contact-field">
+                            <label for="contact-subject" class="about-contact-field__label">Subject</label>
+                            <input
+                                id="contact-subject"
+                                name="subject"
+                                type="text"
+                                class="about-contact-field__input"
+                                placeholder="What would you like to discuss?"
+                                maxlength="128"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <div class="about-contact-field">
+                        <label for="contact-message" class="about-contact-field__label">Message</label>
+                        <textarea
+                            id="contact-message"
+                            name="message"
+                            class="about-contact-field__textarea"
+                            placeholder="Write your message here..."
+                            maxlength="600"
+                            required
+                        ></textarea>
+                    </div>
+
+                    <div class="about-contact-form__actions">
+                        <button type="submit" class="btn btn-primary about-contact-form__button">Send</button>
+                        <button type="reset" class="btn btn-secondary about-contact-form__button">Clear all</button>
+                    </div>
+                </form>
+            </section>
+
             <section class="about-status-card" aria-label="Project functionality status">
                 <header class="about-status-card__header">
                     <h2 class="about-status-card__title">Current functionality</h2>

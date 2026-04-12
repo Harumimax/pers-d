@@ -25,6 +25,9 @@ Route::middleware('auth')->group(function () {
                 ->get(['id', 'name']) ?? collect(),
         ]);
     })->name('about');
+    Route::post('/about/contact', function () {
+        return redirect()->route('about');
+    })->name('about.contact.store');
     Route::get('/remainder', [RemainderController::class, 'index'])->name('remainder');
     Route::post('/remainder/sessions', [RemainderController::class, 'store'])->name('remainder.sessions.store');
     Route::get('/remainder/sessions/{gameSession}', [RemainderController::class, 'showSession'])->name('remainder.sessions.show');
