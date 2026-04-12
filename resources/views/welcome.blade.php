@@ -21,9 +21,11 @@
                         @csrf
                         <button type="submit" class="btn btn-secondary">Log Out</button>
                     </form>
+                    <x-language-switcher />
                 @else
                     <a href="{{ route('login') }}" class="btn btn-secondary">Log in</a>
                     <a href="{{ route('register') }}" class="btn btn-primary">Sign up</a>
+                    <x-language-switcher />
                 @endauth
         </x-site-header>
 

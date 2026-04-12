@@ -35,6 +35,8 @@
                     Sign up
                 </a>
             @endif
+
+            <x-language-switcher />
         </x-site-header>
 
         <main class="auth-main">

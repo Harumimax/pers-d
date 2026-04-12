@@ -11,6 +11,16 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::post('/interface-language', function (Request $request) {
+    $validated = $request->validate([
+        'language' => ['required', 'in:ru,en'],
+    ]);
+
+    $request->session()->put('ui_locale', $validated['language']);
+
+    return redirect()->back();
+})->name('interface-language.update');
+
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', fn () => redirect()->route('dictionaries.index'))
         ->name('dashboard');

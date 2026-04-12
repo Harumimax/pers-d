@@ -58,6 +58,24 @@ class ProfileTest extends TestCase
             ->assertRedirect(route('about'));
     }
 
+    public function test_interface_language_placeholder_route_updates_session_and_redirects_back(): void
+    {
+        $this->from('/')
+            ->post(route('interface-language.update'), [
+                'language' => 'en',
+            ])
+            ->assertRedirect('/')
+            ->assertSessionHas('ui_locale', 'en');
+    }
+
+    public function test_welcome_page_renders_language_switcher(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Ru')
+            ->assertSee('En');
+    }
+
     public function test_remainder_page_is_displayed_for_authenticated_user(): void
     {
         $user = User::factory()->create();

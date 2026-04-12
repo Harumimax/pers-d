@@ -53,6 +53,7 @@
                 @csrf
                 <button type="submit" class="btn btn-secondary">Log out</button>
             </form>
+            <x-language-switcher />
         </x-site-header>
 
         <div class="dictionaries-page">
