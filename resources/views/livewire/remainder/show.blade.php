@@ -13,7 +13,40 @@
         @endforeach
     @endif
 
-    @if ($gameSession->status === \App\Models\GameSession::STATUS_FINISHED)
+    @if ($showFeedback)
+        <section class="remainder-game-card">
+            <header class="remainder-game-card__header">
+                <div>
+                    <p class="remainder-game-eyebrow">
+                        {{ $gameSession->mode === \App\Models\GameSession::MODE_CHOICE ? 'Multiple choice' : 'Manual translation input' }}
+                    </p>
+                    <h1 class="remainder-game-title">Remainder</h1>
+                </div>
+                @if ($progressLabel)
+                    <p class="remainder-game-progress">{{ $progressLabel }}</p>
+                @endif
+            </header>
+
+            <div class="remainder-game-feedback-card {{ $lastAnswerCorrect ? 'remainder-game-feedback-card--correct' : 'remainder-game-feedback-card--incorrect' }}">
+                <h2 class="remainder-game-feedback-card__title">
+                    {{ $lastAnswerCorrect ? 'Correct' : 'Incorrect' }}
+                </h2>
+                <p class="remainder-game-feedback-card__text">Prompt: {{ $lastPromptText }}</p>
+                <p class="remainder-game-feedback-card__text">Your answer: {{ $lastUserAnswer }}</p>
+
+                @unless ($lastAnswerCorrect)
+                    <p class="remainder-game-feedback-card__text">
+                        Correct answer:
+                        <span class="remainder-game-reveal-answer">{{ $lastCorrectAnswer }}</span>
+                    </p>
+                @endunless
+
+                <button type="button" class="btn btn-primary remainder-game-action-btn" wire:click="continueToNext">
+                    Continue
+                </button>
+            </div>
+        </section>
+    @elseif ($gameSession->status === \App\Models\GameSession::STATUS_FINISHED)
         <section class="remainder-game-summary-card">
             <div class="remainder-game-summary-card__header">
                 <p class="remainder-game-eyebrow">Session finished</p>
@@ -64,26 +97,7 @@
                 @endif
             </header>
 
-            @if ($showFeedback)
-                <div class="remainder-game-feedback-card {{ $lastAnswerCorrect ? 'remainder-game-feedback-card--correct' : 'remainder-game-feedback-card--incorrect' }}">
-                    <h2 class="remainder-game-feedback-card__title">
-                        {{ $lastAnswerCorrect ? 'Correct' : 'Incorrect' }}
-                    </h2>
-                    <p class="remainder-game-feedback-card__text">Prompt: {{ $lastPromptText }}</p>
-                    <p class="remainder-game-feedback-card__text">Your answer: {{ $lastUserAnswer }}</p>
-
-                    @unless ($lastAnswerCorrect)
-                        <p class="remainder-game-feedback-card__text">
-                            Correct answer:
-                            <span class="remainder-game-reveal-answer">{{ $lastCorrectAnswer }}</span>
-                        </p>
-                    @endunless
-
-                    <button type="button" class="btn btn-primary remainder-game-action-btn" wire:click="continueToNext">
-                        Continue
-                    </button>
-                </div>
-            @elseif ($currentItem)
+            @if ($currentItem)
                 <div class="remainder-game-prompt-card">
                     <div class="remainder-game-prompt-card__body">
                         <p class="remainder-game-prompt-card__label">Translate this</p>

@@ -403,7 +403,7 @@ class RemainderGameTest extends TestCase
             ->call('continueToNext')
             ->set('selectedChoice', $wrongOption)
             ->call('submitAnswer')
-            ->assertSet('showFeedback', false);
+            ->assertSet('showFeedback', true);
 
         $gameSession->refresh();
         $firstItem->refresh();
@@ -452,7 +452,7 @@ class RemainderGameTest extends TestCase
             ->test(Show::class, ['gameSession' => $gameSession])
             ->set('answer', '  APPLE  ')
             ->call('submitAnswer')
-            ->assertSet('showFeedback', false);
+            ->assertSet('showFeedback', true);
 
         $gameSession->refresh();
         $item = $gameSession->items()->firstOrFail();
@@ -461,6 +461,25 @@ class RemainderGameTest extends TestCase
         $this->assertSame(1, $gameSession->correct_answers);
         $this->assertTrue((bool) $item->is_correct);
         $this->assertSame('APPLE', $item->user_answer);
+    }
+
+    public function test_results_are_shown_only_after_continue_on_the_last_answer(): void
+    {
+        $user = User::factory()->create();
+        $gameSession = $this->startGameForWords($user, [
+            ['word' => 'Apple', 'translation' => 'apple', 'part_of_speech' => 'noun'],
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['gameSession' => $gameSession])
+            ->set('answer', 'apple')
+            ->call('submitAnswer')
+            ->assertSet('showFeedback', true)
+            ->assertSee('Correct')
+            ->assertDontSee('Remainder results')
+            ->call('continueToNext')
+            ->assertSet('showFeedback', false)
+            ->assertSee('Remainder results');
     }
 
     public function test_correct_answers_counter_is_counted_properly_across_multiple_answers(): void

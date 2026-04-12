@@ -43,10 +43,10 @@ class Show extends Component
             ->filter(static fn ($warning): bool => is_string($warning) && trim($warning) !== '')
             ->values();
 
-        if ($this->gameSession->status === GameSession::STATUS_FINISHED) {
-            $resultSummary = $engine->resultSummary($this->gameSession);
-        } elseif ($this->showFeedback) {
+        if ($this->showFeedback) {
             $progressLabel = sprintf('Word %d of %d', $this->lastOrderIndex, $this->gameSession->total_words);
+        } elseif ($this->gameSession->status === GameSession::STATUS_FINISHED) {
+            $resultSummary = $engine->resultSummary($this->gameSession);
         } else {
             $currentItem = $engine->currentItem($this->gameSession);
             $currentItem?->loadMissing('word');
@@ -88,16 +88,6 @@ class Show extends Component
         $this->gameSession->refresh();
         $this->answer = '';
         $this->selectedChoice = '';
-
-        if ($result['finished']) {
-            $this->showFeedback = false;
-            $this->lastAnswerCorrect = null;
-            $this->lastCorrectAnswer = '';
-            $this->lastUserAnswer = '';
-            $this->lastPromptText = '';
-
-            return;
-        }
 
         $this->showFeedback = true;
         $this->lastAnswerCorrect = (bool) $answeredItem->is_correct;
