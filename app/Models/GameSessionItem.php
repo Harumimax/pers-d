@@ -12,6 +12,7 @@ class GameSessionItem extends Model
         'word_id',
         'order_index',
         'prompt_text',
+        'part_of_speech_snapshot',
         'correct_answer',
         'options_json',
         'user_answer',

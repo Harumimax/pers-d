@@ -161,6 +161,7 @@
   - `word_id`
   - `order_index`
   - `prompt_text`
+  - `part_of_speech_snapshot`
   - `correct_answer`
   - `options_json`
   - `user_answer`
@@ -250,6 +251,7 @@
   - `word_id` -> FK to `words.id`
   - `order_index`
   - `prompt_text`
+  - `part_of_speech_snapshot` nullable
   - `correct_answer`
   - `options_json` nullable jsonb
   - `user_answer` nullable
@@ -339,7 +341,7 @@
   - deduplicates words across many-to-many dictionary selection
   - randomizes order
   - creates `GameSession`
-  - creates `GameSessionItem` snapshot rows
+  - creates `GameSessionItem` snapshot rows, including `part_of_speech_snapshot`
 - if mode is `choice`, `ChoiceOptionsBuilder` also precomputes `options_json` for every session item from the full filtered answer pool, while `words_count` still controls only the number of rounds
 - Game page (`/remainder/sessions/{gameSession}`) renders a Blade shell with embedded `App\Livewire\Remainder\Show`
 - `GameEngineService` validates and checks each answer, updates counters, and finishes the session after the last item
@@ -352,6 +354,7 @@
 - Dictionary header dropdown data is passed from Livewire/controllers into the layout; the layout should not query dictionaries directly
 - External API access should continue to go through service abstractions, not be embedded into Livewire components
 - Remainder game sessions always use snapshot semantics: once a game is created, item order and answers are read from `game_session_items`, not recalculated from live dictionary data
+- part of speech displayed on the game screen is also read from `game_session_items.part_of_speech_snapshot`, not from live `words` rows
 - multiple choice distractors are built from the full filtered answer pool captured during preparation, never from live dictionary queries during play
 
 ## Key Files To Read First

@@ -73,6 +73,7 @@ class PrepareGameService
                     'prompt_text' => $config['direction'] === GameSession::DIRECTION_FOREIGN_TO_RU
                         ? $word->word
                         : $word->translation,
+                    'part_of_speech_snapshot' => $word->part_of_speech,
                     'correct_answer' => $config['direction'] === GameSession::DIRECTION_FOREIGN_TO_RU
                         ? $word->translation
                         : $word->word,
@@ -131,6 +132,7 @@ class PrepareGameService
                         'word_id' => $item['word_id'],
                         'order_index' => $item['order_index'],
                         'prompt_text' => $item['prompt_text'],
+                        'part_of_speech_snapshot' => $item['part_of_speech_snapshot'],
                         'correct_answer' => $item['correct_answer'],
                         'options_json' => $item['options_json'] !== null
                             ? json_encode($item['options_json'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)

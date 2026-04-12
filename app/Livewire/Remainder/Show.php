@@ -49,8 +49,7 @@ class Show extends Component
             $resultSummary = $engine->resultSummary($this->gameSession);
         } else {
             $currentItem = $engine->currentItem($this->gameSession);
-            $currentItem?->loadMissing('word');
-            $currentPartOfSpeechLabel = $this->partOfSpeechLabel($currentItem?->word?->part_of_speech);
+            $currentPartOfSpeechLabel = $this->partOfSpeechLabel($currentItem?->part_of_speech_snapshot);
             $progressLabel = $currentItem !== null
                 ? sprintf('Word %d of %d', $currentItem->order_index, $this->gameSession->total_words)
                 : null;

@@ -441,6 +441,27 @@ class RemainderGameTest extends TestCase
             ->assertSee('Stable expression');
     }
 
+    public function test_game_screen_uses_snapshot_part_of_speech_and_not_live_word_data(): void
+    {
+        $user = User::factory()->create();
+        $gameSession = $this->startGameForWords($user, [
+            ['word' => 'apple', 'translation' => 'apple', 'part_of_speech' => 'noun'],
+        ]);
+
+        $item = $gameSession->items()->firstOrFail();
+        $this->assertSame('noun', $item->part_of_speech_snapshot);
+
+        $item->word()->update([
+            'part_of_speech' => 'verb',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('remainder.sessions.show', $gameSession))
+            ->assertOk()
+            ->assertSee('Noun')
+            ->assertDontSee('Verb');
+    }
+
     public function test_manual_answer_is_checked_case_insensitively_and_last_answer_finishes_session(): void
     {
         $user = User::factory()->create();
