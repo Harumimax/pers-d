@@ -108,12 +108,46 @@
     margin-top: 40px;
 }
 
+.profile-main [x-cloak] {
+    display: none !important;
+}
+
+.profile-title-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
 .profile-title {
     margin: 0;
     font-size: 3rem;
     line-height: 1.06;
     letter-spacing: -0.02em;
     color: var(--text-color);
+}
+
+.profile-title-toggle__icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    color: var(--muted-color);
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.profile-title-toggle:hover .profile-title-toggle__icon,
+.profile-title-toggle:focus-visible .profile-title-toggle__icon {
+    color: var(--primary-color);
+}
+
+.profile-title-toggle__icon--open {
+    transform: rotate(180deg);
 }
 
 .profile-card {
@@ -365,6 +399,10 @@
         font-size: 2.3rem;
     }
 
+    .profile-title-toggle {
+        gap: 14px;
+    }
+
     .profile-card {
         padding: 22px;
     }
@@ -414,6 +452,11 @@
 
     .profile-title {
         font-size: 2rem;
+    }
+
+    .profile-title-toggle__icon {
+        width: 22px;
+        height: 22px;
     }
 
     .profile-section__title {

@@ -2,6 +2,10 @@
     padding: 56px 0 72px;
 }
 
+.about-main [x-cloak] {
+    display: none !important;
+}
+
 .about-container {
     display: flex;
     flex-direction: column;
@@ -83,6 +87,19 @@
     margin-bottom: 22px;
 }
 
+.about-section-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
 .about-contact-card__title {
     margin: 0 0 8px;
     font-size: 1.8rem;
@@ -92,11 +109,28 @@
 }
 
 .about-contact-card__subtitle {
-    margin: 0;
+    margin: 0 0 22px;
     max-width: 760px;
     font-size: 0.98rem;
     line-height: 1.6;
     color: var(--muted-color);
+}
+
+.about-section-toggle__icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    color: var(--muted-color);
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.about-section-toggle:hover .about-section-toggle__icon,
+.about-section-toggle:focus-visible .about-section-toggle__icon {
+    color: var(--primary-color);
+}
+
+.about-section-toggle__icon--open {
+    transform: rotate(180deg);
 }
 
 .about-contact-form {
@@ -185,7 +219,7 @@
 }
 
 .about-status-card__subtitle {
-    margin: 0;
+    margin: 0 0 18px;
     font-size: 0.98rem;
     line-height: 1.55;
     color: var(--muted-color);
@@ -285,6 +319,10 @@
     .about-contact-form__grid {
         grid-template-columns: 1fr;
     }
+
+    .about-section-toggle {
+        gap: 14px;
+    }
 }
 
 @media (max-width: 640px) {
@@ -302,6 +340,11 @@
 
     .about-contact-card__title {
         font-size: 1.5rem;
+    }
+
+    .about-section-toggle__icon {
+        width: 22px;
+        height: 22px;
     }
 
     .about-contact-form__actions {

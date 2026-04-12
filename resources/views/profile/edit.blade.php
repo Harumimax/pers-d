@@ -10,13 +10,31 @@
             : 'No completed sessions yet';
     @endphp
 
-    <main class="profile-main">
+    <main class="profile-main" x-data="{ statisticsOpen: false }">
         <div class="profile-container">
             <header class="profile-page-header">
-                <h1 class="profile-title">Remainder Statistic</h1>
+                <button
+                    type="button"
+                    class="profile-title-toggle"
+                    @click="statisticsOpen = !statisticsOpen"
+                    :aria-expanded="statisticsOpen.toString()"
+                    aria-controls="remainder-statistics-panel"
+                >
+                    <span class="profile-title">Remainder Statistic</span>
+                    <span class="profile-title-toggle__icon" :class="{ 'profile-title-toggle__icon--open': statisticsOpen }" aria-hidden="true">
+                        <svg viewBox="0 0 20 20" fill="currentColor" focusable="false">
+                            <path fill-rule="evenodd" d="M5.22 7.22a.75.75 0 0 1 1.06 0L10 10.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 8.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/>
+                        </svg>
+                    </span>
+                </button>
             </header>
 
-            <section class="profile-card profile-statistics-card">
+            <section
+                id="remainder-statistics-panel"
+                class="profile-card profile-statistics-card"
+                x-show="statisticsOpen"
+                x-cloak
+            >
                 <div class="profile-section">
                     <div class="profile-statistics-table-wrap">
                         <table class="profile-statistics-table">
