@@ -6,6 +6,7 @@
 
 @section('content')
     @php
+        $partOfSpeechLabels = \App\Support\PartOfSpeechCatalog::labelsWithAll();
         $initialDictionaryIds = collect(old('dictionary_ids', []))
             ->map(fn ($id) => (int) $id)
             ->filter()
@@ -226,19 +227,7 @@
                         </div>
 
                         <div class="remainder-chip-list">
-                            @foreach ([
-                                'all' => 'All',
-                                'noun' => 'Noun',
-                                'verb' => 'Verb',
-                                'adjective' => 'Adjective',
-                                'adverb' => 'Adverb',
-                                'pronoun' => 'Pronoun',
-                                'cardinal' => 'Cardinal',
-                                'preposition' => 'Preposition',
-                                'conjunction' => 'Conjunction',
-                                'interjection' => 'Interjection',
-                                'stable_expression' => 'Stable expression',
-                            ] as $value => $label)
+                            @foreach ($partOfSpeechLabels as $value => $label)
                                 <button
                                     type="button"
                                     class="remainder-chip"

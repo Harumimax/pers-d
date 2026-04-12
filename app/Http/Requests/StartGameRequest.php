@@ -3,26 +3,13 @@
 namespace App\Http\Requests;
 
 use App\Models\GameSession;
+use App\Support\PartOfSpeechCatalog;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StartGameRequest extends FormRequest
 {
-    private const PARTS_OF_SPEECH = [
-        'all',
-        'noun',
-        'verb',
-        'adjective',
-        'adverb',
-        'pronoun',
-        'cardinal',
-        'preposition',
-        'conjunction',
-        'interjection',
-        'stable_expression',
-    ];
-
     public function authorize(): bool
     {
         return $this->user() !== null;
@@ -59,7 +46,7 @@ class StartGameRequest extends FormRequest
             'dictionary_ids' => ['required', 'array', 'min:1'],
             'dictionary_ids.*' => ['integer', 'distinct'],
             'parts_of_speech' => ['required', 'array', 'min:1'],
-            'parts_of_speech.*' => ['string', Rule::in(self::PARTS_OF_SPEECH)],
+            'parts_of_speech.*' => ['string', Rule::in(PartOfSpeechCatalog::valuesWithAll())],
             'words_count' => ['required', 'integer', 'min:1', 'max:20'],
         ];
     }

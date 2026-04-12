@@ -5,6 +5,7 @@ namespace App\Livewire\Dictionaries;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
+use App\Support\PartOfSpeechCatalog;
 use App\Services\Translation\TranslationServiceInterface;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
@@ -20,37 +21,13 @@ class Show extends Component
 {
     use WithPagination;
 
-    private const PART_OF_SPEECH_FILTER_ALL = 'all';
+    private const PART_OF_SPEECH_FILTER_ALL = PartOfSpeechCatalog::ALL;
     private const SORT_NEWEST = 'newest';
     private const SORT_OLDEST = 'oldest';
     private const SORT_A_TO_Z = 'a-z';
     private const TARGET_LANGUAGE = 'ru';
     private const CONTROL_CHARACTER_PATTERN = '/[\p{Cc}\p{Cf}]/u';
     private const ZERO_WIDTH_CHARACTER_PATTERN = '/[\x{200B}\x{200C}\x{200D}\x{2060}\x{FEFF}]/u';
-    private const PARTS_OF_SPEECH = [
-        'noun',
-        'verb',
-        'adjective',
-        'adverb',
-        'pronoun',
-        'cardinal',
-        'preposition',
-        'conjunction',
-        'interjection',
-        'stable_expression',
-    ];
-    private const PARTS_OF_SPEECH_DISPLAY = [
-        'noun' => 'Noun',
-        'verb' => 'Verb',
-        'adjective' => 'Adjective',
-        'adverb' => 'Adverb',
-        'pronoun' => 'Pronoun',
-        'cardinal' => 'Cardinal',
-        'preposition' => 'Preposition',
-        'conjunction' => 'Conjunction',
-        'interjection' => 'Interjection',
-        'stable_expression' => 'Stable expression',
-    ];
     private const DICTIONARY_LANGUAGE_CODES = [
         'English' => 'en',
         'Spanish' => 'es',
@@ -125,11 +102,8 @@ class Show extends Component
             'words' => $words,
             'totalWordsCount' => $totalWordsCount,
             'partOfSpeechOptions' => $partOfSpeechOptions,
-            'partOfSpeechFilterOptions' => [
-                self::PART_OF_SPEECH_FILTER_ALL => 'All (&#1042;&#1089;&#1077;)',
-                ...$partOfSpeechOptions,
-            ],
-            'partOfSpeechDisplayMap' => self::PARTS_OF_SPEECH_DISPLAY,
+            'partOfSpeechFilterOptions' => PartOfSpeechCatalog::dictionaryFilterLabels(),
+            'partOfSpeechDisplayMap' => PartOfSpeechCatalog::labels(),
             'autoTranslationUnavailableMessage' => 'Translation is currently unavailable. Please switch to Enter manually.',
         ])->layout('layouts.dictionaries', [
             'headerDictionaries' => $headerDictionaries,
@@ -144,7 +118,7 @@ class Show extends Component
 
         $validated = $this->validate([
             'word' => ['required', 'string', 'max:255', 'not_regex:'.self::CONTROL_CHARACTER_PATTERN],
-            'partOfSpeech' => ['required', 'string', Rule::in(self::PARTS_OF_SPEECH)],
+            'partOfSpeech' => ['required', 'string', Rule::in(PartOfSpeechCatalog::values())],
             'translation' => ['required', 'string', 'max:255', 'not_regex:'.self::CONTROL_CHARACTER_PATTERN],
             'comment' => ['nullable', 'string', 'max:600', 'not_regex:'.self::CONTROL_CHARACTER_PATTERN],
         ]);
@@ -170,7 +144,7 @@ class Show extends Component
 
         $validated = $this->validate([
             'autoWord' => ['required', 'string', 'max:255', 'not_regex:'.self::CONTROL_CHARACTER_PATTERN],
-            'autoPartOfSpeech' => ['required', 'string', Rule::in(self::PARTS_OF_SPEECH)],
+            'autoPartOfSpeech' => ['required', 'string', Rule::in(PartOfSpeechCatalog::values())],
             'autoTranslation' => ['required', 'string', 'max:255', 'not_regex:'.self::CONTROL_CHARACTER_PATTERN],
             'autoComment' => ['nullable', 'string', 'max:600', 'not_regex:'.self::CONTROL_CHARACTER_PATTERN],
         ]);
@@ -285,7 +259,7 @@ class Show extends Component
     {
         $allowedValues = [
             self::PART_OF_SPEECH_FILTER_ALL,
-            ...self::PARTS_OF_SPEECH,
+            ...PartOfSpeechCatalog::values(),
         ];
 
         if (! in_array($value, $allowedValues, true)) {
@@ -362,18 +336,7 @@ class Show extends Component
 
     private function partOfSpeechOptions(): array
     {
-        return [
-            'noun' => 'Noun (&#1057;&#1091;&#1097;&#1077;&#1089;&#1090;&#1074;&#1080;&#1090;&#1077;&#1083;&#1100;&#1085;&#1086;&#1077;)',
-            'verb' => 'Verb (&#1043;&#1083;&#1072;&#1075;&#1086;&#1083;)',
-            'adjective' => 'Adjective (&#1055;&#1088;&#1080;&#1083;&#1072;&#1075;&#1072;&#1090;&#1077;&#1083;&#1100;&#1085;&#1086;&#1077;)',
-            'adverb' => 'Adverb (&#1053;&#1072;&#1088;&#1077;&#1095;&#1080;&#1077;)',
-            'pronoun' => 'Pronoun (&#1052;&#1077;&#1089;&#1090;&#1086;&#1080;&#1084;&#1077;&#1085;&#1080;&#1077;)',
-            'cardinal' => 'Cardinal (&#1063;&#1080;&#1089;&#1083;&#1080;&#1090;&#1077;&#1083;&#1100;&#1085;&#1086;&#1077;)',
-            'preposition' => 'Preposition (&#1055;&#1088;&#1077;&#1076;&#1083;&#1086;&#1075;)',
-            'conjunction' => 'Conjunction (&#1057;&#1086;&#1102;&#1079;)',
-            'interjection' => 'Interjection (&#1052;&#1077;&#1078;&#1076;&#1086;&#1084;&#1077;&#1090;&#1080;&#1077;)',
-            'stable_expression' => 'Stable expression (&#1059;&#1089;&#1090;&#1086;&#1081;&#1095;&#1080;&#1074;&#1086;&#1077; &#1074;&#1099;&#1088;&#1072;&#1078;&#1077;&#1085;&#1080;&#1077;)',
-        ];
+        return PartOfSpeechCatalog::dictionaryFormLabels();
     }
 
     private function storeWord(

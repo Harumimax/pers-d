@@ -5,9 +5,9 @@ namespace App\Livewire\Remainder;
 use App\Models\GameSession;
 use App\Models\GameSessionItem;
 use App\Services\Remainder\GameEngineService;
+use App\Support\PartOfSpeechCatalog;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use Livewire\Component;
 
 class Show extends Component
@@ -120,22 +120,6 @@ class Show extends Component
 
     private function partOfSpeechLabel(?string $partOfSpeech): ?string
     {
-        if ($partOfSpeech === null || trim($partOfSpeech) === '') {
-            return null;
-        }
-
-        return match ($partOfSpeech) {
-            'noun' => 'Noun',
-            'verb' => 'Verb',
-            'adjective' => 'Adjective',
-            'adverb' => 'Adverb',
-            'pronoun' => 'Pronoun',
-            'cardinal' => 'Cardinal',
-            'preposition' => 'Preposition',
-            'conjunction' => 'Conjunction',
-            'interjection' => 'Interjection',
-            'stable_expression' => 'Stable expression',
-            default => Str::headline(str_replace('_', ' ', $partOfSpeech)),
-        };
+        return PartOfSpeechCatalog::label($partOfSpeech);
     }
 }
