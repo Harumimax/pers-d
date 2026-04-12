@@ -25,11 +25,18 @@ The product is intentionally lightweight, practical, and built around personal u
 | Search, filter, sort, and paginate words inside a dictionary | `done` |
 | Automatic translation suggestions during word creation | `done` |
 | Delete dictionaries and words with confirmation dialogs | `done` |
-| Create a word repetition mode | `in progress` |
+| Play Remainder sessions with manual translation input | `done` |
+| Play Remainder sessions in multiple choice mode | `done` |
+| Store part of speech inside the game session snapshot | `done` |
+| Show personal Remainder statistics on the profile page | `done` |
+| Add a placeholder contact form on the About page | `done` |
+| Add a placeholder interface language switcher in the header | `done` |
 | Create a Telegram bot | `planning` |
 | Connect site functionality to the Telegram bot | `planning` |
 | Create a mode for sending words to the Telegram bot | `planning` |
 | Switch to another local translation provider | `planning` |
+| Add real interface localization for Russian and English | `planning` |
+| Connect the About page contact form to real email delivery | `planning` |
 
 ## Product feel
 
@@ -81,6 +88,17 @@ Authenticated users can:
 - change password
 - delete account
 - read an About page describing the project and roadmap
+- view personal Remainder statistics on the profile page
+- open a placeholder contact form section on the About page
+
+### Remainder
+Authenticated users can:
+
+- configure a repetition session by dictionaries, part of speech, direction, and words count
+- play in `manual translation input` mode
+- play in `multiple choice` mode
+- finish a session and see a result summary with incorrect answers
+- keep session questions stable through snapshot-based game items
 
 ## Quick start
 
@@ -113,11 +131,12 @@ php artisan test
 
 - authentication is required for the main product flows
 - dictionary and word management are the core of the current product
+- game sessions are snapshot-based and do not depend on live dictionary data during play
 - architecture decisions are documented in [`docs/architecture.md`](docs/architecture.md)
 
 ## Roadmap direction
 
-The next major step is turning stored vocabulary into active practice, starting with a dedicated repetition mode for words. After that, the product can grow toward Telegram-based workflows and deeper spaced learning scenarios.
+The current product already covers the main dictionary workflow and a working Remainder game flow. The next major steps are real interface localization, mail-backed feedback delivery, and later Telegram-based workflows with deeper learning scenarios.
 
 ---
 

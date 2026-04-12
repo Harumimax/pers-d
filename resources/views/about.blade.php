@@ -166,7 +166,15 @@
                                     <td><span class="about-status-badge about-status-badge--done">done</span></td>
                                 </tr>
                                 <tr>
-                                    <td>Create a word repetition mode</td>
+                                    <td>Store part of speech as part of the game session snapshot</td>
+                                    <td><span class="about-status-badge about-status-badge--done">done</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Add a collapsible contact form section on the About page</td>
+                                    <td><span class="about-status-badge about-status-badge--done">done</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Add a placeholder interface language switcher in the site header</td>
                                     <td><span class="about-status-badge about-status-badge--done">done</span></td>
                                 </tr>
                                 <tr>
@@ -186,7 +194,11 @@
                                     <td><span class="about-status-badge about-status-badge--planning">planning</span></td>
                                 </tr>
                                 <tr>
-                                    <td>Add an interface language switcher for Russian and English</td>
+                                    <td>Add real interface localization for Russian and English</td>
+                                    <td><span class="about-status-badge about-status-badge--planning">planning</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Connect the About page contact form to real email delivery</td>
                                     <td><span class="about-status-badge about-status-badge--planning">planning</span></td>
                                 </tr>
                                 <tr>
