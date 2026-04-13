@@ -5,7 +5,7 @@
         @csrf
 
         <div class="auth-field">
-            <x-input-label for="email" :value="__('Email')" class="auth-label" />
+            <x-input-label for="email" :value="__('auth.login.email')" class="auth-label" />
             <x-text-input
                 id="email"
                 class="auth-input mt-2 w-full"
@@ -20,7 +20,7 @@
         </div>
 
         <div class="auth-field">
-            <x-input-label for="password" :value="__('Password')" class="auth-label" />
+            <x-input-label for="password" :value="__('auth.login.password')" class="auth-label" />
             <x-text-input
                 id="password"
                 class="auth-input mt-2 w-full"
@@ -34,18 +34,18 @@
 
         <label for="remember_me" class="auth-remember">
             <input id="remember_me" type="checkbox" name="remember" class="auth-checkbox">
-            <span>{{ __('Remember me') }}</span>
+            <span>{{ __('auth.login.remember') }}</span>
         </label>
 
         <div class="auth-actions">
             @if (Route::has('password.request'))
                 <a class="auth-link" href="{{ route('password.request') }}">
-                    {{ __('Forgot your password?') }}
+                    {{ __('auth.login.forgot_password') }}
                 </a>
             @endif
 
             <button type="submit" class="btn btn-primary btn-large auth-submit-btn">
-                {{ __('Log in') }}
+                {{ __('auth.login.submit') }}
             </button>
         </div>
     </form>

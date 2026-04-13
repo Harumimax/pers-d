@@ -33,21 +33,20 @@
         <div class="container hero-inner">
             <section class="hero-content">
                 <h1 class="hero-title">
-                    Your Personal Foreign<br>
-                    Word Dictionary
+                    {{ __('welcome.title_line_1') }}<br>
+                    {{ __('welcome.title_line_2') }}
                 </h1>
 
                 <p class="hero-description">
-                    Build and organize your vocabulary across multiple languages.
-                    Track words, meanings, and examples in one simple place.
+                    {{ __('welcome.description') }}
                 </p>
 
                 <div class="hero-actions">
                     @auth
-                        <a href="{{ url('/dashboard') }}" class="btn btn-primary btn-large">Dictionaries</a>
+                        <a href="{{ url('/dashboard') }}" class="btn btn-primary btn-large">{{ __('welcome.actions.dictionaries') }}</a>
                     @else
-                        <a href="{{ route('register') }}" class="btn btn-primary btn-large">Sign up</a>
-                        <a href="{{ route('login') }}" class="btn btn-secondary btn-large">Log in</a>
+                        <a href="{{ route('register') }}" class="btn btn-primary btn-large">{{ __('welcome.actions.signup') }}</a>
+                        <a href="{{ route('login') }}" class="btn btn-secondary btn-large">{{ __('welcome.actions.login') }}</a>
                     @endauth
                 </div>
             </section>
@@ -55,7 +54,7 @@
             <section class="hero-image-wrapper">
                 <img
                     src="{{ asset('images/welcome-book.jpg') }}"
-                    alt="Open dictionary book"
+                    alt="{{ __('welcome.image_alt') }}"
                     class="hero-image"
                 >
             </section>

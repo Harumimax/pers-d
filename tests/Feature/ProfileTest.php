@@ -131,6 +131,18 @@ class ProfileTest extends TestCase
             ->assertSee('En');
     }
 
+    public function test_welcome_page_is_translated_to_russian_when_locale_is_set(): void
+    {
+        $this->withSession(['ui_locale' => 'ru'])
+            ->get('/')
+            ->assertOk()
+            ->assertSee('Ваш персональный')
+            ->assertSee('словарь иностранных слов')
+            ->assertSee('Создавайте и упорядочивайте свой словарный запас')
+            ->assertSee('Регистрация')
+            ->assertSee('Войти');
+    }
+
     public function test_remainder_page_is_displayed_for_authenticated_user(): void
     {
         $user = User::factory()->create();

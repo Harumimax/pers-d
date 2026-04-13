@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
+use Illuminate\Auth\Notifications\VerifyEmail as VerifyEmailNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -33,6 +35,29 @@ class User extends Authenticatable
         $preferredLocale = trim((string) $this->preferred_locale);
 
         return $preferredLocale !== '';
+    }
+
+    public function preferredLocaleOrDefault(): string
+    {
+        return $this->hasPreferredLocale()
+            ? (string) $this->preferred_locale
+            : (string) app()->getLocale();
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(
+            (new ResetPasswordNotification($token))
+                ->locale($this->preferredLocaleOrDefault())
+        );
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(
+            (new VerifyEmailNotification())
+                ->locale($this->preferredLocaleOrDefault())
+        );
     }
 
     /**

@@ -11,7 +11,7 @@
                 <div class="about-hero__image-wrap">
                     <img
                         src="{{ asset('images/about-study-desk.jpg') }}"
-                        alt="Open dictionary book"
+                        alt="{{ __('about.hero.image_alt') }}"
                         class="about-hero__image"
                     >
                 </div>
@@ -170,7 +170,15 @@
                                     <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
                                 </tr>
                                 <tr>
-                                    <td>{{ __('about.status.items.placeholder_language_switcher') }}</td>
+                                    <td>{{ __('about.status.items.language_switcher') }}</td>
+                                    <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td>{{ __('about.status.items.preferred_locale') }}</td>
+                                    <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td>{{ __('about.status.items.localized_flows') }}</td>
                                     <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
                                 </tr>
                                 <tr>
@@ -187,10 +195,6 @@
                                 </tr>
                                 <tr>
                                     <td>{{ __('about.status.items.local_translation_provider') }}</td>
-                                    <td><span class="about-status-badge about-status-badge--planning">{{ __('about.status.badges.planning') }}</span></td>
-                                </tr>
-                                <tr>
-                                    <td>{{ __('about.status.items.real_localization') }}</td>
                                     <td><span class="about-status-badge about-status-badge--planning">{{ __('about.status.badges.planning') }}</span></td>
                                 </tr>
                                 <tr>

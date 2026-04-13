@@ -13,7 +13,25 @@ class RegistrationTest extends TestCase
     {
         $response = $this->get('/register');
 
-        $response->assertStatus(200);
+        $response->assertStatus(200)
+            ->assertSee('Name')
+            ->assertSee('Email')
+            ->assertSee('Password')
+            ->assertSee('Confirm Password')
+            ->assertSee('Already registered?')
+            ->assertSee('Register');
+    }
+
+    public function test_registration_screen_is_translated_to_russian_when_locale_is_set(): void
+    {
+        $this->withSession(['ui_locale' => 'ru'])
+            ->get('/register')
+            ->assertOk()
+            ->assertSee('Имя')
+            ->assertSee('Пароль')
+            ->assertSee('Подтвердите пароль')
+            ->assertSee('Уже зарегистрированы?')
+            ->assertSee('Зарегистрироваться');
     }
 
     public function test_new_users_can_register(): void

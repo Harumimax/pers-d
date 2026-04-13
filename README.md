@@ -29,13 +29,14 @@ The product is intentionally lightweight, practical, and built around personal u
 | Play Remainder sessions in multiple choice mode | `done` |
 | Store part of speech inside the game session snapshot | `done` |
 | Show personal Remainder statistics on the profile page | `done` |
+| Switch the interface between Russian and English | `done` |
+| Remember a preferred interface language for authenticated users | `done` |
+| Localize auth, welcome, and product flows in Russian and English | `done` |
 | Add a placeholder contact form on the About page | `done` |
-| Add a placeholder interface language switcher in the header | `done` |
 | Create a Telegram bot | `planning` |
 | Connect site functionality to the Telegram bot | `planning` |
 | Create a mode for sending words to the Telegram bot | `planning` |
 | Switch to another local translation provider | `planning` |
-| Add real interface localization for Russian and English | `planning` |
 | Connect the About page contact form to real email delivery | `planning` |
 
 ## Product feel
@@ -59,7 +60,7 @@ Translation suggestions are integrated through a service abstraction, so externa
 ## Main app areas
 
 ### Welcome page
-A simple entry point that introduces the product and routes users to authentication.
+A localized entry point that introduces the product, lets visitors switch interface language, and routes users to authentication.
 
 ### Dictionaries
 Authenticated users can:
@@ -85,6 +86,7 @@ Inside a dictionary, users can:
 Authenticated users can:
 
 - update profile information
+- choose and persist a preferred interface language
 - change password
 - delete account
 - read an About page describing the project and roadmap
@@ -136,7 +138,7 @@ php artisan test
 
 ## Roadmap direction
 
-The current product already covers the main dictionary workflow and a working Remainder game flow. The next major steps are real interface localization, mail-backed feedback delivery, and later Telegram-based workflows with deeper learning scenarios.
+The current product already covers the main dictionary workflow, a working Remainder game flow, and a bilingual interface with remembered user language preference. The next major steps are mail-backed feedback delivery and later Telegram-based workflows with deeper learning scenarios.
 
 ---
 
