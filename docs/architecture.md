@@ -15,6 +15,7 @@
 - `routes/web.php` is the main web entrypoint
 - Public route:
   - `/` -> `welcome` view
+  - `POST /interface-language` -> stores `ru|en` in session and redirects back
 - Authenticated routes:
   - `/dashboard` -> redirects to dictionaries index
   - `/profile` -> `ProfileController`
@@ -37,6 +38,13 @@
   - renders the game session page shell
 - Auth controllers are the standard Breeze-style controllers under `app/Http/Controllers/Auth`
 - Dictionaries are not handled by traditional controllers; they are handled by Livewire page components
+- Locale switching is currently handled by a small route closure plus web middleware, not by a dedicated controller
+
+### Middleware
+- `App\Http\Middleware\SetLocale`
+  - reads `ui_locale` from session
+  - validates it against configured supported locales
+  - calls `app()->setLocale(...)` for each web request
 
 ### Livewire Components
 - `App\Livewire\Dictionaries\Index`
@@ -67,6 +75,14 @@
   - `resources/views/about.blade.php`
   - `resources/views/remainder.blade.php`
   - `resources/views/remainder-show.blade.php`
+- Reusable shared components:
+  - `resources/views/components/language-switcher.blade.php`
+  - `resources/views/components/site-footer.blade.php`
+- Translation files:
+  - `lang/en/common.php`
+  - `lang/ru/common.php`
+  - `lang/en/about.php`
+  - `lang/ru/about.php`
 - Remainder game UI:
   - `resources/views/livewire/remainder/show.blade.php`
 - Key styling:
@@ -89,6 +105,7 @@
   - `MyMemoryTranslationService`
   - `TranslationResult`
   - `TranslationSuggestion`
+- Interface text localization uses standard Laravel lang files plus application locale set by middleware
 - Profile read-model services live under `app/Services/Profile`
   - `RemainderStatisticsService`
     - aggregates finished game sessions for the authenticated user's profile page
@@ -261,6 +278,13 @@
   - `updated_at`
 
 ## Current Product Decisions
+
+### Interface Locale
+- Currently supported interface locales:
+  - `ru`
+  - `en`
+- Chosen locale is stored in session under `ui_locale`
+- If no locale is selected, the application falls back to `config('app.locale')`
 
 ### Dictionary Language
 - At the moment dictionaries support:

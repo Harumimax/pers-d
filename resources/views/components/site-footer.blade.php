@@ -1,6 +1,6 @@
 @props([
     'linkHref' => '#',
-    'linkLabel' => 'About this project',
+    'linkLabel' => __('common.links.about'),
 ])
 
 <footer class="site-footer" role="contentinfo">

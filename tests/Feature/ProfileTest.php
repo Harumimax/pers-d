@@ -42,7 +42,25 @@ class ProfileTest extends TestCase
             ->assertSee('Message')
             ->assertSee('Send')
             ->assertSee('Clear all')
-            ->assertSee('Create a word repetition mode');
+            ->assertSee('Store part of speech as part of the game session snapshot');
+    }
+
+    public function test_about_page_is_translated_to_russian_when_locale_is_set_in_session(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->withSession(['ui_locale' => 'ru'])
+            ->get('/about')
+            ->assertOk()
+            ->assertSee('О WordKeeper')
+            ->assertSee('Форма обратной связи')
+            ->assertSee('Текущий функционал')
+            ->assertSee('Повторение')
+            ->assertSee('Словари')
+            ->assertSee('Профиль')
+            ->assertSee('Выйти')
+            ->assertSee('О проекте');
     }
 
     public function test_about_contact_placeholder_route_redirects_back_to_about_page(): void
@@ -66,6 +84,16 @@ class ProfileTest extends TestCase
             ])
             ->assertRedirect('/')
             ->assertSessionHas('ui_locale', 'en');
+    }
+
+    public function test_invalid_interface_language_is_ignored_without_error(): void
+    {
+        $this->from('/')
+            ->post(route('interface-language.update'), [
+                'language' => 'de',
+            ])
+            ->assertRedirect('/')
+            ->assertSessionMissing('ui_locale');
     }
 
     public function test_welcome_page_renders_language_switcher(): void

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,18 +13,18 @@
 <body>
 
 
-        <x-site-header label="Authentication links">
+        <x-site-header :label="__('common.navigation.auth')">
                 @auth
-                    <a href="{{ route('remainder') }}" class="btn btn-secondary">Remainder</a>
-                    <a href="{{ url('/dashboard') }}" class="btn btn-primary">Dictionaries</a>
+                    <a href="{{ route('remainder') }}" class="btn btn-secondary">{{ __('common.links.remainder') }}</a>
+                    <a href="{{ url('/dashboard') }}" class="btn btn-primary">{{ __('common.links.dictionaries') }}</a>
                     <form method="POST" action="{{ route('logout') }}" style="display:inline">
                         @csrf
-                        <button type="submit" class="btn btn-secondary">Log Out</button>
+                        <button type="submit" class="btn btn-secondary">{{ __('common.links.logout') }}</button>
                     </form>
                     <x-language-switcher />
                 @else
-                    <a href="{{ route('login') }}" class="btn btn-secondary">Log in</a>
-                    <a href="{{ route('register') }}" class="btn btn-primary">Sign up</a>
+                    <a href="{{ route('login') }}" class="btn btn-secondary">{{ __('common.links.login') }}</a>
+                    <a href="{{ route('register') }}" class="btn btn-primary">{{ __('common.links.signup') }}</a>
                     <x-language-switcher />
                 @endauth
         </x-site-header>

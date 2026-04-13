@@ -12,11 +12,12 @@ Route::get('/', function () {
 });
 
 Route::post('/interface-language', function (Request $request) {
-    $validated = $request->validate([
-        'language' => ['required', 'in:ru,en'],
-    ]);
+    $language = (string) $request->input('language');
+    $supportedLocales = config('app.supported_locales', [config('app.locale')]);
 
-    $request->session()->put('ui_locale', $validated['language']);
+    if (in_array($language, $supportedLocales, true)) {
+        $request->session()->put('ui_locale', $language);
+    }
 
     return redirect()->back();
 })->name('interface-language.update');

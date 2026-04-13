@@ -22,16 +22,16 @@
     </head>
     @php($dictionariesNavActive = request()->routeIs('dictionaries.index') || request()->routeIs('dictionaries.show'))
     <body class="dictionaries-shell">
-        <x-site-header nav-class="dictionaries-header-nav" label="Dictionaries navigation">
+        <x-site-header nav-class="dictionaries-header-nav" :label="__('common.navigation.dictionaries')">
             <a href="{{ route('remainder') }}" class="dictionaries-header-nav__link">
-                Remainder
+                {{ __('common.links.remainder') }}
             </a>
             <div class="dictionaries-header-nav__dropdown">
                 <a
                     href="{{ route('dictionaries.index') }}"
                     class="dictionaries-header-nav__link {{ $dictionariesNavActive ? 'dictionaries-header-nav__link--active' : '' }}"
                 >
-                    Dictionaries
+                    {{ __('common.links.dictionaries') }}
                 </a>
 
                 <div class="dictionaries-header-nav__menu" aria-label="Your dictionaries">
@@ -46,12 +46,12 @@
                 </div>
             </div>
             <a href="{{ route('profile.edit') }}" class="dictionaries-header-nav__link">
-                Profile
+                {{ __('common.links.profile') }}
             </a>
 
             <form method="POST" action="{{ route('logout') }}" class="dictionaries-header-nav__form">
                 @csrf
-                <button type="submit" class="btn btn-secondary">Log out</button>
+                <button type="submit" class="btn btn-secondary">{{ __('common.links.logout') }}</button>
             </form>
             <x-language-switcher />
         </x-site-header>
@@ -60,7 +60,7 @@
             {{ $slot }}
         </div>
 
-        <x-site-footer :link-href="route('about')" />
+        <x-site-footer :link-href="route('about')" :link-label="__('common.links.about')" />
 
         @livewireScripts
     </body>

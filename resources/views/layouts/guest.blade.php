@@ -17,13 +17,13 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="auth-shell">
-        <x-site-header label="Authentication links">
+        <x-site-header :label="__('common.navigation.auth')">
             @if (Route::has('login'))
                 <a
                     href="{{ route('login') }}"
                     class="btn {{ request()->routeIs('login') ? 'btn-primary' : 'btn-secondary' }}"
                 >
-                    Log in
+                    {{ __('common.links.login') }}
                 </a>
             @endif
 
@@ -32,7 +32,7 @@
                     href="{{ route('register') }}"
                     class="btn {{ request()->routeIs('register') ? 'btn-primary' : 'btn-secondary' }}"
                 >
-                    Sign up
+                    {{ __('common.links.signup') }}
                 </a>
             @endif
 

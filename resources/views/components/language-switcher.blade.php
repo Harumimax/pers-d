@@ -1,5 +1,5 @@
 @php
-    $currentLanguage = session('ui_locale', 'ru');
+    $currentLanguage = session('ui_locale', config('app.locale'));
     $targetLanguage = $currentLanguage === 'ru' ? 'en' : 'ru';
 @endphp
 
@@ -10,7 +10,7 @@
     <button
         type="submit"
         class="language-switcher__toggle {{ $currentLanguage === 'en' ? 'language-switcher__toggle--en' : 'language-switcher__toggle--ru' }}"
-        aria-label="Switch interface language"
+        aria-label="{{ __('common.language_switcher.label') }}"
     >
         <span class="language-switcher__label language-switcher__label--ru">Ru</span>
         <span class="language-switcher__thumb" aria-hidden="true"></span>

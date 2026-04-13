@@ -21,16 +21,16 @@
     </head>
     @php($activeNav = $activeNav ?? null)
     <body class="profile-shell">
-        <x-site-header nav-class="profile-header-nav" label="Profile navigation">
+        <x-site-header nav-class="profile-header-nav" :label="__('common.navigation.profile')">
             <a
                 href="{{ route('remainder') }}"
                 class="profile-header-nav__link {{ $activeNav === 'remainder' ? 'profile-header-nav__link--active' : '' }}"
             >
-                Remainder
+                {{ __('common.links.remainder') }}
             </a>
             <div class="profile-header-nav__dropdown">
                 <a href="{{ route('dictionaries.index') }}" class="profile-header-nav__link">
-                    Dictionaries
+                    {{ __('common.links.dictionaries') }}
                 </a>
 
                 <div class="profile-header-nav__menu" aria-label="Your dictionaries">
@@ -48,12 +48,12 @@
                 href="{{ route('profile.edit') }}"
                 class="profile-header-nav__link {{ $activeNav === 'profile' ? 'profile-header-nav__link--active' : '' }}"
             >
-                Profile
+                {{ __('common.links.profile') }}
             </a>
 
             <form method="POST" action="{{ route('logout') }}" class="profile-header-nav__form">
                 @csrf
-                <button type="submit" class="btn btn-secondary">Log out</button>
+                <button type="submit" class="btn btn-secondary">{{ __('common.links.logout') }}</button>
             </form>
             <x-language-switcher />
         </x-site-header>
@@ -62,6 +62,6 @@
             @yield('content')
         </div>
 
-        <x-site-footer :link-href="route('about')" />
+        <x-site-footer :link-href="route('about')" :link-label="__('common.links.about')" />
     </body>
 </html>
