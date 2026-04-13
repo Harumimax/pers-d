@@ -24,6 +24,7 @@ return [
     'attributes' => [
         'name' => 'имя',
         'email' => 'email',
+        'preferred_locale' => 'предпочитаемый язык',
         'language' => 'язык',
         'word' => 'слово',
         'translation' => 'перевод',

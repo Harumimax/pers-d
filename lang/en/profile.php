@@ -38,6 +38,11 @@ return [
         'description' => 'Update your account\'s profile information and email address.',
         'name' => 'Name',
         'email' => 'Email',
+        'preferred_locale' => 'Preferred language',
+        'locale_options' => [
+            'ru' => 'Russian',
+            'en' => 'English',
+        ],
         'unverified' => 'Your email address is unverified.',
         'resend_verification' => 'Click here to re-send the verification email.',
         'verification_sent' => 'A new verification link has been sent to your email address.',

@@ -362,6 +362,10 @@
     gap: 10px;
 }
 
+.profile-modal-cancel-btn {
+    min-width: 156px;
+}
+
 .profile-danger-btn {
     min-width: 142px;
     height: 48px;
@@ -485,6 +489,7 @@
         align-items: stretch;
     }
 
+    .profile-modal-cancel-btn,
     .profile-danger-btn {
         width: 100%;
     }

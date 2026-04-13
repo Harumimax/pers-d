@@ -24,6 +24,7 @@ return [
     'attributes' => [
         'name' => 'name',
         'email' => 'email',
+        'preferred_locale' => 'preferred language',
         'language' => 'language',
         'word' => 'word',
         'translation' => 'translation',

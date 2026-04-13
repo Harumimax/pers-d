@@ -40,6 +40,7 @@ class ProfileController extends Controller
         }
 
         $request->user()->save();
+        $request->session()->put('ui_locale', $request->user()->preferred_locale);
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }

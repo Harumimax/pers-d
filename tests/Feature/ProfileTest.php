@@ -86,6 +86,16 @@ class ProfileTest extends TestCase
             ->assertSessionHas('ui_locale', 'en');
     }
 
+    public function test_guest_can_still_change_locale_via_session_only(): void
+    {
+        $this->from('/')
+            ->post(route('interface-language.update'), [
+                'language' => 'ru',
+            ])
+            ->assertRedirect('/')
+            ->assertSessionHas('ui_locale', 'ru');
+    }
+
     public function test_invalid_interface_language_is_ignored_without_error(): void
     {
         $this->from('/')
@@ -93,7 +103,24 @@ class ProfileTest extends TestCase
                 'language' => 'de',
             ])
             ->assertRedirect('/')
-            ->assertSessionMissing('ui_locale');
+            ->assertSessionHas('ui_locale', config('app.locale'));
+    }
+
+    public function test_authenticated_user_switching_locale_updates_preferred_locale(): void
+    {
+        $user = User::factory()->create([
+            'preferred_locale' => 'en',
+        ]);
+
+        $this->actingAs($user)
+            ->from('/profile')
+            ->post(route('interface-language.update'), [
+                'language' => 'ru',
+            ])
+            ->assertRedirect('/profile')
+            ->assertSessionHas('ui_locale', 'ru');
+
+        $this->assertSame('ru', $user->fresh()->preferred_locale);
     }
 
     public function test_welcome_page_renders_language_switcher(): void
@@ -275,6 +302,7 @@ class ProfileTest extends TestCase
             ->patch('/profile', [
                 'name' => 'Test User',
                 'email' => 'test@example.com',
+                'preferred_locale' => 'en',
             ]);
 
         $response
@@ -285,7 +313,27 @@ class ProfileTest extends TestCase
 
         $this->assertSame('Test User', $user->name);
         $this->assertSame('test@example.com', $user->email);
+        $this->assertSame('en', $user->preferred_locale);
         $this->assertNull($user->email_verified_at);
+    }
+
+    public function test_profile_information_rejects_unsupported_preferred_locale(): void
+    {
+        $user = User::factory()->create([
+            'preferred_locale' => 'en',
+        ]);
+
+        $this->actingAs($user)
+            ->from('/profile')
+            ->patch('/profile', [
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+                'preferred_locale' => 'de',
+            ])
+            ->assertRedirect('/profile')
+            ->assertSessionHasErrors('preferred_locale');
+
+        $this->assertSame('en', $user->fresh()->preferred_locale);
     }
 
     public function test_profile_information_is_trimmed_and_zero_width_characters_are_removed(): void
@@ -300,6 +348,7 @@ class ProfileTest extends TestCase
             ->patch('/profile', [
                 'name' => " \u{200B}Test User\u{200D} ",
                 'email' => " \u{FEFF}Test@Example.com ",
+                'preferred_locale' => 'ru',
             ]);
 
         $response
@@ -310,6 +359,7 @@ class ProfileTest extends TestCase
 
         $this->assertSame('Test User', $user->name);
         $this->assertSame('test@example.com', $user->email);
+        $this->assertSame('ru', $user->preferred_locale);
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
@@ -321,13 +371,37 @@ class ProfileTest extends TestCase
             ->patch('/profile', [
                 'name' => 'Test User',
                 'email' => $user->email,
+                'preferred_locale' => 'en',
             ]);
 
         $response
             ->assertSessionHasNoErrors()
             ->assertRedirect('/profile');
 
-        $this->assertNotNull($user->refresh()->email_verified_at);
+        $user->refresh();
+
+        $this->assertNotNull($user->email_verified_at);
+        $this->assertSame('en', $user->preferred_locale);
+    }
+
+    public function test_preferred_locale_is_applied_after_login(): void
+    {
+        $password = 'password';
+        $user = User::factory()->create([
+            'email' => 'locale-user@example.com',
+            'password' => $password,
+            'preferred_locale' => 'ru',
+        ]);
+
+        $this->withSession(['ui_locale' => 'en'])
+            ->followingRedirects()
+            ->post('/login', [
+                'email' => $user->email,
+                'password' => $password,
+            ])
+            ->assertOk()
+            ->assertSee('Мои словари')
+            ->assertSessionHas('ui_locale', 'ru');
     }
 
     public function test_user_can_delete_their_account(): void

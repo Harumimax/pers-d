@@ -15,7 +15,7 @@
 - `routes/web.php` is the main web entrypoint
 - Public route:
   - `/` -> `welcome` view
-  - `POST /interface-language` -> stores `ru|en` in session and redirects back
+  - `POST /interface-language` -> stores `ru|en` in session, also updates authenticated user's preferred locale when available, and redirects back
 - Authenticated routes:
   - `/dashboard` -> redirects to dictionaries index
   - `/profile` -> `ProfileController`
@@ -42,8 +42,12 @@
 
 ### Middleware
 - `App\Http\Middleware\SetLocale`
-  - reads `ui_locale` from session
-  - validates it against configured supported locales
+  - resolves locale priority in this order:
+    - authenticated user's `preferred_locale`
+    - session `ui_locale`
+    - application default locale
+  - validates the resolved locale against configured supported locales
+  - synchronizes the resolved locale back into session
   - calls `app()->setLocale(...)` for each web request
 
 ### Livewire Components
@@ -129,6 +133,8 @@
 
 ### User
 - Model: `App\Models\User`
+- Important fields:
+  - `preferred_locale` nullable
 - Relationships:
   - `hasMany(UserDictionary::class)` via `dictionaries()`
   - `hasMany(GameSession::class)` via `gameSessions()`
@@ -198,6 +204,7 @@
   - `id`
   - `name`
   - `email`
+  - `preferred_locale` nullable
   - `password`
   - `email_verified_at`
 
@@ -283,8 +290,13 @@
 - Currently supported interface locales:
   - `ru`
   - `en`
-- Chosen locale is stored in session under `ui_locale`
-- If no locale is selected, the application falls back to `config('app.locale')`
+- Guests store the chosen locale in session under `ui_locale`
+- Authenticated users can persist locale in `users.preferred_locale` from the profile page or header switcher
+- Locale resolution priority:
+  - authenticated user's `preferred_locale`
+  - session `ui_locale`
+  - `config('app.locale')`
+- When an authenticated user changes locale via the header switcher, both session and `preferred_locale` are updated
 
 ### Dictionary Language
 - At the moment dictionaries support:

@@ -61,6 +61,24 @@
             @endif
         </div>
 
+        <div class="profile-field">
+            <label for="preferred_locale" class="profile-label">{{ __('profile.personal_information.preferred_locale') }}</label>
+            <select
+                id="preferred_locale"
+                name="preferred_locale"
+                class="profile-input"
+                required
+            >
+                <option value="ru" @selected(old('preferred_locale', $user->preferred_locale ?? config('app.locale')) === 'ru')>
+                    {{ __('profile.personal_information.locale_options.ru') }}
+                </option>
+                <option value="en" @selected(old('preferred_locale', $user->preferred_locale ?? config('app.locale')) === 'en')>
+                    {{ __('profile.personal_information.locale_options.en') }}
+                </option>
+            </select>
+            <x-input-error class="profile-error" :messages="$errors->get('preferred_locale')" />
+        </div>
+
         <div class="profile-actions">
             <button type="submit" class="btn btn-primary profile-submit-btn">{{ __('profile.personal_information.save') }}</button>
 

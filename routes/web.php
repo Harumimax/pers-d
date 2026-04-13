@@ -17,6 +17,12 @@ Route::post('/interface-language', function (Request $request) {
 
     if (in_array($language, $supportedLocales, true)) {
         $request->session()->put('ui_locale', $language);
+
+        if ($request->user() !== null) {
+            $request->user()->forceFill([
+                'preferred_locale' => $language,
+            ])->save();
+        }
     }
 
     return redirect()->back();

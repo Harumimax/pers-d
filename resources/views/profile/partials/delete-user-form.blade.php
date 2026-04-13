@@ -41,7 +41,7 @@
             </div>
 
             <div class="profile-modal-actions">
-                <button type="button" class="btn btn-secondary" x-on:click="$dispatch('close')">
+                <button type="button" class="btn btn-secondary profile-modal-cancel-btn" x-on:click="$dispatch('close')">
                     {{ __('profile.delete.cancel') }}
                 </button>
 

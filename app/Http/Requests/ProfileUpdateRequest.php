@@ -17,6 +17,7 @@ class ProfileUpdateRequest extends FormRequest
         $this->merge([
             'name' => $this->sanitizeTextInput($this->input('name')),
             'email' => $this->sanitizeEmail($this->input('email')),
+            'preferred_locale' => $this->sanitizeLocale($this->input('preferred_locale')),
         ]);
     }
 
@@ -38,6 +39,11 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
+            'preferred_locale' => [
+                'required',
+                'string',
+                Rule::in(config('app.supported_locales', [config('app.locale')])),
+            ],
         ];
     }
 
@@ -46,6 +52,7 @@ class ProfileUpdateRequest extends FormRequest
         return [
             'name' => __('validation.attributes.name'),
             'email' => __('validation.attributes.email'),
+            'preferred_locale' => __('validation.attributes.preferred_locale'),
         ];
     }
 
@@ -57,6 +64,11 @@ class ProfileUpdateRequest extends FormRequest
     }
 
     private function sanitizeEmail(?string $value): string
+    {
+        return mb_strtolower($this->sanitizeTextInput($value));
+    }
+
+    private function sanitizeLocale(?string $value): string
     {
         return mb_strtolower($this->sanitizeTextInput($value));
     }
