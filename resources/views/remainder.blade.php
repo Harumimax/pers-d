@@ -22,8 +22,8 @@
         <div class="container remainder-container">
             <section class="remainder-hero">
                 <div class="remainder-copy">
-                    <h1 class="remainder-title">Remainder</h1>
-                    <p class="remainder-description">is a game for reminding words.</p>
+                    <h1 class="remainder-title">{{ __('remainder.settings.title') }}</h1>
+                    <p class="remainder-description">{{ __('remainder.settings.description') }}</p>
                 </div>
             </section>
 
@@ -104,17 +104,17 @@
 
                 <header class="remainder-setup-card__header">
                     <div>
-                        <p class="remainder-setup-card__eyebrow">Remainder setup</p>
-                        <h2 class="remainder-setup-card__title">Configure your next repetition session</h2>
+                        <p class="remainder-setup-card__eyebrow">{{ __('remainder.settings.setup_eyebrow') }}</p>
+                        <h2 class="remainder-setup-card__title">{{ __('remainder.settings.setup_title') }}</h2>
                     </div>
                     <p class="remainder-setup-card__subtitle">
-                        Choose how you want to practice, which dictionaries to include, and how focused the round should be.
+                        {{ __('remainder.settings.setup_subtitle') }}
                     </p>
                 </header>
 
                 @if ($errors->any())
                     <div class="remainder-errors" role="alert">
-                        <p class="remainder-errors__title">We could not start the game yet.</p>
+                        <p class="remainder-errors__title">{{ __('remainder.settings.errors_title') }}</p>
                         <ul class="remainder-errors__list">
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
@@ -126,8 +126,8 @@
                 <div class="remainder-setup-grid">
                     <section class="remainder-section" aria-labelledby="remainder-game-type-title">
                         <div class="remainder-section__header">
-                            <h3 id="remainder-game-type-title" class="remainder-section__title">Game type</h3>
-                            <p class="remainder-section__description">Pick the answer format that feels right for this practice round.</p>
+                            <h3 id="remainder-game-type-title" class="remainder-section__title">{{ __('remainder.settings.game_type.title') }}</h3>
+                            <p class="remainder-section__description">{{ __('remainder.settings.game_type.description') }}</p>
                         </div>
 
                         <div class="remainder-option-grid remainder-option-grid--two">
@@ -137,8 +137,8 @@
                                 :class="{ 'remainder-option-card--active': gameType === 'manual' }"
                                 @click="gameType = 'manual'"
                             >
-                                <span class="remainder-option-card__title">Manual translation input</span>
-                                <span class="remainder-option-card__meta">Type the translation yourself and check your recall.</span>
+                                <span class="remainder-option-card__title">{{ __('remainder.settings.game_type.manual_title') }}</span>
+                                <span class="remainder-option-card__meta">{{ __('remainder.settings.game_type.manual_meta') }}</span>
                             </button>
 
                             <button
@@ -147,8 +147,8 @@
                                 :class="{ 'remainder-option-card--active': gameType === 'choice' }"
                                 @click="gameType = 'choice'"
                             >
-                                <span class="remainder-option-card__title">Choose from 6 options</span>
-                                <span class="remainder-option-card__meta">See up to 6 prepared answer options for each word and choose the correct one.</span>
+                                <span class="remainder-option-card__title">{{ __('remainder.settings.game_type.choice_title') }}</span>
+                                <span class="remainder-option-card__meta">{{ __('remainder.settings.game_type.choice_meta') }}</span>
                             </button>
                         </div>
 
@@ -156,8 +156,8 @@
 
                     <section class="remainder-section" aria-labelledby="remainder-direction-title">
                         <div class="remainder-section__header">
-                            <h3 id="remainder-direction-title" class="remainder-section__title">Translation direction</h3>
-                            <p class="remainder-section__description">Decide which side of the vocabulary pair should appear first.</p>
+                            <h3 id="remainder-direction-title" class="remainder-section__title">{{ __('remainder.settings.direction.title') }}</h3>
+                            <p class="remainder-section__description">{{ __('remainder.settings.direction.description') }}</p>
                         </div>
 
                         <div class="remainder-option-grid remainder-option-grid--two">
@@ -167,8 +167,8 @@
                                 :class="{ 'remainder-option-card--active': direction === 'foreign_to_ru' }"
                                 @click="direction = 'foreign_to_ru'"
                             >
-                                <span class="remainder-option-card__title">Foreign language to Russian</span>
-                                <span class="remainder-option-card__meta">See the original word first and recall the Russian meaning.</span>
+                                <span class="remainder-option-card__title">{{ __('remainder.settings.direction.foreign_to_ru_title') }}</span>
+                                <span class="remainder-option-card__meta">{{ __('remainder.settings.direction.foreign_to_ru_meta') }}</span>
                             </button>
 
                             <button
@@ -177,8 +177,8 @@
                                 :class="{ 'remainder-option-card--active': direction === 'ru_to_foreign' }"
                                 @click="direction = 'ru_to_foreign'"
                             >
-                                <span class="remainder-option-card__title">Russian to foreign language</span>
-                                <span class="remainder-option-card__meta">Flip the direction and reproduce the foreign word yourself.</span>
+                                <span class="remainder-option-card__title">{{ __('remainder.settings.direction.ru_to_foreign_title') }}</span>
+                                <span class="remainder-option-card__meta">{{ __('remainder.settings.direction.ru_to_foreign_meta') }}</span>
                             </button>
                         </div>
                     </section>
@@ -186,13 +186,18 @@
 
                 <section class="remainder-section" aria-labelledby="remainder-dictionaries-title">
                     <div class="remainder-section__header">
-                        <h3 id="remainder-dictionaries-title" class="remainder-section__title">Dictionaries</h3>
-                        <p class="remainder-section__description">Select one or several dictionaries to combine into the same session.</p>
+                        <h3 id="remainder-dictionaries-title" class="remainder-section__title">{{ __('remainder.settings.dictionaries.title') }}</h3>
+                        <p class="remainder-section__description">{{ __('remainder.settings.dictionaries.description') }}</p>
                     </div>
 
                     @if ($remainderDictionaries->isNotEmpty())
-                        <div class="remainder-dictionary-list" role="list" aria-label="Available dictionaries">
+                        <div class="remainder-dictionary-list" role="list" aria-label="{{ __('remainder.settings.dictionaries.available_aria') }}">
                             @foreach ($remainderDictionaries as $dictionary)
+                                @php
+                                    $dictionaryLanguageKey = $dictionary->language !== null
+                                        ? 'dictionaries.index.languages.' . strtolower($dictionary->language)
+                                        : 'dictionaries.index.languages.not_specified';
+                                @endphp
                                 <button
                                     type="button"
                                     class="remainder-dictionary-item"
@@ -202,9 +207,9 @@
                                     <span class="remainder-dictionary-item__main">
                                         <span class="remainder-dictionary-item__name">{{ $dictionary->name }}</span>
                                         <span class="remainder-dictionary-item__meta">
-                                            {{ $dictionary->language }}
+                                            {{ __($dictionaryLanguageKey) }}
                                             <span aria-hidden="true">&middot;</span>
-                                            {{ $dictionary->words_count }} {{ \Illuminate\Support\Str::plural('word', $dictionary->words_count) }}
+                                            {{ trans_choice('remainder.settings.dictionaries.words_count', $dictionary->words_count, ['count' => $dictionary->words_count]) }}
                                         </span>
                                     </span>
                                     <span class="remainder-dictionary-item__status" aria-hidden="true"></span>
@@ -213,8 +218,8 @@
                         </div>
                     @else
                         <div class="remainder-empty-state">
-                            <p class="remainder-empty-state__title">No dictionaries yet.</p>
-                            <p class="remainder-empty-state__text">Create a dictionary first, then come back here to configure a repetition session.</p>
+                            <p class="remainder-empty-state__title">{{ __('remainder.settings.dictionaries.empty_title') }}</p>
+                            <p class="remainder-empty-state__text">{{ __('remainder.settings.dictionaries.empty_text') }}</p>
                         </div>
                     @endif
                 </section>
@@ -222,8 +227,8 @@
                 <div class="remainder-setup-grid remainder-setup-grid--secondary">
                     <section class="remainder-section" aria-labelledby="remainder-parts-title">
                         <div class="remainder-section__header">
-                            <h3 id="remainder-parts-title" class="remainder-section__title">Parts of speech</h3>
-                            <p class="remainder-section__description">Focus the round on the categories you want to revisit.</p>
+                            <h3 id="remainder-parts-title" class="remainder-section__title">{{ __('remainder.settings.parts_of_speech.title') }}</h3>
+                            <p class="remainder-section__description">{{ __('remainder.settings.parts_of_speech.description') }}</p>
                         </div>
 
                         <div class="remainder-chip-list">
@@ -242,12 +247,12 @@
 
                     <section class="remainder-section" aria-labelledby="remainder-count-title">
                         <div class="remainder-section__header">
-                            <h3 id="remainder-count-title" class="remainder-section__title">Words count</h3>
-                            <p class="remainder-section__description">Set the size of the training set for one reminder session. Up to 20 words.</p>
+                            <h3 id="remainder-count-title" class="remainder-section__title">{{ __('remainder.settings.words_count.title') }}</h3>
+                            <p class="remainder-section__description">{{ __('remainder.settings.words_count.description') }}</p>
                         </div>
 
                         <div class="remainder-count-field">
-                            <label for="remainder-words-count" class="remainder-count-label">Words count</label>
+                            <label for="remainder-words-count" class="remainder-count-label">{{ __('remainder.settings.words_count.label') }}</label>
                             <input
                                 id="remainder-words-count"
                                 name="words_count"
@@ -258,19 +263,19 @@
                                 class="remainder-count-input"
                                 x-model="wordsCount"
                                 @input="sanitizeWordsCount($event.target.value)"
-                                placeholder="10"
+                                placeholder="{{ __('remainder.settings.words_count.placeholder') }}"
                                 aria-describedby="remainder-words-count-hint"
                             >
-                            <p id="remainder-words-count-hint" class="remainder-count-hint">Only digits are allowed. Maximum value: 20.</p>
+                            <p id="remainder-words-count-hint" class="remainder-count-hint">{{ __('remainder.settings.words_count.hint') }}</p>
                         </div>
                     </section>
                 </div>
 
                 <footer class="remainder-actions">
                     <button type="submit" class="btn btn-primary remainder-actions__start">
-                        Start
+                        {{ __('remainder.settings.actions.start') }}
                     </button>
-                    <button type="button" class="btn btn-secondary remainder-actions__reset" @click="resetSettings()">Reset</button>
+                    <button type="button" class="btn btn-secondary remainder-actions__reset" @click="resetSettings()">{{ __('remainder.settings.actions.reset') }}</button>
                 </footer>
             </form>
         </div>

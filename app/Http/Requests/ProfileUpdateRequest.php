@@ -41,6 +41,14 @@ class ProfileUpdateRequest extends FormRequest
         ];
     }
 
+    public function attributes(): array
+    {
+        return [
+            'name' => __('validation.attributes.name'),
+            'email' => __('validation.attributes.email'),
+        ];
+    }
+
     private function sanitizeTextInput(?string $value): string
     {
         $normalized = preg_replace(self::ZERO_WIDTH_CHARACTER_PATTERN, '', (string) $value) ?? (string) $value;

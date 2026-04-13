@@ -3,11 +3,11 @@
 @section('content')
     @php
         $firstFinishedAt = $remainderStatistics['first_finished_at']
-            ? \Illuminate\Support\Carbon::parse($remainderStatistics['first_finished_at'])->format('d M Y')
-            : 'No completed sessions yet';
+            ? \Illuminate\Support\Carbon::parse($remainderStatistics['first_finished_at'])->translatedFormat('d M Y')
+            : __('profile.statistics.fallbacks.no_completed_sessions');
         $lastFinishedAt = $remainderStatistics['last_finished_at']
-            ? \Illuminate\Support\Carbon::parse($remainderStatistics['last_finished_at'])->format('d M Y')
-            : 'No completed sessions yet';
+            ? \Illuminate\Support\Carbon::parse($remainderStatistics['last_finished_at'])->translatedFormat('d M Y')
+            : __('profile.statistics.fallbacks.no_completed_sessions');
     @endphp
 
     <main class="profile-main" x-data="{ statisticsOpen: false }">
@@ -20,7 +20,7 @@
                     :aria-expanded="statisticsOpen.toString()"
                     aria-controls="remainder-statistics-panel"
                 >
-                    <span class="profile-title">Remainder Statistic</span>
+                    <span class="profile-title">{{ __('profile.statistics.title') }}</span>
                     <span class="profile-title-toggle__icon" :class="{ 'profile-title-toggle__icon--open': statisticsOpen }" aria-hidden="true">
                         <svg viewBox="0 0 20 20" fill="currentColor" focusable="false">
                             <path fill-rule="evenodd" d="M5.22 7.22a.75.75 0 0 1 1.06 0L10 10.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 8.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/>
@@ -40,41 +40,41 @@
                         <table class="profile-statistics-table">
                             <tbody>
                                 <tr>
-                                    <th scope="row">Completed sessions</th>
+                                    <th scope="row">{{ __('profile.statistics.rows.completed_sessions') }}</th>
                                     <td>{{ $remainderStatistics['sessions_count'] }}</td>
                                 </tr>
                                 <tr>
-                                    <th scope="row">First completed session</th>
+                                    <th scope="row">{{ __('profile.statistics.rows.first_completed_session') }}</th>
                                     <td>{{ $firstFinishedAt }}</td>
                                 </tr>
                                 <tr>
-                                    <th scope="row">Last completed session</th>
+                                    <th scope="row">{{ __('profile.statistics.rows.last_completed_session') }}</th>
                                     <td>{{ $lastFinishedAt }}</td>
                                 </tr>
                                 <tr>
-                                    <th scope="row">Preferred mode</th>
-                                    <td>{{ $remainderStatistics['preferred_mode'] ?? 'Not enough data yet' }}</td>
+                                    <th scope="row">{{ __('profile.statistics.rows.preferred_mode') }}</th>
+                                    <td>{{ $remainderStatistics['preferred_mode'] ?? __('profile.statistics.fallbacks.not_enough_data') }}</td>
                                 </tr>
                                 <tr>
-                                    <th scope="row">Preferred direction</th>
-                                    <td>{{ $remainderStatistics['preferred_direction'] ?? 'Not enough data yet' }}</td>
+                                    <th scope="row">{{ __('profile.statistics.rows.preferred_direction') }}</th>
+                                    <td>{{ $remainderStatistics['preferred_direction'] ?? __('profile.statistics.fallbacks.not_enough_data') }}</td>
                                 </tr>
                                 <tr>
-                                    <th scope="row">Total words in all games</th>
+                                    <th scope="row">{{ __('profile.statistics.rows.total_words') }}</th>
                                     <td>{{ $remainderStatistics['total_words'] }}</td>
                                 </tr>
                                 <tr>
-                                    <th scope="row">Total correct answers</th>
+                                    <th scope="row">{{ __('profile.statistics.rows.correct_answers') }}</th>
                                     <td>{{ $remainderStatistics['correct_answers'] }}</td>
                                 </tr>
                                 <tr>
-                                    <th scope="row">Total incorrect answers</th>
+                                    <th scope="row">{{ __('profile.statistics.rows.incorrect_answers') }}</th>
                                     <td>{{ $remainderStatistics['incorrect_answers'] }}</td>
                                 </tr>
                                 <tr>
-                                    <th scope="row">Correct answers percentage</th>
+                                    <th scope="row">{{ __('profile.statistics.rows.accuracy_percentage') }}</th>
                                     <td>
-                                        {{ $remainderStatistics['accuracy_percentage'] !== null ? rtrim(rtrim(number_format($remainderStatistics['accuracy_percentage'], 1), '0'), '.') . '%' : 'No answers yet' }}
+                                        {{ $remainderStatistics['accuracy_percentage'] !== null ? rtrim(rtrim(number_format($remainderStatistics['accuracy_percentage'], 1), '0'), '.') . '%' : __('profile.statistics.fallbacks.no_answers') }}
                                     </td>
                                 </tr>
                             </tbody>
@@ -84,7 +84,7 @@
             </section>
 
             <header class="profile-page-header profile-page-header--spacious">
-                <h1 class="profile-title">Profile Settings</h1>
+                <h1 class="profile-title">{{ __('profile.settings.title') }}</h1>
             </header>
 
             <section class="profile-card">

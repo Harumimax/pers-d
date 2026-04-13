@@ -18,9 +18,9 @@
             <header class="remainder-game-card__header">
                 <div>
                     <p class="remainder-game-eyebrow">
-                        {{ $gameSession->mode === \App\Models\GameSession::MODE_CHOICE ? 'Multiple choice' : 'Manual translation input' }}
+                        {{ $gameSession->mode === \App\Models\GameSession::MODE_CHOICE ? __('remainder.game.mode.choice') : __('remainder.game.mode.manual') }}
                     </p>
-                    <h1 class="remainder-game-title">Remainder</h1>
+                    <h1 class="remainder-game-title">{{ __('remainder.settings.title') }}</h1>
                 </div>
                 @if ($progressLabel)
                     <p class="remainder-game-progress">{{ $progressLabel }}</p>
@@ -29,44 +29,44 @@
 
             <div class="remainder-game-feedback-card {{ $lastAnswerCorrect ? 'remainder-game-feedback-card--correct' : 'remainder-game-feedback-card--incorrect' }}">
                 <h2 class="remainder-game-feedback-card__title">
-                    {{ $lastAnswerCorrect ? 'Correct' : 'Incorrect' }}
+                    {{ $lastAnswerCorrect ? __('remainder.game.feedback.correct') : __('remainder.game.feedback.incorrect') }}
                 </h2>
-                <p class="remainder-game-feedback-card__text">Prompt: {{ $lastPromptText }}</p>
-                <p class="remainder-game-feedback-card__text">Your answer: {{ $lastUserAnswer }}</p>
+                <p class="remainder-game-feedback-card__text">{{ __('remainder.game.feedback.prompt', ['value' => $lastPromptText]) }}</p>
+                <p class="remainder-game-feedback-card__text">{{ __('remainder.game.feedback.your_answer', ['value' => $lastUserAnswer]) }}</p>
 
                 @unless ($lastAnswerCorrect)
                     <p class="remainder-game-feedback-card__text">
-                        Correct answer:
+                        {{ __('remainder.game.feedback.correct_answer') }}
                         <span class="remainder-game-reveal-answer">{{ $lastCorrectAnswer }}</span>
                     </p>
                 @endunless
 
                 <button type="button" class="btn btn-primary remainder-game-action-btn" wire:click="continueToNext">
-                    Continue
+                    {{ __('remainder.game.feedback.continue') }}
                 </button>
             </div>
         </section>
     @elseif ($gameSession->status === \App\Models\GameSession::STATUS_FINISHED)
         <section class="remainder-game-summary-card">
             <div class="remainder-game-summary-card__header">
-                <p class="remainder-game-eyebrow">Session finished</p>
-                <h1 class="remainder-game-title">Remainder results</h1>
+                <p class="remainder-game-eyebrow">{{ __('remainder.game.result.finished') }}</p>
+                <h1 class="remainder-game-title">{{ __('remainder.game.result.title') }}</h1>
                 <p class="remainder-game-description">
-                    Correct {{ $resultSummary['correct_answers'] }} of {{ $resultSummary['total_words'] }}.
+                    {{ __('remainder.game.result.summary', ['correct' => $resultSummary['correct_answers'], 'total' => $resultSummary['total_words']]) }}
                 </p>
             </div>
 
             @if ($resultSummary['incorrect_items']->isNotEmpty())
                 <div class="remainder-game-errors">
-                    <h2 class="remainder-game-errors__title">Incorrect answers</h2>
+                    <h2 class="remainder-game-errors__title">{{ __('remainder.game.result.incorrect_answers') }}</h2>
 
                     <div class="remainder-game-errors__list">
                         @foreach ($resultSummary['incorrect_items'] as $item)
                             <article class="remainder-game-error-item">
-                                <p class="remainder-game-error-item__prompt">Prompt: {{ $item->prompt_text }}</p>
-                                <p class="remainder-game-error-item__answer">Your answer: {{ $item->user_answer }}</p>
+                                <p class="remainder-game-error-item__prompt">{{ __('remainder.game.feedback.prompt', ['value' => $item->prompt_text]) }}</p>
+                                <p class="remainder-game-error-item__answer">{{ __('remainder.game.feedback.your_answer', ['value' => $item->user_answer]) }}</p>
                                 <p class="remainder-game-error-item__answer">
-                                    Correct answer:
+                                    {{ __('remainder.game.feedback.correct_answer') }}
                                     <span class="remainder-game-reveal-answer">{{ $item->correct_answer }}</span>
                                 </p>
                             </article>
@@ -75,12 +75,12 @@
                 </div>
             @else
                 <div class="remainder-game-banner remainder-game-banner--success">
-                    Great work. All answers in this session were correct.
+                    {{ __('remainder.game.result.all_correct') }}
                 </div>
             @endif
 
             <div class="remainder-game-summary-card__actions">
-                <a href="{{ route('remainder') }}" class="btn btn-primary remainder-game-action-btn">Back to settings</a>
+                <a href="{{ route('remainder') }}" class="btn btn-primary remainder-game-action-btn">{{ __('remainder.game.result.back_to_settings') }}</a>
             </div>
         </section>
     @else
@@ -88,9 +88,9 @@
             <header class="remainder-game-card__header">
                 <div>
                     <p class="remainder-game-eyebrow">
-                        {{ $gameSession->mode === \App\Models\GameSession::MODE_CHOICE ? 'Multiple choice' : 'Manual translation input' }}
+                        {{ $gameSession->mode === \App\Models\GameSession::MODE_CHOICE ? __('remainder.game.mode.choice') : __('remainder.game.mode.manual') }}
                     </p>
-                    <h1 class="remainder-game-title">Remainder</h1>
+                    <h1 class="remainder-game-title">{{ __('remainder.settings.title') }}</h1>
                 </div>
                 @if ($progressLabel)
                     <p class="remainder-game-progress">{{ $progressLabel }}</p>
@@ -100,7 +100,7 @@
             @if ($currentItem)
                 <div class="remainder-game-prompt-card">
                     <div class="remainder-game-prompt-card__body">
-                        <p class="remainder-game-prompt-card__label">Translate this</p>
+                        <p class="remainder-game-prompt-card__label">{{ __('remainder.game.prompt.translate_this') }}</p>
                         <div class="remainder-game-prompt-card__word-row">
                             <p class="remainder-game-prompt-card__word">{{ $currentItem->prompt_text }}</p>
                             @if ($currentPartOfSpeechLabel)
@@ -113,7 +113,7 @@
                 <form wire:submit="submitAnswer" class="remainder-game-form">
                     @if ($gameSession->mode === \App\Models\GameSession::MODE_CHOICE)
                         <div class="remainder-game-field">
-                            <span class="remainder-game-label">Choose the correct answer</span>
+                            <span class="remainder-game-label">{{ __('remainder.game.prompt.choose_correct_answer') }}</span>
 
                             <div class="remainder-game-choice-grid">
                                 @foreach (($currentItem->options_json ?? []) as $option)
@@ -133,7 +133,7 @@
                         </div>
                     @else
                         <div class="remainder-game-field">
-                            <label for="manual-answer" class="remainder-game-label">Your translation</label>
+                            <label for="manual-answer" class="remainder-game-label">{{ __('remainder.game.prompt.your_translation') }}</label>
                             <input
                                 id="manual-answer"
                                 type="text"
@@ -148,12 +148,12 @@
                     @endif
 
                     <div class="remainder-game-form__actions">
-                        <button type="submit" class="btn btn-primary remainder-game-action-btn">Submit</button>
+                        <button type="submit" class="btn btn-primary remainder-game-action-btn">{{ __('remainder.game.prompt.submit') }}</button>
                     </div>
                 </form>
             @else
                 <div class="remainder-game-banner remainder-game-banner--info">
-                    No active item is available for this session.
+                    {{ __('remainder.game.prompt.no_active_item') }}
                 </div>
             @endif
         </section>

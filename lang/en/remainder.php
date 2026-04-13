@@ -1,0 +1,103 @@
+<?php
+
+return [
+    'settings' => [
+        'title' => 'Remainder',
+        'description' => 'is a game for reminding words.',
+        'setup_eyebrow' => 'Remainder setup',
+        'setup_title' => 'Configure your next repetition session',
+        'setup_subtitle' => 'Choose how you want to practice, which dictionaries to include, and how focused the round should be.',
+        'errors_title' => 'We could not start the game yet.',
+        'game_type' => [
+            'title' => 'Game type',
+            'description' => 'Pick the answer format that feels right for this practice round.',
+            'manual_title' => 'Manual translation input',
+            'manual_meta' => 'Type the translation yourself and check your recall.',
+            'choice_title' => 'Choose from 6 options',
+            'choice_meta' => 'See up to 6 prepared answer options for each word and choose the correct one.',
+        ],
+        'direction' => [
+            'title' => 'Translation direction',
+            'description' => 'Decide which side of the vocabulary pair should appear first.',
+            'foreign_to_ru_title' => 'Foreign language to Russian',
+            'foreign_to_ru_meta' => 'See the original word first and recall the Russian meaning.',
+            'ru_to_foreign_title' => 'Russian to foreign language',
+            'ru_to_foreign_meta' => 'Flip the direction and reproduce the foreign word yourself.',
+        ],
+        'dictionaries' => [
+            'title' => 'Dictionaries',
+            'description' => 'Select one or several dictionaries to combine into the same session.',
+            'available_aria' => 'Available dictionaries',
+            'empty_title' => 'No dictionaries yet.',
+            'empty_text' => 'Create a dictionary first, then come back here to configure a repetition session.',
+            'words_count' => '{1} :count word|[2,*] :count words',
+        ],
+        'parts_of_speech' => [
+            'title' => 'Parts of speech',
+            'description' => 'Focus the round on the categories you want to revisit.',
+        ],
+        'words_count' => [
+            'title' => 'Words count',
+            'description' => 'Set the size of the training set for one reminder session. Up to 20 words.',
+            'label' => 'Words count',
+            'placeholder' => '10',
+            'hint' => 'Only digits are allowed. Maximum value: 20.',
+        ],
+        'actions' => [
+            'start' => 'Start',
+            'reset' => 'Reset',
+        ],
+    ],
+    'game' => [
+        'mode' => [
+            'choice' => 'Multiple choice',
+            'manual' => 'Manual translation input',
+        ],
+        'progress' => 'Word :current of :total',
+        'feedback' => [
+            'correct' => 'Correct',
+            'incorrect' => 'Incorrect',
+            'prompt' => 'Prompt: :value',
+            'your_answer' => 'Your answer: :value',
+            'correct_answer' => 'Correct answer:',
+            'continue' => 'Continue',
+        ],
+        'result' => [
+            'finished' => 'Session finished',
+            'title' => 'Remainder results',
+            'summary' => 'Correct :correct of :total.',
+            'incorrect_answers' => 'Incorrect answers',
+            'back_to_settings' => 'Back to settings',
+            'all_correct' => 'Great work. All answers in this session were correct.',
+        ],
+        'prompt' => [
+            'translate_this' => 'Translate this',
+            'choose_correct_answer' => 'Choose the correct answer',
+            'your_translation' => 'Your translation',
+            'submit' => 'Submit',
+            'no_active_item' => 'No active item is available for this session.',
+        ],
+    ],
+    'messages' => [
+        'start' => [
+            'not_owner' => 'You can use only your own dictionaries in the game configuration.',
+            'no_words' => 'No words matched the selected dictionaries and filters.',
+            'partial_notice' => 'Only :count :word_label matched the current filters, so the game was created with :count.',
+            'word_label_singular' => 'word',
+            'word_label_plural' => 'words',
+            'choice_requires_unique_answers' => 'Multiple choice mode requires at least 2 unique answers in the selected dictionaries and filters.',
+            'choice_requires_question_options' => 'Multiple choice mode requires at least 2 options for each question.',
+            'choice_partial_warning' => 'Only :count answer :option_label were available for some questions because the selected dictionaries and filters did not contain enough unique answers.',
+            'option_label_singular' => 'option',
+            'option_label_plural' => 'options',
+            'choose_dictionary' => 'Choose at least one dictionary to start the game.',
+            'words_count_max' => 'Words count cannot be greater than 20.',
+        ],
+        'play' => [
+            'finished' => 'This game session is already finished.',
+            'enter_translation' => 'Enter your translation before submitting.',
+            'choose_option' => 'Choose one answer option before submitting.',
+            'choose_available_option' => 'Choose one of the available answer options.',
+        ],
+    ],
+];

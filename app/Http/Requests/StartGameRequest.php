@@ -57,8 +57,16 @@ class StartGameRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'dictionary_ids.required' => 'Choose at least one dictionary to start the game.',
-            'words_count.max' => 'Words count cannot be greater than 20.',
+            'dictionary_ids.required' => __('remainder.messages.start.choose_dictionary'),
+            'words_count.max' => __('remainder.messages.start.words_count_max'),
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'dictionary_ids' => __('validation.attributes.dictionary_ids'),
+            'words_count' => __('validation.attributes.words_count'),
         ];
     }
 }

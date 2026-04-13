@@ -1,8 +1,8 @@
 <section class="profile-section">
     <header class="profile-section__header">
-        <h2 class="profile-section__title">{{ __('Delete Account') }}</h2>
+        <h2 class="profile-section__title">{{ __('profile.delete.title') }}</h2>
         <p class="profile-section__description">
-            {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.') }}
+            {{ __('profile.delete.description') }}
         </p>
     </header>
 
@@ -11,7 +11,7 @@
         class="profile-delete-trigger"
         x-data=""
         x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')"
-    >{{ __('Delete Account') }}</button>
+    >{{ __('profile.delete.trigger') }}</button>
 
     <x-modal name="confirm-user-deletion" :show="$errors->userDeletion->isNotEmpty()" focusable>
         <form method="post" action="{{ route('profile.destroy') }}" class="profile-modal-form">
@@ -19,22 +19,22 @@
             @method('delete')
 
             <h2 class="profile-modal-title">
-                {{ __('Are you sure you want to delete your account?') }}
+                {{ __('profile.delete.confirm_title') }}
             </h2>
 
             <p class="profile-modal-text">
-                {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.') }}
+                {{ __('profile.delete.confirm_text') }}
             </p>
 
             <div class="profile-field">
-                <label for="password" class="profile-label sr-only">{{ __('Password') }}</label>
+                <label for="password" class="profile-label sr-only">{{ __('profile.delete.password_placeholder') }}</label>
 
                 <input
                     id="password"
                     name="password"
                     type="password"
                     class="profile-input"
-                    placeholder="{{ __('Password') }}"
+                    placeholder="{{ __('profile.delete.password_placeholder') }}"
                 />
 
                 <x-input-error :messages="$errors->userDeletion->get('password')" class="profile-error" />
@@ -42,11 +42,11 @@
 
             <div class="profile-modal-actions">
                 <button type="button" class="btn btn-secondary" x-on:click="$dispatch('close')">
-                    {{ __('Cancel') }}
+                    {{ __('profile.delete.cancel') }}
                 </button>
 
                 <button type="submit" class="profile-danger-btn">
-                    {{ __('Delete Account') }}
+                    {{ __('profile.delete.confirm') }}
                 </button>
             </div>
         </form>

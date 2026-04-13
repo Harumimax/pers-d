@@ -104,7 +104,7 @@ class Show extends Component
             'partOfSpeechOptions' => $partOfSpeechOptions,
             'partOfSpeechFilterOptions' => PartOfSpeechCatalog::dictionaryFilterLabels(),
             'partOfSpeechDisplayMap' => PartOfSpeechCatalog::labels(),
-            'autoTranslationUnavailableMessage' => 'Translation is currently unavailable. Please switch to Enter manually.',
+            'autoTranslationUnavailableMessage' => __('dictionaries.show.translation.unavailable'),
         ])->layout('layouts.dictionaries', [
             'headerDictionaries' => $headerDictionaries,
         ]);
@@ -182,7 +182,7 @@ class Show extends Component
 
         $sourceLanguage = $this->sourceLanguageCode();
         if ($sourceLanguage === null) {
-            $this->autoTranslationError = 'Translation is currently unavailable. Please switch to Enter manually.';
+            $this->autoTranslationError = __('dictionaries.show.translation.unavailable');
             $this->dispatch('auto-translation-unavailable');
 
             return;
@@ -195,7 +195,7 @@ class Show extends Component
                 self::TARGET_LANGUAGE,
             );
         } catch (ConnectionException|RequestException) {
-            $this->autoTranslationError = 'Translation is currently unavailable. Please switch to Enter manually.';
+            $this->autoTranslationError = __('dictionaries.show.translation.unavailable');
             $this->dispatch('auto-translation-unavailable');
 
             return;
@@ -204,7 +204,7 @@ class Show extends Component
         $this->autoSuggestions = $result->toArray();
 
         if ($this->autoSuggestions === []) {
-            $this->autoTranslationError = 'Translation is currently unavailable. Please switch to Enter manually.';
+            $this->autoTranslationError = __('dictionaries.show.translation.unavailable');
             $this->dispatch('auto-translation-unavailable');
 
             return;

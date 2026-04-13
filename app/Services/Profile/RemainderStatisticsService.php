@@ -66,12 +66,12 @@ class RemainderStatisticsService
             ->get();
 
         if ($modeCounts->count() > 1 && (int) $modeCounts[0]->aggregate === (int) $modeCounts[1]->aggregate) {
-            return 'Both equally';
+            return __('profile.statistics.mode.both_equally');
         }
 
         return match ($modeCounts->first()?->mode) {
-            GameSession::MODE_CHOICE => 'Multiple choice',
-            GameSession::MODE_MANUAL => 'Manual translation input',
+            GameSession::MODE_CHOICE => __('profile.statistics.mode.choice'),
+            GameSession::MODE_MANUAL => __('profile.statistics.mode.manual'),
             default => null,
         };
     }
@@ -93,12 +93,12 @@ class RemainderStatisticsService
             ->get();
 
         if ($directionCounts->count() > 1 && (int) $directionCounts[0]->aggregate === (int) $directionCounts[1]->aggregate) {
-            return 'Both equally';
+            return __('profile.statistics.direction.both_equally');
         }
 
         return match ($directionCounts->first()?->direction) {
-            GameSession::DIRECTION_FOREIGN_TO_RU => 'Foreign language to Russian',
-            GameSession::DIRECTION_RU_TO_FOREIGN => 'Russian to foreign language',
+            GameSession::DIRECTION_FOREIGN_TO_RU => __('profile.statistics.direction.foreign_to_ru'),
+            GameSession::DIRECTION_RU_TO_FOREIGN => __('profile.statistics.direction.ru_to_foreign'),
             default => null,
         };
     }

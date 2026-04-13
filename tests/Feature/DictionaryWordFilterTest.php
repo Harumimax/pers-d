@@ -47,12 +47,12 @@ class DictionaryWordFilterTest extends TestCase
 
         Livewire::actingAs($user)
             ->test(Show::class, ['dictionary' => $dictionary])
-            ->assertSeeHtml('Total words: <b> 3 </b>')
+            ->assertSeeHtml('Total words: <b>3</b>')
             ->assertSee('casa')
             ->assertSee('hablar')
             ->assertSee('legacy')
             ->set('partOfSpeechFilter', 'verb')
-            ->assertSeeHtml('Total words: <b> 3 </b>')
+            ->assertSeeHtml('Total words: <b>3</b>')
             ->assertSee('hablar')
             ->assertDontSee('casa')
             ->assertDontSee('legacy')
@@ -295,8 +295,8 @@ class DictionaryWordFilterTest extends TestCase
 
         Livewire::actingAs($user)
             ->test(Show::class, ['dictionary' => $dictionary])
-            ->assertSeeHtml('Cardinal (&#1063;&#1080;&#1089;&#1083;&#1080;&#1090;&#1077;&#1083;&#1100;&#1085;&#1086;&#1077;)')
-            ->assertSee('Cardinal');
+            ->assertSee('Cardinal')
+            ->assertSee('Числительное');
     }
 
     public function test_translate_automatically_loads_suggestions_from_service(): void

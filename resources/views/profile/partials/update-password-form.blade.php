@@ -1,8 +1,8 @@
 <section class="profile-section">
     <header class="profile-section__header">
-        <h2 class="profile-section__title">{{ __('Change Password') }}</h2>
+        <h2 class="profile-section__title">{{ __('profile.password.title') }}</h2>
         <p class="profile-section__description">
-            {{ __('Ensure your account is using a long, random password to stay secure.') }}
+            {{ __('profile.password.description') }}
         </p>
     </header>
 
@@ -11,7 +11,7 @@
         @method('put')
 
         <div class="profile-field">
-            <label for="update_password_current_password" class="profile-label">{{ __('Current Password') }}</label>
+            <label for="update_password_current_password" class="profile-label">{{ __('profile.password.current') }}</label>
             <input
                 id="update_password_current_password"
                 name="current_password"
@@ -23,7 +23,7 @@
         </div>
 
         <div class="profile-field">
-            <label for="update_password_password" class="profile-label">{{ __('New Password') }}</label>
+            <label for="update_password_password" class="profile-label">{{ __('profile.password.new') }}</label>
             <input
                 id="update_password_password"
                 name="password"
@@ -35,7 +35,7 @@
         </div>
 
         <div class="profile-field">
-            <label for="update_password_password_confirmation" class="profile-label">{{ __('Confirm Password') }}</label>
+            <label for="update_password_password_confirmation" class="profile-label">{{ __('profile.password.confirm') }}</label>
             <input
                 id="update_password_password_confirmation"
                 name="password_confirmation"
@@ -47,7 +47,7 @@
         </div>
 
         <div class="profile-actions">
-            <button type="submit" class="btn btn-primary profile-submit-btn">{{ __('Save Changes') }}</button>
+            <button type="submit" class="btn btn-primary profile-submit-btn">{{ __('profile.password.save') }}</button>
 
             @if (session('status') === 'password-updated')
                 <p
@@ -56,7 +56,7 @@
                     x-transition
                     x-init="setTimeout(() => show = false, 2000)"
                     class="profile-muted-status"
-                >{{ __('Saved.') }}</p>
+                >{{ __('profile.password.saved') }}</p>
             @endif
         </div>
     </form>

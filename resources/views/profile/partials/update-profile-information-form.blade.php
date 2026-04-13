@@ -1,8 +1,8 @@
 <section class="profile-section">
     <header class="profile-section__header">
-        <h2 class="profile-section__title">{{ __('Personal Information') }}</h2>
+        <h2 class="profile-section__title">{{ __('profile.personal_information.title') }}</h2>
         <p class="profile-section__description">
-            {{ __("Update your account's profile information and email address.") }}
+            {{ __('profile.personal_information.description') }}
         </p>
     </header>
 
@@ -15,7 +15,7 @@
         @method('patch')
 
         <div class="profile-field">
-            <label for="name" class="profile-label">{{ __('Name') }}</label>
+            <label for="name" class="profile-label">{{ __('profile.personal_information.name') }}</label>
             <input
                 id="name"
                 name="name"
@@ -30,7 +30,7 @@
         </div>
 
         <div class="profile-field">
-            <label for="email" class="profile-label">{{ __('Email') }}</label>
+            <label for="email" class="profile-label">{{ __('profile.personal_information.email') }}</label>
             <input
                 id="email"
                 name="email"
@@ -45,16 +45,16 @@
             @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
                 <div class="profile-inline-status">
                     <p>
-                        {{ __('Your email address is unverified.') }}
+                        {{ __('profile.personal_information.unverified') }}
 
                         <button form="send-verification" class="profile-inline-link" type="submit">
-                            {{ __('Click here to re-send the verification email.') }}
+                            {{ __('profile.personal_information.resend_verification') }}
                         </button>
                     </p>
 
                     @if (session('status') === 'verification-link-sent')
                         <p class="profile-success">
-                            {{ __('A new verification link has been sent to your email address.') }}
+                            {{ __('profile.personal_information.verification_sent') }}
                         </p>
                     @endif
                 </div>
@@ -62,7 +62,7 @@
         </div>
 
         <div class="profile-actions">
-            <button type="submit" class="btn btn-primary profile-submit-btn">{{ __('Save Changes') }}</button>
+            <button type="submit" class="btn btn-primary profile-submit-btn">{{ __('profile.personal_information.save') }}</button>
 
             @if (session('status') === 'profile-updated')
                 <p
@@ -71,7 +71,7 @@
                     x-transition
                     x-init="setTimeout(() => show = false, 2000)"
                     class="profile-muted-status"
-                >{{ __('Saved.') }}</p>
+                >{{ __('profile.personal_information.saved') }}</p>
             @endif
         </div>
     </form>

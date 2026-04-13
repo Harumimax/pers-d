@@ -24,8 +24,8 @@ class PartOfSpeechOptionsTest extends TestCase
 
         Livewire::actingAs($user)
             ->test(Show::class, ['dictionary' => $dictionary])
-            ->assertSeeHtml('Cardinal (&#1063;&#1080;&#1089;&#1083;&#1080;&#1090;&#1077;&#1083;&#1100;&#1085;&#1086;&#1077;)')
-            ->assertSee('Cardinal');
+            ->assertSee('Cardinal')
+            ->assertSee('Числительное');
     }
 
     public function test_remainder_page_displays_cardinal_part_of_speech_chip(): void

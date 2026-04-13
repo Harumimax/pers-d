@@ -35,7 +35,7 @@ class PrepareGameService
 
         if ($dictionaryIds !== $ownedDictionaryIds) {
             throw ValidationException::withMessages([
-                'dictionary_ids' => 'You can use only your own dictionaries in the game configuration.',
+                'dictionary_ids' => __('remainder.messages.start.not_owner'),
             ]);
         }
 
@@ -44,7 +44,7 @@ class PrepareGameService
 
         if ($availableWords->isEmpty()) {
             throw ValidationException::withMessages([
-                'dictionary_ids' => 'No words matched the selected dictionaries and filters.',
+                'dictionary_ids' => __('remainder.messages.start.no_words'),
             ]);
         }
 
@@ -56,12 +56,12 @@ class PrepareGameService
 
         $notice = null;
         if ($selectedWords->count() < $requestedWordsCount) {
-            $notice = sprintf(
-                'Only %d %s matched the current filters, so the game was created with %d.',
-                $selectedWords->count(),
-                $selectedWords->count() === 1 ? 'word' : 'words',
-                $selectedWords->count(),
-            );
+            $notice = __('remainder.messages.start.partial_notice', [
+                'count' => $selectedWords->count(),
+                'word_label' => $selectedWords->count() === 1
+                    ? __('remainder.messages.start.word_label_singular')
+                    : __('remainder.messages.start.word_label_plural'),
+            ]);
         }
 
         $baseItemPayloads = $selectedWords

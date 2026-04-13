@@ -35,7 +35,7 @@ class GameEngineService
 
             if ($session->status !== GameSession::STATUS_ACTIVE) {
                 throw ValidationException::withMessages([
-                    'answer' => 'This game session is already finished.',
+                    'answer' => __('remainder.messages.play.finished'),
                 ]);
             }
 
@@ -54,7 +54,7 @@ class GameEngineService
                 ])->save();
 
                 throw ValidationException::withMessages([
-                    'answer' => 'This game session is already finished.',
+                    'answer' => __('remainder.messages.play.finished'),
                 ]);
             }
 
@@ -120,7 +120,7 @@ class GameEngineService
 
             if ($selectedChoice === '') {
                 throw ValidationException::withMessages([
-                    'selectedChoice' => 'Choose one answer option before submitting.',
+                    'selectedChoice' => __('remainder.messages.play.choose_option'),
                 ]);
             }
 
@@ -130,7 +130,7 @@ class GameEngineService
 
             if (! $options->contains($selectedChoice)) {
                 throw ValidationException::withMessages([
-                    'selectedChoice' => 'Choose one of the available answer options.',
+                    'selectedChoice' => __('remainder.messages.play.choose_available_option'),
                 ]);
             }
 
@@ -144,7 +144,7 @@ class GameEngineService
 
         if ($sanitizedAnswer === '') {
             throw ValidationException::withMessages([
-                'answer' => 'Enter your translation before submitting.',
+                'answer' => __('remainder.messages.play.enter_translation'),
             ]);
         }
 

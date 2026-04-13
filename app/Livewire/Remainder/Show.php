@@ -44,14 +44,20 @@ class Show extends Component
             ->values();
 
         if ($this->showFeedback) {
-            $progressLabel = sprintf('Word %d of %d', $this->lastOrderIndex, $this->gameSession->total_words);
+            $progressLabel = __('remainder.game.progress', [
+                'current' => $this->lastOrderIndex,
+                'total' => $this->gameSession->total_words,
+            ]);
         } elseif ($this->gameSession->status === GameSession::STATUS_FINISHED) {
             $resultSummary = $engine->resultSummary($this->gameSession);
         } else {
             $currentItem = $engine->currentItem($this->gameSession);
             $currentPartOfSpeechLabel = $this->partOfSpeechLabel($currentItem?->part_of_speech_snapshot);
             $progressLabel = $currentItem !== null
-                ? sprintf('Word %d of %d', $currentItem->order_index, $this->gameSession->total_words)
+                ? __('remainder.game.progress', [
+                    'current' => $currentItem->order_index,
+                    'total' => $this->gameSession->total_words,
+                ])
                 : null;
         }
 

@@ -32,18 +32,19 @@ class ChoiceOptionsBuilder
 
         if ($normalizedAnswerMap->count() < 2) {
             throw ValidationException::withMessages([
-                'dictionary_ids' => 'Multiple choice mode requires at least 2 unique answers in the selected dictionaries and filters.',
+                'dictionary_ids' => __('remainder.messages.start.choice_requires_unique_answers'),
             ]);
         }
 
         $warnings = [];
 
         if ($normalizedAnswerMap->count() < self::OPTIONS_TARGET_COUNT) {
-            $warnings[] = sprintf(
-                'Only %d answer %s were available for some questions because the selected dictionaries and filters did not contain enough unique answers.',
-                $normalizedAnswerMap->count(),
-                $normalizedAnswerMap->count() === 1 ? 'option' : 'options',
-            );
+            $warnings[] = __('remainder.messages.start.choice_partial_warning', [
+                'count' => $normalizedAnswerMap->count(),
+                'option_label' => $normalizedAnswerMap->count() === 1
+                    ? __('remainder.messages.start.option_label_singular')
+                    : __('remainder.messages.start.option_label_plural'),
+            ]);
         }
 
         $items = $itemPayloads
@@ -66,7 +67,7 @@ class ChoiceOptionsBuilder
 
                 if (count($options) < 2) {
                     throw ValidationException::withMessages([
-                        'dictionary_ids' => 'Multiple choice mode requires at least 2 options for each question.',
+                        'dictionary_ids' => __('remainder.messages.start.choice_requires_question_options'),
                     ]);
                 }
 
