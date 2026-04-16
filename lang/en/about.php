@@ -20,6 +20,19 @@ return [
         'send' => 'Send',
         'clear' => 'Clear all',
     ],
+    'general_statistics' => [
+        'title' => 'General statistics',
+        'subtitle' => 'A quick snapshot of aggregate activity across the whole site.',
+        'rows' => [
+            'dictionaries_count' => 'Total dictionaries across all users',
+            'word_entries_count' => 'Total word entries across all user dictionaries',
+            'sessions_count' => 'Total game sessions played by all users',
+            'accuracy_percentage' => 'Overall correct answers percentage across all games',
+        ],
+        'fallbacks' => [
+            'no_answers' => 'No answers yet',
+        ],
+    ],
     'status' => [
         'title' => 'Current functionality',
         'subtitle' => 'What is already available in the product and what is being built next.',

@@ -19,7 +19,7 @@
 - Authenticated routes:
   - `/dashboard` -> redirects to dictionaries index
   - `/profile` -> `ProfileController`
-  - `/about` -> auth-only informational page rendered from `about` view
+  - `/about` -> `AboutController`
   - `/remainder` -> `RemainderController@index`
   - `POST /remainder/sessions` -> `RemainderController@store`
   - `GET /remainder/sessions/{gameSession}` -> `RemainderController@showSession`
@@ -32,6 +32,9 @@
   - delegates remainder statistics aggregation to `RemainderStatisticsService`
   - updates profile
   - deletes account
+- `App\Http\Controllers\AboutController`
+  - renders the authenticated About page
+  - delegates aggregate site-wide About statistics to `GlobalStatisticsService`
 - `App\Http\Controllers\RemainderController`
   - renders remainder settings page
   - starts manual game sessions
@@ -114,6 +117,10 @@
   - `RemainderStatisticsService`
     - aggregates finished game sessions for the authenticated user's profile page
     - computes preferred mode, preferred direction, totals, and answer accuracy
+- About read-model services live under `app/Services/About`
+  - `GlobalStatisticsService`
+    - aggregates site-wide counts for dictionaries, word entries, and game sessions
+    - computes overall answer accuracy across all game sessions
 - Remainder game services live under `app/Services/Remainder`
   - `PrepareGameService`
     - validates dictionary ownership at the domain layer
@@ -386,6 +393,7 @@
 
 ## Important Implementation Notes
 - Dictionary page totals show the total number of words in the dictionary, independent of active filters
+- About page global word totals are counted as total dictionary-word pivot entries, not as unique `words` rows
 - Search, sorting, part-of-speech filter, and pagination are all handled inside `App\Livewire\Dictionaries\Show`
 - Dictionary header dropdown data is passed from Livewire/controllers into the layout; the layout should not query dictionaries directly
 - External API access should continue to go through service abstractions, not be embedded into Livewire components

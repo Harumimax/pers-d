@@ -37,6 +37,7 @@ class ProfileTest extends TestCase
             ->assertOk()
             ->assertSee('About WordKeeper')
             ->assertSee('Contact form')
+            ->assertSee('General statistics')
             ->assertSee('Contact email')
             ->assertSee('Subject')
             ->assertSee('Message')
@@ -55,6 +56,7 @@ class ProfileTest extends TestCase
             ->assertOk()
             ->assertSee('О WordKeeper')
             ->assertSee('Форма обратной связи')
+            ->assertSee('Общая статистика')
             ->assertSee('Текущий функционал')
             ->assertSee('Повторение')
             ->assertSee('Словари')
@@ -74,6 +76,94 @@ class ProfileTest extends TestCase
                 'message' => 'This should not send anything yet.',
             ])
             ->assertRedirect(route('about'));
+    }
+
+    public function test_about_page_displays_global_statistics_for_all_users(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        $firstDictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English Core',
+            'language' => 'English',
+        ]);
+
+        $secondDictionary = UserDictionary::create([
+            'user_id' => $otherUser->id,
+            'name' => 'Spanish Travel',
+            'language' => 'Spanish',
+        ]);
+
+        $thirdDictionary = UserDictionary::create([
+            'user_id' => $otherUser->id,
+            'name' => 'German Basics',
+            'language' => 'German',
+        ]);
+
+        $sharedWord = Word::create([
+            'word' => 'apple',
+            'translation' => 'яблоко',
+            'part_of_speech' => 'noun',
+            'comment' => null,
+        ]);
+
+        $secondWord = Word::create([
+            'word' => 'book',
+            'translation' => 'книга',
+            'part_of_speech' => 'noun',
+            'comment' => null,
+        ]);
+
+        $firstDictionary->words()->attach([$sharedWord->id, $secondWord->id]);
+        $secondDictionary->words()->attach($sharedWord->id);
+        $thirdDictionary->words()->attach($secondWord->id);
+
+        GameSession::create([
+            'user_id' => $user->id,
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'total_words' => 10,
+            'correct_answers' => 7,
+            'status' => GameSession::STATUS_FINISHED,
+            'started_at' => '2026-04-01 10:00:00',
+            'finished_at' => '2026-04-01 10:10:00',
+            'config_snapshot' => ['mode' => GameSession::MODE_MANUAL],
+        ]);
+
+        GameSession::create([
+            'user_id' => $otherUser->id,
+            'mode' => GameSession::MODE_CHOICE,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'total_words' => 8,
+            'correct_answers' => 5,
+            'status' => GameSession::STATUS_ACTIVE,
+            'started_at' => '2026-04-03 10:00:00',
+            'finished_at' => null,
+            'config_snapshot' => ['mode' => GameSession::MODE_CHOICE],
+        ]);
+
+        $this->actingAs($user)
+            ->get('/about')
+            ->assertOk()
+            ->assertSee('Total dictionaries across all users')
+            ->assertSee('Total word entries across all user dictionaries')
+            ->assertSee('Total game sessions played by all users')
+            ->assertSee('Overall correct answers percentage across all games')
+            ->assertSee('3')
+            ->assertSee('4')
+            ->assertSee('2')
+            ->assertSee('66.7%');
+    }
+
+    public function test_about_page_shows_no_answers_fallback_when_global_game_answers_do_not_exist(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get('/about')
+            ->assertOk()
+            ->assertSee('No answers yet');
     }
 
     public function test_interface_language_placeholder_route_updates_session_and_redirects_back(): void
@@ -155,7 +245,7 @@ class ProfileTest extends TestCase
 
         $word = Word::create([
             'word' => 'apple',
-            'translation' => 'яблоко',
+            'translation' => 'СЏР±Р»РѕРєРѕ',
             'part_of_speech' => 'noun',
             'comment' => 'fruit',
         ]);

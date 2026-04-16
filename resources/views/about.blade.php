@@ -5,7 +5,7 @@
 @endpush
 
 @section('content')
-    <main class="about-main" x-data="{ contactOpen: false, functionalityOpen: false }">
+    <main class="about-main" x-data="{ contactOpen: false, generalStatisticsOpen: false, functionalityOpen: false }">
         <div class="container about-container">
             <section class="about-hero">
                 <div class="about-hero__image-wrap">
@@ -25,6 +25,54 @@
                     <p class="about-hero__description">
                         {{ __('about.hero.description_2') }}
                     </p>
+                </div>
+            </section>
+
+            <section class="about-status-card" aria-label="General statistics">
+                <header class="about-status-card__header">
+                    <button
+                        type="button"
+                        class="about-section-toggle"
+                        @click="generalStatisticsOpen = !generalStatisticsOpen"
+                        :aria-expanded="generalStatisticsOpen.toString()"
+                        aria-controls="about-general-statistics-panel"
+                    >
+                        <span class="about-status-card__title">{{ __('about.general_statistics.title') }}</span>
+                        <span class="about-section-toggle__icon" :class="{ 'about-section-toggle__icon--open': generalStatisticsOpen }" aria-hidden="true">
+                            <svg viewBox="0 0 20 20" fill="currentColor" focusable="false">
+                                <path fill-rule="evenodd" d="M5.22 7.22a.75.75 0 0 1 1.06 0L10 10.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 8.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/>
+                            </svg>
+                        </span>
+                    </button>
+                </header>
+
+                <div id="about-general-statistics-panel" x-show="generalStatisticsOpen" x-cloak>
+                    <p class="about-status-card__subtitle">{{ __('about.general_statistics.subtitle') }}</p>
+
+                    <div class="about-status-table-wrap">
+                        <table class="about-status-table">
+                            <tbody>
+                                <tr>
+                                    <th scope="row">{{ __('about.general_statistics.rows.dictionaries_count') }}</th>
+                                    <td>{{ $globalStatistics['dictionaries_count'] }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">{{ __('about.general_statistics.rows.word_entries_count') }}</th>
+                                    <td>{{ $globalStatistics['word_entries_count'] }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">{{ __('about.general_statistics.rows.sessions_count') }}</th>
+                                    <td>{{ $globalStatistics['sessions_count'] }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">{{ __('about.general_statistics.rows.accuracy_percentage') }}</th>
+                                    <td>
+                                        {{ $globalStatistics['accuracy_percentage'] !== null ? rtrim(rtrim(number_format($globalStatistics['accuracy_percentage'], 1), '0'), '.') . '%' : __('about.general_statistics.fallbacks.no_answers') }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 

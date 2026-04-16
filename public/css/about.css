@@ -252,6 +252,17 @@
     text-align: center;
 }
 
+.about-status-table tbody th {
+    padding: 18px 18px 18px 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    text-align: left;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.55;
+    color: var(--text-color);
+    vertical-align: middle;
+}
+
 .about-status-table tbody td {
     padding: 18px 0;
     border-bottom: 1px solid rgba(148, 163, 184, 0.12);
@@ -262,6 +273,10 @@
 }
 
 .about-status-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.about-status-table tbody tr:last-child th {
     border-bottom: 0;
 }
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AboutController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RemainderController;
 use App\Livewire\Dictionaries\Index;
@@ -35,13 +36,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::get('/about', function (Request $request) {
-        return view('about', [
-            'headerDictionaries' => $request->user()?->dictionaries()
-                ->orderByDesc('created_at')
-                ->get(['id', 'name']) ?? collect(),
-        ]);
-    })->name('about');
+    Route::get('/about', [AboutController::class, 'index'])->name('about');
     Route::post('/about/contact', function () {
         return redirect()->route('about');
     })->name('about.contact.store');
