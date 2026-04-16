@@ -54,6 +54,10 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'analytics' => [
+        'yandex_metrika_id' => env('YANDEX_METRIKA_ID'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
