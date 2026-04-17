@@ -5,7 +5,12 @@
 @endpush
 
 @section('content')
-    <main class="about-main" x-data="{ contactOpen: false, generalStatisticsOpen: false, functionalityOpen: false, privacyPolicyOpen: false, cookiePolicyOpen: false }">
+    @php
+        $contactOpenDefault = $errors->any()
+            || session()->has('aboutContactError');
+    @endphp
+
+    <main class="about-main" x-data="{ contactOpen: @js($contactOpenDefault), generalStatisticsOpen: false, functionalityOpen: false, privacyPolicyOpen: false, cookiePolicyOpen: false }">
         <div class="container about-container">
             <section class="about-hero">
                 <div class="about-hero__image-wrap">
@@ -94,8 +99,30 @@
                     </button>
                 </header>
 
+                @if (session('aboutContactStatus'))
+                    <div class="about-contact-alert about-contact-alert--success" role="status">
+                        <span class="about-contact-alert__icon" aria-hidden="true">
+                            <svg viewBox="0 0 20 20" fill="currentColor" focusable="false">
+                                <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7 7.06a1 1 0 0 1-1.42.004L3.3 8.79a1 1 0 1 1 1.4-1.428l4.28 4.2 6.31-6.265a1 1 0 0 1 1.414-.006Z" clip-rule="evenodd"/>
+                            </svg>
+                        </span>
+                        <span>{{ session('aboutContactStatus') }}</span>
+                    </div>
+                @endif
+
                 <div id="about-contact-panel" x-show="contactOpen" x-cloak>
                     <p class="about-contact-card__subtitle">{{ __('about.contact.subtitle') }}</p>
+
+                    @if (session('aboutContactError'))
+                        <div class="about-contact-alert about-contact-alert--error" role="alert">
+                            <span class="about-contact-alert__icon" aria-hidden="true">
+                                <svg viewBox="0 0 20 20" fill="currentColor" focusable="false">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm0-10.75a.75.75 0 0 1 .75.75v3.25a.75.75 0 0 1-1.5 0V8a.75.75 0 0 1 .75-.75Zm0 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd"/>
+                                </svg>
+                            </span>
+                            <span>{{ session('aboutContactError') }}</span>
+                        </div>
+                    @endif
 
                     <form method="POST" action="{{ route('about.contact.store') }}" class="about-contact-form">
                     @csrf
@@ -107,10 +134,15 @@
                                     id="contact-email"
                                     name="contact_email"
                                     type="email"
-                                    class="about-contact-field__input"
+                                    class="about-contact-field__input @error('contact_email') about-contact-field__input--error @enderror"
                                     placeholder="{{ __('about.contact.email_placeholder') }}"
+                                    value="{{ old('contact_email') }}"
+                                    aria-invalid="{{ $errors->has('contact_email') ? 'true' : 'false' }}"
                                     required
                                 >
+                                @error('contact_email')
+                                    <p class="about-contact-field__error">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <div class="about-contact-field">
@@ -119,11 +151,16 @@
                                     id="contact-subject"
                                     name="subject"
                                     type="text"
-                                    class="about-contact-field__input"
+                                    class="about-contact-field__input @error('subject') about-contact-field__input--error @enderror"
                                     placeholder="{{ __('about.contact.subject_placeholder') }}"
+                                    value="{{ old('subject') }}"
                                     maxlength="128"
+                                    aria-invalid="{{ $errors->has('subject') ? 'true' : 'false' }}"
                                     required
                                 >
+                                @error('subject')
+                                    <p class="about-contact-field__error">{{ $message }}</p>
+                                @enderror
                             </div>
                         </div>
 
@@ -132,11 +169,15 @@
                             <textarea
                                 id="contact-message"
                                 name="message"
-                                class="about-contact-field__textarea"
+                                class="about-contact-field__textarea @error('message') about-contact-field__input--error @enderror"
                                 placeholder="{{ __('about.contact.message_placeholder') }}"
                                 maxlength="600"
+                                aria-invalid="{{ $errors->has('message') ? 'true' : 'false' }}"
                                 required
-                            ></textarea>
+                            >{{ old('message') }}</textarea>
+                            @error('message')
+                                <p class="about-contact-field__error">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <div class="about-contact-form__actions">

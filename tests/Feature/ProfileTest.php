@@ -2,11 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Mail\AboutContactMessage as AboutContactMail;
+use App\Models\AboutContactMessage;
 use App\Models\GameSession;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
+use RuntimeException;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
@@ -71,17 +75,86 @@ class ProfileTest extends TestCase
             ->assertSee('О проекте');
     }
 
-    public function test_about_contact_placeholder_route_redirects_back_to_about_page(): void
+    public function test_authenticated_user_can_send_about_contact_form(): void
     {
         $user = User::factory()->create();
+        Mail::fake();
 
         $this->actingAs($user)
             ->post(route('about.contact.store'), [
                 'contact_email' => 'user@example.com',
-                'subject' => 'Local placeholder',
-                'message' => 'This should not send anything yet.',
+                'subject' => 'Local delivery works',
+                'message' => 'This message should be emailed and stored.',
             ])
-            ->assertRedirect(route('about'));
+            ->assertRedirect(route('about'))
+            ->assertSessionHas('aboutContactStatus');
+
+        $this->assertDatabaseHas('about_contact_messages', [
+            'contact_email' => 'user@example.com',
+            'subject' => 'Local delivery works',
+            'message' => 'This message should be emailed and stored.',
+            'delivery_status' => AboutContactMessage::STATUS_SENT,
+        ]);
+
+        Mail::assertSent(AboutContactMail::class, function (AboutContactMail $mail): bool {
+            return $mail->hasTo((string) config('mail.about_contact_recipient'))
+                && $mail->contactMessage->contact_email === 'user@example.com'
+                && $mail->contactMessage->subject === 'Local delivery works';
+        });
+    }
+
+    public function test_about_contact_form_validation_rejects_invalid_input(): void
+    {
+        $user = User::factory()->create();
+        Mail::fake();
+
+        $this->actingAs($user)
+            ->from(route('about'))
+            ->post(route('about.contact.store'), [
+                'contact_email' => 'not-an-email',
+                'subject' => '',
+                'message' => '',
+            ])
+            ->assertRedirect(route('about'))
+            ->assertSessionHasErrors(['contact_email', 'subject', 'message']);
+
+        $this->assertDatabaseCount('about_contact_messages', 0);
+        Mail::assertNothingSent();
+    }
+
+    public function test_about_contact_form_marks_message_as_failed_when_delivery_throws(): void
+    {
+        $user = User::factory()->create();
+        $recipient = (string) config('mail.about_contact_recipient');
+
+        Mail::shouldReceive('to')
+            ->once()
+            ->with($recipient)
+            ->andReturnSelf();
+        Mail::shouldReceive('locale')
+            ->once()
+            ->with(app()->getLocale())
+            ->andReturnSelf();
+        Mail::shouldReceive('send')
+            ->once()
+            ->andThrow(new RuntimeException('SMTP unavailable'));
+
+        $this->actingAs($user)
+            ->from(route('about'))
+            ->post(route('about.contact.store'), [
+                'contact_email' => 'user@example.com',
+                'subject' => 'Delivery issue',
+                'message' => 'This message should end up with a failed status.',
+            ])
+            ->assertRedirect(route('about'))
+            ->assertSessionHas('aboutContactError');
+
+        $this->assertDatabaseHas('about_contact_messages', [
+            'contact_email' => 'user@example.com',
+            'subject' => 'Delivery issue',
+            'message' => 'This message should end up with a failed status.',
+            'delivery_status' => AboutContactMessage::STATUS_FAILED,
+        ]);
     }
 
     public function test_about_page_displays_global_statistics_for_all_users(): void

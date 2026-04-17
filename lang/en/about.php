@@ -10,7 +10,7 @@ return [
     ],
     'contact' => [
         'title' => 'Contact form',
-        'subtitle' => 'Share a question, suggestion, or bug report. The form design is ready, and the mail backend will be connected later.',
+        'subtitle' => 'Share a question, suggestion, or bug report directly from the page.',
         'email' => 'Contact email',
         'subject' => 'Subject',
         'message' => 'Message',
@@ -19,6 +19,14 @@ return [
         'message_placeholder' => 'Write your message here...',
         'send' => 'Send',
         'clear' => 'Clear all',
+        'status' => [
+            'success' => 'Your message has been sent successfully.',
+            'error' => 'We could not send your message right now. Please try again a little later.',
+        ],
+        'mail' => [
+            'title' => 'New message from the About page contact form',
+            'subject_line' => '[WordKeeper] About contact form: :subject',
+        ],
     ],
     'general_statistics' => [
         'title' => 'General statistics',

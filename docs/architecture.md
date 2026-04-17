@@ -35,6 +35,11 @@
 - `App\Http\Controllers\AboutController`
   - renders the authenticated About page
   - delegates aggregate site-wide About statistics to `GlobalStatisticsService`
+- `App\Http\Controllers\AboutContactController`
+  - handles authenticated About contact form submissions
+  - validates input through `StoreAboutContactRequest`
+  - sends email through Laravel's mail layer
+  - persists delivery status in `about_contact_messages`
 - `App\Http\Controllers\RemainderController`
   - renders remainder settings page
   - starts manual game sessions
@@ -113,6 +118,11 @@
   - `TranslationResult`
   - `TranslationSuggestion`
 - Interface text localization uses standard Laravel lang files plus application locale set by middleware
+- About contact delivery currently uses standard Laravel mail infrastructure:
+  - `StoreAboutContactRequest`
+  - `App\Mail\AboutContactMessage`
+  - `App\Models\AboutContactMessage`
+  - email is sent synchronously in the first implementation slice
 - Profile read-model services live under `app/Services/Profile`
   - `RemainderStatisticsService`
     - aggregates finished game sessions for the authenticated user's profile page
@@ -201,6 +211,17 @@
   - `belongsTo(GameSession::class)`
   - `belongsTo(Word::class)`
 
+### AboutContactMessage
+- Model: `App\Models\AboutContactMessage`
+- Purpose: stores a copy of one submitted About contact form message plus delivery outcome
+- Core fields:
+  - `contact_email`
+  - `subject`
+  - `message`
+  - `delivery_status`
+  - `delivered_at`
+  - `delivery_error`
+
 ## Database Structure
 
 ### Core Tables
@@ -288,6 +309,20 @@
   - `user_answer` nullable
   - `is_correct` nullable
   - `answered_at` nullable
+  - `created_at`
+  - `updated_at`
+
+#### `about_contact_messages`
+- Created in `2026_04_17_000014_create_about_contact_messages_table.php`
+- Purpose: stores About page contact form submissions and email delivery state
+- Fields:
+  - `id`
+  - `contact_email`
+  - `subject`
+  - `message`
+  - `delivery_status`
+  - `delivered_at` nullable
+  - `delivery_error` nullable
   - `created_at`
   - `updated_at`
 
@@ -397,6 +432,7 @@
 ## Important Implementation Notes
 - Dictionary page totals show the total number of words in the dictionary, independent of active filters
 - About page global word totals are counted as total dictionary-word pivot entries, not as unique `words` rows
+- About contact form submissions are currently available only to authenticated users and are delivered to a fixed recipient email while also being stored in `about_contact_messages`
 - Search, sorting, part-of-speech filter, and pagination are all handled inside `App\Livewire\Dictionaries\Show`
 - Dictionary header dropdown data is passed from Livewire/controllers into the layout; the layout should not query dictionaries directly
 - External API access should continue to go through service abstractions, not be embedded into Livewire components
