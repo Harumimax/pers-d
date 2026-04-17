@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Livewire\Dictionaries\Index;
 use App\Models\User;
 use App\Models\UserDictionary;
+use App\Models\Word;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -112,6 +113,50 @@ class UserDictionaryCrudTest extends TestCase
             'id' => $foreignDictionary->id,
             'user_id' => $otherUser->id,
             'name' => 'Hidden Dictionary',
+        ]);
+    }
+
+    public function test_deleting_dictionary_also_deletes_words_that_belonged_to_it(): void
+    {
+        $user = User::factory()->create();
+
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English Core',
+            'language' => 'English',
+        ]);
+
+        $firstWord = Word::create([
+            'word' => 'apple',
+            'translation' => 'яблоко',
+            'part_of_speech' => 'noun',
+            'comment' => null,
+        ]);
+
+        $secondWord = Word::create([
+            'word' => 'book',
+            'translation' => 'книга',
+            'part_of_speech' => 'noun',
+            'comment' => null,
+        ]);
+
+        $dictionary->words()->attach([$firstWord->id, $secondWord->id]);
+
+        Livewire::actingAs($user)
+            ->test(Index::class)
+            ->call('confirmDeleteDictionary', $dictionary->id)
+            ->call('deleteConfirmedDictionary');
+
+        $this->assertDatabaseMissing('user_dictionaries', [
+            'id' => $dictionary->id,
+        ]);
+
+        $this->assertDatabaseMissing('words', [
+            'id' => $firstWord->id,
+        ]);
+
+        $this->assertDatabaseMissing('words', [
+            'id' => $secondWord->id,
         ]);
     }
 }

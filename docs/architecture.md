@@ -328,6 +328,9 @@
 - Database structure is currently `many-to-many` between dictionaries and words
 - Product behavior currently acts closer to "word created inside a dictionary"
 - This is a known architectural tension and should be revisited only if reuse across dictionaries becomes a confirmed product feature
+- Current deletion behavior follows the product assumption above:
+  - deleting a dictionary also deletes all words attached to that dictionary
+  - this is intentional under the current product model, where words are effectively treated as belonging to one dictionary at creation time
 
 ### Remainder Game Modes
 - Current implemented modes:

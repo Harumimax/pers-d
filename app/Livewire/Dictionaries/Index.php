@@ -3,9 +3,11 @@
 namespace App\Livewire\Dictionaries;
 
 use App\Models\User;
+use App\Models\Word;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 
@@ -85,7 +87,18 @@ class Index extends Component
 
         abort_if($dictionary === null, 403);
 
-        $dictionary->delete();
+        DB::transaction(function () use ($dictionary): void {
+            $wordIds = $dictionary->words()
+                ->pluck('words.id')
+                ->all();
+
+            $dictionary->delete();
+
+            if ($wordIds !== []) {
+                Word::query()->whereIn('id', $wordIds)->delete();
+            }
+        });
+
         $this->cancelDeleteDictionary();
     }
 
