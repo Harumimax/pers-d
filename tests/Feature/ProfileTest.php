@@ -221,10 +221,13 @@ class ProfileTest extends TestCase
 
     public function test_welcome_page_renders_language_switcher(): void
     {
+        config(['app.analytics.yandex_metrika_id' => '108580029']);
+
         $this->get('/')
             ->assertOk()
             ->assertSee('Ru')
-            ->assertSee('En');
+            ->assertSee('En')
+            ->assertDontSee('mc.yandex.ru/metrika/tag.js');
     }
 
     public function test_welcome_page_is_translated_to_russian_when_locale_is_set(): void

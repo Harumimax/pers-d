@@ -7,9 +7,12 @@
     <div class="container footer-inner">
         @php
             $yandexMetrikaId = trim((string) config('app.analytics.yandex_metrika_id'));
+            $shouldRenderYandexMetrika = $yandexMetrikaId !== ''
+                && request()->path() !== '/'
+                && ! request()->routeIs('login', 'register');
         @endphp
 
-        @if ($yandexMetrikaId !== '')
+        @if ($shouldRenderYandexMetrika)
             <!-- Yandex.Metrika counter -->
             <script type="text/javascript">
                 (function(m,e,t,r,i,k,a){

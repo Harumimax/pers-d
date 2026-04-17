@@ -12,6 +12,8 @@ class AuthenticationTest extends TestCase
 
     public function test_login_screen_can_be_rendered(): void
     {
+        config(['app.analytics.yandex_metrika_id' => '108580029']);
+
         $response = $this->get('/login');
 
         $response->assertStatus(200)
@@ -19,7 +21,8 @@ class AuthenticationTest extends TestCase
             ->assertSee('Password')
             ->assertSee('Remember me')
             ->assertSee('Forgot your password?')
-            ->assertSee('Log in');
+            ->assertSee('Log in')
+            ->assertDontSee('mc.yandex.ru/metrika/tag.js');
     }
 
     public function test_login_screen_is_translated_to_russian_when_locale_is_set(): void

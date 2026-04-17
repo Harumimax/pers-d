@@ -11,6 +11,8 @@ class RegistrationTest extends TestCase
 
     public function test_registration_screen_can_be_rendered(): void
     {
+        config(['app.analytics.yandex_metrika_id' => '108580029']);
+
         $response = $this->get('/register');
 
         $response->assertStatus(200)
@@ -19,7 +21,8 @@ class RegistrationTest extends TestCase
             ->assertSee('Password')
             ->assertSee('Confirm Password')
             ->assertSee('Already registered?')
-            ->assertSee('Register');
+            ->assertSee('Register')
+            ->assertDontSee('mc.yandex.ru/metrika/tag.js');
     }
 
     public function test_registration_screen_is_translated_to_russian_when_locale_is_set(): void
