@@ -33,6 +33,14 @@ return [
             'no_answers' => 'No answers yet',
         ],
     ],
+    'legal' => [
+        'privacy' => [
+            'title' => 'Privacy Policy and Personal Data Processing',
+        ],
+        'cookies' => [
+            'title' => 'Cookie Policy',
+        ],
+    ],
     'status' => [
         'title' => 'Current functionality',
         'subtitle' => 'What is already available in the product and what is being built next.',

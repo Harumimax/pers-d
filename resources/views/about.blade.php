@@ -5,7 +5,7 @@
 @endpush
 
 @section('content')
-    <main class="about-main" x-data="{ contactOpen: false, generalStatisticsOpen: false, functionalityOpen: false }">
+    <main class="about-main" x-data="{ contactOpen: false, generalStatisticsOpen: false, functionalityOpen: false, privacyPolicyOpen: false, cookiePolicyOpen: false }">
         <div class="container about-container">
             <section class="about-hero">
                 <div class="about-hero__image-wrap">
@@ -259,6 +259,56 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="about-status-card" aria-label="Privacy policy">
+                <header class="about-status-card__header">
+                    <button
+                        type="button"
+                        class="about-section-toggle"
+                        @click="privacyPolicyOpen = !privacyPolicyOpen"
+                        :aria-expanded="privacyPolicyOpen.toString()"
+                        aria-controls="about-privacy-policy-panel"
+                    >
+                        <span class="about-status-card__title">{{ __('about.legal.privacy.title') }}</span>
+                        <span class="about-section-toggle__icon" :class="{ 'about-section-toggle__icon--open': privacyPolicyOpen }" aria-hidden="true">
+                            <svg viewBox="0 0 20 20" fill="currentColor" focusable="false">
+                                <path fill-rule="evenodd" d="M5.22 7.22a.75.75 0 0 1 1.06 0L10 10.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 8.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/>
+                            </svg>
+                        </span>
+                    </button>
+                </header>
+
+                <div id="about-privacy-policy-panel" x-show="privacyPolicyOpen" x-cloak>
+                    <div class="about-legal-copy">
+                        @include(app()->getLocale() === 'en' ? 'about.partials.privacy-policy-en' : 'about.partials.privacy-policy')
+                    </div>
+                </div>
+            </section>
+
+            <section class="about-status-card" aria-label="Cookie policy">
+                <header class="about-status-card__header">
+                    <button
+                        type="button"
+                        class="about-section-toggle"
+                        @click="cookiePolicyOpen = !cookiePolicyOpen"
+                        :aria-expanded="cookiePolicyOpen.toString()"
+                        aria-controls="about-cookie-policy-panel"
+                    >
+                        <span class="about-status-card__title">{{ __('about.legal.cookies.title') }}</span>
+                        <span class="about-section-toggle__icon" :class="{ 'about-section-toggle__icon--open': cookiePolicyOpen }" aria-hidden="true">
+                            <svg viewBox="0 0 20 20" fill="currentColor" focusable="false">
+                                <path fill-rule="evenodd" d="M5.22 7.22a.75.75 0 0 1 1.06 0L10 10.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 8.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/>
+                            </svg>
+                        </span>
+                    </button>
+                </header>
+
+                <div id="about-cookie-policy-panel" x-show="cookiePolicyOpen" x-cloak>
+                    <div class="about-legal-copy">
+                        @include(app()->getLocale() === 'en' ? 'about.partials.cookie-policy-en' : 'about.partials.cookie-policy')
                     </div>
                 </div>
             </section>

@@ -308,6 +308,36 @@
     color: var(--muted-color);
 }
 
+.about-legal-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    color: var(--text-color);
+}
+
+.about-legal-copy h3 {
+    margin: 8px 0 0;
+    font-size: 1.08rem;
+    line-height: 1.4;
+    color: var(--text-color);
+}
+
+.about-legal-copy p,
+.about-legal-copy li {
+    margin: 0;
+    font-size: 0.98rem;
+    line-height: 1.7;
+    color: var(--muted-color);
+}
+
+.about-legal-copy ul {
+    margin: 0;
+    padding-left: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 @media (max-width: 992px) {
     .about-main {
         padding: 42px 0 56px;

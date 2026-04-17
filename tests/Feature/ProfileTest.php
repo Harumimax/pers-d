@@ -38,11 +38,15 @@ class ProfileTest extends TestCase
             ->assertSee('About WordKeeper')
             ->assertSee('Contact form')
             ->assertSee('General statistics')
+            ->assertSee('Privacy Policy and Personal Data Processing')
+            ->assertSee('Cookie Policy')
             ->assertSee('Contact email')
             ->assertSee('Subject')
             ->assertSee('Message')
             ->assertSee('Send')
             ->assertSee('Clear all')
+            ->assertSee('GENERAL PROVISIONS')
+            ->assertSee('This Cookie Policy supplements and clarifies the general Privacy Policy and Personal Data Processing Policy')
             ->assertSee('Store part of speech as part of the game session snapshot');
     }
 
@@ -58,6 +62,8 @@ class ProfileTest extends TestCase
             ->assertSee('Форма обратной связи')
             ->assertSee('Общая статистика')
             ->assertSee('Текущий функционал')
+            ->assertSee('Политика конфиденциальности и обработки персональных данных')
+            ->assertSee('Политика использования файлов cookie')
             ->assertSee('Повторение')
             ->assertSee('Словари')
             ->assertSee('Профиль')
@@ -245,7 +251,7 @@ class ProfileTest extends TestCase
 
         $word = Word::create([
             'word' => 'apple',
-            'translation' => 'СЏР±Р»РѕРєРѕ',
+            'translation' => 'яблоко',
             'part_of_speech' => 'noun',
             'comment' => 'fruit',
         ]);
