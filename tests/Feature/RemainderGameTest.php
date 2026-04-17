@@ -338,6 +338,55 @@ class RemainderGameTest extends TestCase
             ->assertSee($warnings[0]);
     }
 
+    public function test_choice_warning_is_hidden_on_feedback_and_result_screens(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = $this->createDictionaryForUser($user, 'Compact deck', 'English');
+        $this->attachWord($dictionary, 'apple', 'red', 'noun');
+        $this->attachWord($dictionary, 'book', 'blue', 'noun');
+
+        $response = $this->actingAs($user)->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_CHOICE,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'dictionary_ids' => [$dictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 5,
+        ]);
+
+        $gameSession = GameSession::query()->latest('id')->firstOrFail();
+        $warning = $gameSession->config_snapshot['warnings'][0] ?? null;
+        $gameNotice = session('gameNotice');
+        $item = $gameSession->items()->firstOrFail();
+
+        $this->assertIsString($warning);
+        $this->assertIsString($gameNotice);
+        $response->assertRedirect(route('remainder.sessions.show', $gameSession));
+
+        $this->actingAs($user)
+            ->get(route('remainder.sessions.show', $gameSession))
+            ->assertOk()
+            ->assertSeeInOrder([
+                $gameNotice,
+                $warning,
+                'Remainder',
+            ]);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['gameSession' => $gameSession])
+            ->assertSee($warning)
+            ->set('selectedChoice', $item->correct_answer)
+            ->call('submitAnswer')
+            ->assertDontSee($warning)
+            ->call('continueToNext')
+            ->assertSee($warning)
+            ->set('selectedChoice', collect($gameSession->items()->orderBy('order_index')->skip(1)->firstOrFail()->options_json)->first())
+            ->call('submitAnswer')
+            ->assertDontSee($warning)
+            ->call('continueToNext')
+            ->assertDontSee($warning)
+            ->assertSee('Remainder results');
+    }
+
     public function test_choice_game_is_not_created_if_it_cannot_build_two_unique_options(): void
     {
         $user = User::factory()->create();

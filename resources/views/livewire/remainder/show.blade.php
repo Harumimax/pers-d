@@ -5,7 +5,7 @@
         </div>
     @endif
 
-    @if ($gameSession->mode === \App\Models\GameSession::MODE_CHOICE && $sessionWarnings->isNotEmpty())
+    @if (! $showFeedback && $gameSession->status !== \App\Models\GameSession::STATUS_FINISHED && $gameSession->mode === \App\Models\GameSession::MODE_CHOICE && $sessionWarnings->isNotEmpty())
         @foreach ($sessionWarnings as $warning)
             <div class="remainder-game-banner remainder-game-banner--info">
                 {{ $warning }}
