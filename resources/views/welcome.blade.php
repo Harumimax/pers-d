@@ -41,6 +41,10 @@
                     {{ __('welcome.description') }}
                 </p>
 
+                <p class="hero-description">
+                    {{ __('welcome.description_secondary') }}
+                </p>
+
                 <div class="hero-actions">
                     @auth
                         <a href="{{ url('/dashboard') }}" class="btn btn-primary btn-large">{{ __('welcome.actions.dictionaries') }}</a>
