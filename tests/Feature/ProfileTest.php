@@ -308,9 +308,11 @@ class ProfileTest extends TestCase
         $this->withSession(['ui_locale' => 'ru'])
             ->get('/')
             ->assertOk()
-            ->assertSee('Ваш персональный')
+            ->assertSee('Персональный')
             ->assertSee('словарь иностранных слов')
             ->assertSee('Создавайте и упорядочивайте свой словарный запас')
+            ->assertSee('Сценарии использования')
+            ->assertSee('Как можно использовать WordKeeper')
             ->assertSee('Регистрация')
             ->assertSee('Войти');
     }

@@ -64,5 +64,35 @@
             </section>
         </div>
     </main>
+
+    <section class="use-cases" aria-labelledby="use-cases-title">
+        <div class="container">
+            <div class="use-cases__heading">
+                <p class="use-cases__eyebrow">{{ __('welcome.use_cases.eyebrow') }}</p>
+                <h2 id="use-cases-title" class="use-cases__title">{{ __('welcome.use_cases.title') }}</h2>
+                <p class="use-cases__description">{{ __('welcome.use_cases.description') }}</p>
+            </div>
+
+            <div class="use-cases__grid">
+                <article class="use-case-card">
+                    <div class="use-case-card__icon" aria-hidden="true">{{ __('welcome.use_cases.items.reading.icon') }}</div>
+                    <h3 class="use-case-card__title">{{ __('welcome.use_cases.items.reading.title') }}</h3>
+                    <p class="use-case-card__text">{{ __('welcome.use_cases.items.reading.text') }}</p>
+                </article>
+
+                <article class="use-case-card">
+                    <div class="use-case-card__icon" aria-hidden="true">{{ __('welcome.use_cases.items.studying.icon') }}</div>
+                    <h3 class="use-case-card__title">{{ __('welcome.use_cases.items.studying.title') }}</h3>
+                    <p class="use-case-card__text">{{ __('welcome.use_cases.items.studying.text') }}</p>
+                </article>
+
+                <article class="use-case-card">
+                    <div class="use-case-card__icon" aria-hidden="true">{{ __('welcome.use_cases.items.speaking.icon') }}</div>
+                    <h3 class="use-case-card__title">{{ __('welcome.use_cases.items.speaking.title') }}</h3>
+                    <p class="use-case-card__text">{{ __('welcome.use_cases.items.speaking.text') }}</p>
+                </article>
+            </div>
+        </div>
+    </section>
 </body>
 </html>
