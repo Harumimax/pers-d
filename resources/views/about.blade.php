@@ -12,6 +12,28 @@
 
     <main class="about-main" x-data="{ contactOpen: @js($contactOpenDefault), generalStatisticsOpen: false, functionalityOpen: false, privacyPolicyOpen: false, cookiePolicyOpen: false }">
         <div class="container about-container">
+            @if (session('aboutContactStatus'))
+                <div class="about-contact-alert about-contact-alert--success about-page-alert" role="status">
+                    <span class="about-contact-alert__icon" aria-hidden="true">
+                        <svg viewBox="0 0 20 20" fill="currentColor" focusable="false">
+                            <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7 7.06a1 1 0 0 1-1.42.004L3.3 8.79a1 1 0 1 1 1.4-1.428l4.28 4.2 6.31-6.265a1 1 0 0 1 1.414-.006Z" clip-rule="evenodd"/>
+                        </svg>
+                    </span>
+                    <span>{{ session('aboutContactStatus') }}</span>
+                </div>
+            @endif
+
+            @if (session('aboutContactError'))
+                <div class="about-contact-alert about-contact-alert--error about-page-alert" role="alert">
+                    <span class="about-contact-alert__icon" aria-hidden="true">
+                        <svg viewBox="0 0 20 20" fill="currentColor" focusable="false">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm0-10.75a.75.75 0 0 1 .75.75v3.25a.75.75 0 0 1-1.5 0V8a.75.75 0 0 1 .75-.75Zm0 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd"/>
+                        </svg>
+                    </span>
+                    <span>{{ session('aboutContactError') }}</span>
+                </div>
+            @endif
+
             <section class="about-hero">
                 <div class="about-hero__image-wrap">
                     <img
@@ -99,30 +121,8 @@
                     </button>
                 </header>
 
-                @if (session('aboutContactStatus'))
-                    <div class="about-contact-alert about-contact-alert--success" role="status">
-                        <span class="about-contact-alert__icon" aria-hidden="true">
-                            <svg viewBox="0 0 20 20" fill="currentColor" focusable="false">
-                                <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7 7.06a1 1 0 0 1-1.42.004L3.3 8.79a1 1 0 1 1 1.4-1.428l4.28 4.2 6.31-6.265a1 1 0 0 1 1.414-.006Z" clip-rule="evenodd"/>
-                            </svg>
-                        </span>
-                        <span>{{ session('aboutContactStatus') }}</span>
-                    </div>
-                @endif
-
                 <div id="about-contact-panel" x-show="contactOpen" x-cloak>
                     <p class="about-contact-card__subtitle">{{ __('about.contact.subtitle') }}</p>
-
-                    @if (session('aboutContactError'))
-                        <div class="about-contact-alert about-contact-alert--error" role="alert">
-                            <span class="about-contact-alert__icon" aria-hidden="true">
-                                <svg viewBox="0 0 20 20" fill="currentColor" focusable="false">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm0-10.75a.75.75 0 0 1 .75.75v3.25a.75.75 0 0 1-1.5 0V8a.75.75 0 0 1 .75-.75Zm0 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd"/>
-                                </svg>
-                            </span>
-                            <span>{{ session('aboutContactError') }}</span>
-                        </div>
-                    @endif
 
                     <form method="POST" action="{{ route('about.contact.store') }}" class="about-contact-form">
                     @csrf

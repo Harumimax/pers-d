@@ -150,6 +150,10 @@
     margin-top: 1px;
 }
 
+.about-page-alert {
+    margin-bottom: 0;
+}
+
 .about-section-toggle__icon {
     width: 24px;
     height: 24px;
