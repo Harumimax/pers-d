@@ -298,6 +298,11 @@ class ProfileTest extends TestCase
 
         $this->get('/')
             ->assertOk()
+            ->assertSee('Save words. Practice them. Remember more.')
+            ->assertSee('Product preview')
+            ->assertSee('See WordKeeper in action')
+            ->assertSee('Add a new word in dictionary quickly')
+            ->assertSee('Review results and weak spots')
             ->assertSee('Ru')
             ->assertSee('En')
             ->assertDontSee('mc.yandex.ru/metrika/tag.js');
@@ -311,6 +316,11 @@ class ProfileTest extends TestCase
             ->assertSee('Персональный')
             ->assertSee('словарь иностранных слов')
             ->assertSee('Создавайте и упорядочивайте свой словарный запас')
+            ->assertSee('Сохраняйте слова. Практикуйтесь. Запоминайте больше.')
+            ->assertSee('Примеры интерфейса')
+            ->assertSee('Посмотрите WordKeeper в работе')
+            ->assertSee('Быстро добавляйте новое слово в словарь')
+            ->assertSee('Просматривайте результаты и слабые места')
             ->assertSee('Сценарии использования')
             ->assertSee('Как можно использовать WordKeeper')
             ->assertSee('Регистрация')
