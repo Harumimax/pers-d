@@ -35,8 +35,6 @@ class UserDictionaryCrudTest extends TestCase
         $response->assertOk();
         $response->assertSee('My Dictionaries');
         $response->assertSee('Edit dictionary English Core');
-        $response->assertSee('Dictionary name for English Core');
-        $response->assertSee('Apply');
     }
 
     public function test_dictionaries_index_page_renders_dropdown_with_user_dictionaries(): void
@@ -102,6 +100,92 @@ class UserDictionaryCrudTest extends TestCase
         ]);
     }
 
+    public function test_user_can_rename_dictionary_through_livewire_interface(): void
+    {
+        $user = User::factory()->create();
+
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'Old Name',
+            'language' => 'English',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Index::class)
+            ->call('startEditingDictionary', $dictionary->id)
+            ->assertSet('editingDictionaryId', $dictionary->id)
+            ->assertSet('editingDictionaryName', 'Old Name')
+            ->assertSee('Dictionary name for Old Name')
+            ->assertSee('Apply')
+            ->set('editingDictionaryName', 'New Name')
+            ->call('updateEditingDictionaryName')
+            ->assertHasNoErrors()
+            ->assertSet('editingDictionaryId', null)
+            ->assertSet('editingDictionaryName', '');
+
+        $this->assertDatabaseHas('user_dictionaries', [
+            'id' => $dictionary->id,
+            'user_id' => $user->id,
+            'name' => 'New Name',
+        ]);
+    }
+
+    public function test_user_cannot_rename_dictionary_to_duplicate_name(): void
+    {
+        $user = User::factory()->create();
+
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English Core',
+            'language' => 'English',
+        ]);
+
+        UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'Travel Words',
+            'language' => 'English',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Index::class)
+            ->call('startEditingDictionary', $dictionary->id)
+            ->set('editingDictionaryName', 'Travel Words')
+            ->call('updateEditingDictionaryName')
+            ->assertHasErrors('editingDictionaryName');
+
+        $this->assertDatabaseHas('user_dictionaries', [
+            'id' => $dictionary->id,
+            'name' => 'English Core',
+        ]);
+    }
+
+    public function test_user_sees_inline_error_when_dictionary_rename_is_empty(): void
+    {
+        $user = User::factory()->create();
+
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English Core',
+            'language' => 'English',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Index::class)
+            ->call('startEditingDictionary', $dictionary->id)
+            ->set('editingDictionaryName', '')
+            ->call('updateEditingDictionaryName')
+            ->assertHasErrors('editingDictionaryName')
+            ->assertSet('editingDictionaryId', $dictionary->id)
+            ->assertSee(__('validation.required', [
+                'attribute' => __('dictionaries.index.fields.name'),
+            ]));
+
+        $this->assertDatabaseHas('user_dictionaries', [
+            'id' => $dictionary->id,
+            'name' => 'English Core',
+        ]);
+    }
+
     public function test_user_cannot_delete_another_users_dictionary(): void
     {
         $user = User::factory()->create();
@@ -115,6 +199,28 @@ class UserDictionaryCrudTest extends TestCase
         Livewire::actingAs($user)
             ->test(Index::class)
             ->call('confirmDeleteDictionary', $foreignDictionary->id)
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('user_dictionaries', [
+            'id' => $foreignDictionary->id,
+            'user_id' => $otherUser->id,
+            'name' => 'Hidden Dictionary',
+        ]);
+    }
+
+    public function test_user_cannot_rename_another_users_dictionary(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        $foreignDictionary = UserDictionary::create([
+            'user_id' => $otherUser->id,
+            'name' => 'Hidden Dictionary',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Index::class)
+            ->call('startEditingDictionary', $foreignDictionary->id)
             ->assertForbidden();
 
         $this->assertDatabaseHas('user_dictionaries', [

@@ -63,57 +63,48 @@
             @php
                 $languageKey = $dictionary->language !== null ? 'dictionaries.index.languages.' . strtolower($dictionary->language) : 'dictionaries.index.languages.not_specified';
             @endphp
-            <article
-                class="dictionary-card"
-                wire:key="dictionary-{{ $dictionary->id }}"
-                x-data="{
-                    editing: false,
-                    originalName: @js($dictionary->name),
-                    draftName: @js($dictionary->name),
-                    startEditing() {
-                        this.editing = true;
-                        this.$nextTick(() => this.$refs.nameInput?.focus());
-                    },
-                    cancelEditing() {
-                        this.draftName = this.originalName;
-                        this.editing = false;
-                    },
-                }"
-            >
+            <article class="dictionary-card" wire:key="dictionary-{{ $dictionary->id }}">
                 <div class="dictionary-card__content">
-                    <h2 class="dictionary-card__title" x-show="! editing">
-                        <a href="{{ route('dictionaries.show', $dictionary) }}">{{ $dictionary->name }}</a>
-                    </h2>
+                    @if ($editingDictionaryId === $dictionary->id)
+                        <div class="dictionary-card__edit-form">
+                            <div class="dictionary-card__edit-field">
+                                <input
+                                    type="text"
+                                    class="dictionary-card__edit-input"
+                                    wire:model.defer="editingDictionaryName"
+                                    aria-label="{{ __('dictionaries.index.edit.field_aria', ['name' => $dictionary->name]) }}"
+                                    wire:keydown.enter.prevent="updateEditingDictionaryName"
+                                    wire:keydown.escape.prevent="cancelEditingDictionary"
+                                >
 
-                    <div class="dictionary-card__edit-form" x-cloak x-show="editing">
-                        <input
-                            type="text"
-                            class="dictionary-card__edit-input"
-                            x-ref="nameInput"
-                            x-model="draftName"
-                            aria-label="{{ __('dictionaries.index.edit.field_aria', ['name' => $dictionary->name]) }}"
-                            @keydown.enter.prevent="cancelEditing()"
-                            @keydown.escape.prevent="cancelEditing()"
-                        >
+                                @error('editingDictionaryName')
+                                    <p class="dictionaries-error dictionary-card__edit-error">{{ $message }}</p>
+                                @enderror
+                            </div>
 
-                        <div class="dictionary-card__edit-actions">
-                            <button
-                                type="button"
-                                class="dictionary-card__edit-submit"
-                                @click="cancelEditing()"
-                            >
-                                {{ __('dictionaries.index.edit.accept') }}
-                            </button>
+                            <div class="dictionary-card__edit-actions">
+                                <button
+                                    type="button"
+                                    class="dictionary-card__edit-submit"
+                                    wire:click="updateEditingDictionaryName"
+                                >
+                                    {{ __('dictionaries.index.edit.accept') }}
+                                </button>
 
-                            <button
-                                type="button"
-                                class="dictionary-card__edit-cancel"
-                                @click="cancelEditing()"
-                            >
-                                {{ __('dictionaries.index.edit.cancel') }}
-                            </button>
+                                <button
+                                    type="button"
+                                    class="dictionary-card__edit-cancel"
+                                    wire:click="cancelEditingDictionary"
+                                >
+                                    {{ __('dictionaries.index.edit.cancel') }}
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    @else
+                        <h2 class="dictionary-card__title">
+                            <a href="{{ route('dictionaries.show', $dictionary) }}">{{ $dictionary->name }}</a>
+                        </h2>
+                    @endif
 
                     <p class="dictionary-card__meta">
                         {{ __($languageKey) }}
@@ -128,7 +119,7 @@
                     <button
                         type="button"
                         class="dictionary-card__edit"
-                        @click="startEditing()"
+                        wire:click="startEditingDictionary({{ $dictionary->id }})"
                         aria-label="{{ __('dictionaries.index.edit.aria', ['name' => $dictionary->name]) }}"
                     >
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
