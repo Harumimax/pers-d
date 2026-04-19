@@ -239,6 +239,82 @@
     color: var(--primary-color);
 }
 
+.dictionary-card__content {
+    min-width: 0;
+    flex: 1;
+}
+
+.dictionary-card__edit-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.dictionary-card__edit-form[x-cloak] {
+    display: none !important;
+}
+
+.dictionary-card__edit-input {
+    width: min(100%, 360px);
+    height: 42px;
+    border: 1px solid #c8ced9;
+    border-radius: 10px;
+    background: #f8fafc;
+    padding: 0 12px;
+    font-size: calc(1.1rem * var(--dictionaries-text-scale));
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.dictionary-card__edit-input:focus {
+    outline: none;
+    border-color: #94a3b8;
+    box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.14);
+}
+
+.dictionary-card__edit-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.dictionary-card__edit-submit,
+.dictionary-card__edit-cancel {
+    height: 34px;
+    min-width: 76px;
+    border-radius: 9px;
+    border: 1px solid #cbd5e1;
+    padding: 0 12px;
+    font-size: 0.86rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.dictionary-card__edit-submit {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+}
+
+.dictionary-card__edit-submit:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+.dictionary-card__edit-cancel {
+    background: #f8fafc;
+    color: #475569;
+}
+
+.dictionary-card__edit-cancel:hover {
+    background: #e2e8f0;
+    border-color: #94a3b8;
+    color: #334155;
+}
+
 .dictionary-card__meta {
     margin: 0;
     color: var(--muted-color);
@@ -249,6 +325,14 @@
     margin: 0 8px;
 }
 
+.dictionary-card__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.dictionary-card__edit,
 .dictionary-card__delete {
     display: inline-flex;
     align-items: center;
@@ -262,10 +346,20 @@
     cursor: pointer;
 }
 
+.dictionary-card__edit {
+    color: #64748b;
+}
+
+.dictionary-card__edit:hover {
+    background: rgba(100, 116, 139, 0.12);
+    color: #475569;
+}
+
 .dictionary-card__delete:hover {
     background: rgba(239, 68, 68, 0.1);
 }
 
+.dictionary-card__edit svg,
 .dictionary-card__delete svg {
     width: 24px;
     height: 24px;
@@ -437,7 +531,26 @@
         align-items: flex-start;
     }
 
-    .dictionary-card__delete {
+    .dictionary-card__edit-form {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dictionary-card__edit-input {
+        width: 100%;
+    }
+
+    .dictionary-card__edit-actions {
+        width: 100%;
+    }
+
+    .dictionary-card__edit-submit,
+    .dictionary-card__edit-cancel {
+        flex: 1;
+    }
+
+    .dictionary-card__actions {
         align-self: flex-end;
     }
 }

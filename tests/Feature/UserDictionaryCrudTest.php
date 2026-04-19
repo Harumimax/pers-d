@@ -24,11 +24,19 @@ class UserDictionaryCrudTest extends TestCase
     public function test_authenticated_user_can_open_their_dictionaries_page(): void
     {
         $user = User::factory()->create();
+        UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English Core',
+            'language' => 'English',
+        ]);
 
         $response = $this->actingAs($user)->get(route('dictionaries.index'));
 
         $response->assertOk();
         $response->assertSee('My Dictionaries');
+        $response->assertSee('Edit dictionary English Core');
+        $response->assertSee('Dictionary name for English Core');
+        $response->assertSee('Apply');
     }
 
     public function test_dictionaries_index_page_renders_dropdown_with_user_dictionaries(): void

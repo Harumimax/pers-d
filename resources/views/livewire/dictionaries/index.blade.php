@@ -63,11 +63,57 @@
             @php
                 $languageKey = $dictionary->language !== null ? 'dictionaries.index.languages.' . strtolower($dictionary->language) : 'dictionaries.index.languages.not_specified';
             @endphp
-            <article class="dictionary-card" wire:key="dictionary-{{ $dictionary->id }}">
+            <article
+                class="dictionary-card"
+                wire:key="dictionary-{{ $dictionary->id }}"
+                x-data="{
+                    editing: false,
+                    originalName: @js($dictionary->name),
+                    draftName: @js($dictionary->name),
+                    startEditing() {
+                        this.editing = true;
+                        this.$nextTick(() => this.$refs.nameInput?.focus());
+                    },
+                    cancelEditing() {
+                        this.draftName = this.originalName;
+                        this.editing = false;
+                    },
+                }"
+            >
                 <div class="dictionary-card__content">
-                    <h2 class="dictionary-card__title">
+                    <h2 class="dictionary-card__title" x-show="! editing">
                         <a href="{{ route('dictionaries.show', $dictionary) }}">{{ $dictionary->name }}</a>
                     </h2>
+
+                    <div class="dictionary-card__edit-form" x-cloak x-show="editing">
+                        <input
+                            type="text"
+                            class="dictionary-card__edit-input"
+                            x-ref="nameInput"
+                            x-model="draftName"
+                            aria-label="{{ __('dictionaries.index.edit.field_aria', ['name' => $dictionary->name]) }}"
+                            @keydown.enter.prevent="cancelEditing()"
+                            @keydown.escape.prevent="cancelEditing()"
+                        >
+
+                        <div class="dictionary-card__edit-actions">
+                            <button
+                                type="button"
+                                class="dictionary-card__edit-submit"
+                                @click="cancelEditing()"
+                            >
+                                {{ __('dictionaries.index.edit.accept') }}
+                            </button>
+
+                            <button
+                                type="button"
+                                class="dictionary-card__edit-cancel"
+                                @click="cancelEditing()"
+                            >
+                                {{ __('dictionaries.index.edit.cancel') }}
+                            </button>
+                        </div>
+                    </div>
 
                     <p class="dictionary-card__meta">
                         {{ __($languageKey) }}
@@ -78,16 +124,30 @@
                     </p>
                 </div>
 
-                <button
-                    type="button"
-                    class="dictionary-card__delete"
-                    wire:click="confirmDeleteDictionary({{ $dictionary->id }})"
-                    aria-label="{{ __('dictionaries.index.delete.aria', ['name' => $dictionary->name]) }}"
-                >
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M9 3h6m-8 3h10m-1 0-.7 11.2A2 2 0 0 1 13.3 19h-2.6a2 2 0 0 1-1.99-1.8L8 6m3 4v5m2-5v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                </button>
+                <div class="dictionary-card__actions">
+                    <button
+                        type="button"
+                        class="dictionary-card__edit"
+                        @click="startEditing()"
+                        aria-label="{{ __('dictionaries.index.edit.aria', ['name' => $dictionary->name]) }}"
+                    >
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="m4 20 4.25-1.06a2 2 0 0 0 .9-.52L19 8.57a2.12 2.12 0 0 0-3-3L6.15 15.42a2 2 0 0 0-.52.9L4 20Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="m14.5 7.5 2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                    </button>
+
+                    <button
+                        type="button"
+                        class="dictionary-card__delete"
+                        wire:click="confirmDeleteDictionary({{ $dictionary->id }})"
+                        aria-label="{{ __('dictionaries.index.delete.aria', ['name' => $dictionary->name]) }}"
+                    >
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M9 3h6m-8 3h10m-1 0-.7 11.2A2 2 0 0 1 13.3 19h-2.6a2 2 0 0 1-1.99-1.8L8 6m3 4v5m2-5v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </div>
             </article>
         @empty
             <article class="dictionary-card dictionary-card--empty">

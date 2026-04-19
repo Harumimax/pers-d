@@ -31,6 +31,12 @@ return [
             'title' => 'No dictionaries yet',
             'text' => 'Create your first dictionary to start organizing words.',
         ],
+        'edit' => [
+            'aria' => 'Edit dictionary :name',
+            'field_aria' => 'Dictionary name for :name',
+            'accept' => 'Apply',
+            'cancel' => 'Cancel',
+        ],
         'delete' => [
             'aria' => 'Delete dictionary :name',
             'title' => 'Delete Dictionary',
