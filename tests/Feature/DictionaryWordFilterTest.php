@@ -83,11 +83,152 @@ class DictionaryWordFilterTest extends TestCase
         Livewire::actingAs($user)
             ->test(Show::class, ['dictionary' => $dictionary])
             ->assertSee('Edit word apple')
+            ->call('startEditingWord', $word->id)
             ->assertSee('word-edit-translation-'.$word->id)
             ->assertSee('word-edit-part-of-speech-'.$word->id)
             ->assertSee('word-edit-comment-'.$word->id)
             ->assertSee('Apply')
             ->assertSee('Cancel');
+    }
+
+    public function test_user_can_update_word_translation_part_of_speech_and_comment(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English',
+            'language' => 'English',
+        ]);
+
+        $word = Word::create([
+            'word' => 'apple',
+            'part_of_speech' => 'noun',
+            'translation' => 'яблоко',
+            'comment' => 'fruit',
+        ]);
+
+        $dictionary->words()->attach($word->id);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['dictionary' => $dictionary])
+            ->call('startEditingWord', $word->id)
+            ->assertSet('editingWordId', $word->id)
+            ->assertSet('editingWordTranslation', 'яблоко')
+            ->assertSet('editingWordPartOfSpeech', 'noun')
+            ->assertSet('editingWordComment', 'fruit')
+            ->set('editingWordTranslation', 'apple fruit')
+            ->set('editingWordPartOfSpeech', 'stable_expression')
+            ->set('editingWordComment', 'updated comment')
+            ->call('updateEditingWord')
+            ->assertHasNoErrors()
+            ->assertSet('editingWordId', null)
+            ->assertSet('editingWordTranslation', '')
+            ->assertSet('editingWordPartOfSpeech', '')
+            ->assertSet('editingWordComment', '')
+            ->assertSee('apple fruit')
+            ->assertSee('updated comment');
+
+        $this->assertDatabaseHas('words', [
+            'id' => $word->id,
+            'translation' => 'apple fruit',
+            'part_of_speech' => 'stable_expression',
+            'comment' => 'updated comment',
+        ]);
+    }
+
+    public function test_user_can_clear_word_comment_while_editing_word(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English',
+            'language' => 'English',
+        ]);
+
+        $word = Word::create([
+            'word' => 'book',
+            'part_of_speech' => 'noun',
+            'translation' => 'книга',
+            'comment' => 'paper',
+        ]);
+
+        $dictionary->words()->attach($word->id);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['dictionary' => $dictionary])
+            ->call('startEditingWord', $word->id)
+            ->set('editingWordComment', '')
+            ->call('updateEditingWord')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('words', [
+            'id' => $word->id,
+            'comment' => null,
+        ]);
+    }
+
+    public function test_word_translation_is_required_when_editing_word(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English',
+            'language' => 'English',
+        ]);
+
+        $word = Word::create([
+            'word' => 'green',
+            'part_of_speech' => 'adjective',
+            'translation' => 'зелёный',
+            'comment' => null,
+        ]);
+
+        $dictionary->words()->attach($word->id);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['dictionary' => $dictionary])
+            ->call('startEditingWord', $word->id)
+            ->set('editingWordTranslation', '')
+            ->call('updateEditingWord')
+            ->assertHasErrors('editingWordTranslation')
+            ->assertSet('editingWordId', $word->id);
+
+        $this->assertDatabaseHas('words', [
+            'id' => $word->id,
+            'translation' => 'зелёный',
+        ]);
+    }
+
+    public function test_user_cannot_edit_word_from_another_dictionary(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English',
+            'language' => 'English',
+        ]);
+
+        $otherDictionary = UserDictionary::create([
+            'user_id' => $otherUser->id,
+            'name' => 'Private',
+            'language' => 'English',
+        ]);
+
+        $foreignWord = Word::create([
+            'word' => 'hidden',
+            'part_of_speech' => 'noun',
+            'translation' => 'secret',
+            'comment' => null,
+        ]);
+
+        $otherDictionary->words()->attach($foreignWord->id);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['dictionary' => $dictionary])
+            ->call('startEditingWord', $foreignWord->id)
+            ->assertForbidden();
     }
 
     public function test_part_of_speech_filter_resets_pagination_and_works_with_sort(): void

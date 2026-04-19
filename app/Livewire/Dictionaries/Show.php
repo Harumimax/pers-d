@@ -13,6 +13,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -53,6 +54,10 @@ class Show extends Component
     public int $formRenderKey = 0;
     public ?int $pendingDeleteWordId = null;
     public string $pendingDeleteWordLabel = '';
+    public ?int $editingWordId = null;
+    public string $editingWordTranslation = '';
+    public string $editingWordPartOfSpeech = '';
+    public string $editingWordComment = '';
 
     public function mount(UserDictionary $dictionary): void
     {
@@ -290,6 +295,87 @@ class Show extends Component
         $this->dispatch('reset-auto-add-word-form');
     }
 
+    public function startEditingWord(int $wordId): void
+    {
+        $word = $this->attachedWord($wordId);
+
+        $this->editingWordId = $word->id;
+        $this->editingWordTranslation = $word->translation;
+        $this->editingWordPartOfSpeech = $word->part_of_speech ?? PartOfSpeechCatalog::values()[0];
+        $this->editingWordComment = $word->comment ?? '';
+        $this->resetValidation([
+            'editingWordTranslation',
+            'editingWordPartOfSpeech',
+            'editingWordComment',
+        ]);
+    }
+
+    public function cancelEditingWord(): void
+    {
+        $this->editingWordId = null;
+        $this->editingWordTranslation = '';
+        $this->editingWordPartOfSpeech = '';
+        $this->editingWordComment = '';
+        $this->resetValidation([
+            'editingWordTranslation',
+            'editingWordPartOfSpeech',
+            'editingWordComment',
+        ]);
+    }
+
+    public function updateEditingWord(): void
+    {
+        $wordId = $this->editingWordId;
+        abort_if($wordId === null || $wordId <= 0, 404);
+
+        $word = $this->attachedWord($wordId);
+
+        $this->editingWordTranslation = $this->sanitizeTextInput($this->editingWordTranslation);
+        $this->editingWordComment = $this->sanitizeTextInput($this->editingWordComment);
+
+        $this->resetValidation([
+            'editingWordTranslation',
+            'editingWordPartOfSpeech',
+            'editingWordComment',
+        ]);
+
+        $validator = Validator::make(
+            [
+                'editingWordTranslation' => $this->editingWordTranslation,
+                'editingWordPartOfSpeech' => $this->editingWordPartOfSpeech,
+                'editingWordComment' => $this->editingWordComment,
+            ],
+            [
+                'editingWordTranslation' => ['required', 'string', 'max:255', 'not_regex:'.self::CONTROL_CHARACTER_PATTERN],
+                'editingWordPartOfSpeech' => ['required', 'string', Rule::in(PartOfSpeechCatalog::values())],
+                'editingWordComment' => ['nullable', 'string', 'max:600', 'not_regex:'.self::CONTROL_CHARACTER_PATTERN],
+            ],
+            [],
+            $this->validationAttributes()
+        );
+
+        if ($validator->fails()) {
+            foreach ($validator->errors()->messages() as $field => $messages) {
+                foreach ($messages as $message) {
+                    $this->addError($field, $message);
+                }
+            }
+
+            return;
+        }
+
+        /** @var array{editingWordTranslation: string, editingWordPartOfSpeech: string, editingWordComment?: string|null} $validated */
+        $validated = $validator->validated();
+
+        $word->update([
+            'translation' => $validated['editingWordTranslation'],
+            'part_of_speech' => $validated['editingWordPartOfSpeech'],
+            'comment' => ($validated['editingWordComment'] ?? '') !== '' ? $validated['editingWordComment'] : null,
+        ]);
+
+        $this->cancelEditingWord();
+    }
+
     public function confirmDeleteWord(int $wordId): void
     {
         $isAttached = $this->dictionary->words()
@@ -339,6 +425,17 @@ class Show extends Component
         return PartOfSpeechCatalog::dictionaryFormLabels();
     }
 
+    private function attachedWord(int $wordId): Word
+    {
+        $word = $this->dictionary->words()
+            ->where('words.id', $wordId)
+            ->first();
+
+        abort_if($word === null, 403);
+
+        return $word;
+    }
+
     private function storeWord(
         string $wordValue,
         string $partOfSpeechValue,
@@ -378,5 +475,17 @@ class Show extends Component
         abort_unless($user instanceof User, 401);
 
         return $user;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function validationAttributes(): array
+    {
+        return [
+            'editingWordTranslation' => __('dictionaries.show.fields.translation'),
+            'editingWordPartOfSpeech' => __('dictionaries.show.fields.part_of_speech'),
+            'editingWordComment' => __('dictionaries.show.fields.comment'),
+        ];
     }
 }
