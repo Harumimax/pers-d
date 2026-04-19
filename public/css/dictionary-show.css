@@ -428,6 +428,14 @@
     text-align: center;
 }
 
+.word-list-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.word-list-edit-btn,
 .word-list-delete-btn {
     width: 40px;
     height: 40px;
@@ -441,8 +449,101 @@
     cursor: pointer;
 }
 
+.word-list-edit-btn {
+    color: #64748b;
+}
+
+.word-list-edit-btn:hover {
+    background: rgba(100, 116, 139, 0.12);
+    color: #475569;
+}
+
 .word-list-delete-btn:hover {
     background: rgba(239, 68, 68, 0.08);
+}
+
+.word-list-edit-panel[x-cloak],
+.word-list-edit-actions[x-cloak] {
+    display: none !important;
+}
+
+.word-list-edit-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.word-list-edit-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--muted-color);
+}
+
+.word-list-edit-input,
+.word-list-edit-select {
+    width: 100%;
+    min-width: 180px;
+    height: 38px;
+    border: 1px solid #c8ced9;
+    border-radius: 10px;
+    background: #f8fafc;
+    padding: 0 11px;
+    color: var(--text-color);
+    font-size: 0.86rem;
+    font-weight: 600;
+}
+
+.word-list-edit-select {
+    padding-right: 34px;
+}
+
+.word-list-edit-input:focus,
+.word-list-edit-select:focus {
+    outline: none;
+    border-color: #94a3b8;
+    box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.14);
+}
+
+.word-list-edit-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.word-list-edit-accept-btn,
+.word-list-edit-cancel-btn {
+    height: 34px;
+    min-width: 74px;
+    border-radius: 9px;
+    border: 1px solid #cbd5e1;
+    padding: 0 10px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.word-list-edit-accept-btn {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+}
+
+.word-list-edit-accept-btn:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+.word-list-edit-cancel-btn {
+    background: #f8fafc;
+    color: #475569;
+}
+
+.word-list-edit-cancel-btn:hover {
+    background: #e2e8f0;
+    border-color: #94a3b8;
+    color: #334155;
 }
 
 .word-list-pagination {

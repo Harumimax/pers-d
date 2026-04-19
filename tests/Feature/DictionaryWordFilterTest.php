@@ -62,6 +62,34 @@ class DictionaryWordFilterTest extends TestCase
             ->assertSee('legacy');
     }
 
+    public function test_word_list_renders_edit_placeholder_ui(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English',
+            'language' => 'English',
+        ]);
+
+        $word = Word::create([
+            'word' => 'apple',
+            'part_of_speech' => 'noun',
+            'translation' => 'яблоко',
+            'comment' => null,
+        ]);
+
+        $dictionary->words()->attach($word->id);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['dictionary' => $dictionary])
+            ->assertSee('Edit word apple')
+            ->assertSee('word-edit-translation-'.$word->id)
+            ->assertSee('word-edit-part-of-speech-'.$word->id)
+            ->assertSee('word-edit-comment-'.$word->id)
+            ->assertSee('Apply')
+            ->assertSee('Cancel');
+    }
+
     public function test_part_of_speech_filter_resets_pagination_and_works_with_sort(): void
     {
         $user = User::factory()->create();

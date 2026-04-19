@@ -328,36 +328,126 @@
                                 @php
                                     $wordLanguageKey = $dictionary->language !== null ? 'dictionaries.index.languages.' . strtolower($dictionary->language) : 'dictionaries.index.languages.not_specified';
                                 @endphp
-                                <tr wire:key="word-row-{{ $wordItem->id }}-{{ $wordItem->pivot->created_at?->timestamp ?? 'na' }}">
+                                <tr
+                                    wire:key="word-row-{{ $wordItem->id }}-{{ $wordItem->pivot->created_at?->timestamp ?? 'na' }}"
+                                    x-data="{
+                                        editing: false,
+                                        originalTranslation: @js($wordItem->translation),
+                                        draftTranslation: @js($wordItem->translation),
+                                        originalPartOfSpeech: @js($wordItem->part_of_speech ?? ''),
+                                        draftPartOfSpeech: @js($wordItem->part_of_speech ?? ''),
+                                        originalComment: @js($wordItem->comment ?? ''),
+                                        draftComment: @js($wordItem->comment ?? ''),
+                                        startEditing() {
+                                            this.editing = true;
+                                            this.$nextTick(() => this.$refs.translationInput?.focus());
+                                        },
+                                        cancelEditing() {
+                                            this.draftTranslation = this.originalTranslation;
+                                            this.draftPartOfSpeech = this.originalPartOfSpeech;
+                                            this.draftComment = this.originalComment;
+                                            this.editing = false;
+                                        },
+                                    }"
+                                >
                                     <td>
                                         <div class="word-list-main">{{ $wordItem->word }}</div>
-                                        <div class="word-list-meta">
+                                        <div class="word-list-meta" x-show="! editing">
                                             {{ __($wordLanguageKey) }}
                                             &middot;
                                             {{ $partOfSpeechDisplayMap[$wordItem->part_of_speech] ?? __('dictionaries.show.word_list.part_of_speech_not_specified') }}
                                         </div>
+                                        <div class="word-list-edit-panel" x-cloak x-show="editing">
+                                            <select
+                                                id="word-edit-part-of-speech-{{ $wordItem->id }}"
+                                                class="word-list-edit-select"
+                                                x-model="draftPartOfSpeech"
+                                                aria-label="{{ __('dictionaries.show.fields.part_of_speech') }}"
+                                            >
+                                                <option value="">{{ __('dictionaries.show.placeholders.part_of_speech') }}</option>
+                                                @foreach ($partOfSpeechOptions as $partOfSpeechValue => $partOfSpeechLabel)
+                                                    <option value="{{ $partOfSpeechValue }}">{!! $partOfSpeechLabel !!}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
                                     </td>
                                     <td>
-                                        <div class="word-list-translation">{{ $wordItem->translation }}</div>
+                                        <div class="word-list-translation" x-show="! editing">{{ $wordItem->translation }}</div>
+                                        <div class="word-list-edit-panel" x-cloak x-show="editing">
+                                            <label class="word-list-edit-label" for="word-edit-translation-{{ $wordItem->id }}">
+                                                {{ __('dictionaries.show.fields.translation') }}
+                                            </label>
+                                            <input
+                                                id="word-edit-translation-{{ $wordItem->id }}"
+                                                type="text"
+                                                class="word-list-edit-input"
+                                                x-ref="translationInput"
+                                                x-model="draftTranslation"
+                                            >
+                                        </div>
                                     </td>
                                     <td>
-                                        <div class="word-list-comment">{{ $wordItem->comment ?: __('dictionaries.show.word_list.no_comment') }}</div>
+                                        <div class="word-list-comment" x-show="! editing">{{ $wordItem->comment ?: __('dictionaries.show.word_list.no_comment') }}</div>
+                                        <div class="word-list-edit-panel" x-cloak x-show="editing">
+                                            <label class="word-list-edit-label" for="word-edit-comment-{{ $wordItem->id }}">
+                                                {{ __('dictionaries.show.fields.comment') }}
+                                            </label>
+                                            <input
+                                                id="word-edit-comment-{{ $wordItem->id }}"
+                                                type="text"
+                                                class="word-list-edit-input"
+                                                x-model="draftComment"
+                                            >
+                                        </div>
                                     </td>
                                     <td>
                                         <span class="word-list-badge">{{ $wordItem->pivot->created_at?->translatedFormat('M d') ?? '-' }}</span>
                                     </td>
                                     <td class="word-list-action-cell">
-                                        <button
-                                            type="button"
-                                            class="word-list-delete-btn"
-                                            wire:key="word-delete-btn-{{ $wordItem->id }}"
-                                            wire:click="confirmDeleteWord({{ $wordItem->id }})"
-                                            aria-label="{{ __('dictionaries.show.word_list.delete.aria', ['name' => $wordItem->word]) }}"
-                                        >
-                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                                <path d="M9 3h6m-8 3h10m-1 0-.7 11.2A2 2 0 0 1 13.3 19h-2.6a2 2 0 0 1-1.99-1.8L8 6m3 4v5m2-5v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                            </svg>
-                                        </button>
+                                        <div class="word-list-actions">
+                                            <div class="word-list-edit-actions" x-cloak x-show="editing">
+                                                <button
+                                                    type="button"
+                                                    class="word-list-edit-accept-btn"
+                                                    x-on:click="cancelEditing()"
+                                                >
+                                                    {{ __('dictionaries.show.word_list.edit.accept') }}
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    class="word-list-edit-cancel-btn"
+                                                    x-on:click="cancelEditing()"
+                                                >
+                                                    {{ __('dictionaries.show.word_list.edit.cancel') }}
+                                                </button>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                class="word-list-edit-btn"
+                                                x-show="! editing"
+                                                x-on:click="startEditing()"
+                                                aria-label="{{ __('dictionaries.show.word_list.edit.aria', ['name' => $wordItem->word]) }}"
+                                            >
+                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                    <path d="m4 20 4.25-1.06a2 2 0 0 0 .9-.52L19 8.57a2.12 2.12 0 0 0-3-3L6.15 15.42a2 2 0 0 0-.52.9L4 20Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                    <path d="m14.5 7.5 2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                                </svg>
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                class="word-list-delete-btn"
+                                                wire:key="word-delete-btn-{{ $wordItem->id }}"
+                                                wire:click="confirmDeleteWord({{ $wordItem->id }})"
+                                                aria-label="{{ __('dictionaries.show.word_list.delete.aria', ['name' => $wordItem->word]) }}"
+                                            >
+                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                    <path d="M9 3h6m-8 3h10m-1 0-.7 11.2A2 2 0 0 1 13.3 19h-2.6a2 2 0 0 1-1.99-1.8L8 6m3 4v5m2-5v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach

@@ -117,6 +117,11 @@ return [
                 'no' => 'No',
                 'yes' => 'Yes',
             ],
+            'edit' => [
+                'aria' => 'Edit word :name',
+                'accept' => 'Apply',
+                'cancel' => 'Cancel',
+            ],
         ],
     ],
 ];
