@@ -22,8 +22,10 @@
         <div class="container remainder-container">
             <section class="remainder-hero">
                 <div class="remainder-copy">
-                    <h1 class="remainder-title">{{ __('remainder.settings.title') }}</h1>
-                    <p class="remainder-description">{{ __('remainder.settings.description') }}</p>
+                    <div class="remainder-heading-line">
+                        <h1 class="remainder-title">{{ __('remainder.settings.title') }}</h1>
+                        <p class="remainder-description">{{ __('remainder.settings.description') }}</p>
+                    </div>
                 </div>
             </section>
 

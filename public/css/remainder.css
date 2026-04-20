@@ -19,6 +19,13 @@
     gap: 10px;
 }
 
+.remainder-heading-line {
+    display: flex;
+    align-items: baseline;
+    gap: 0.45rem;
+    flex-wrap: nowrap;
+}
+
 .remainder-eyebrow {
     margin: 0;
     font-size: 0.92rem;
@@ -38,10 +45,11 @@
 
 .remainder-description {
     margin: 0;
-    max-width: 620px;
+    max-width: none;
     font-size: 1rem;
     line-height: 1.65;
     color: var(--muted-color);
+    white-space: nowrap;
 }
 
 .remainder-setup-card {
@@ -446,6 +454,14 @@
 
     .remainder-title {
         font-size: 1.95rem;
+    }
+
+    .remainder-heading-line {
+        flex-wrap: wrap;
+    }
+
+    .remainder-description {
+        white-space: normal;
     }
 
     .remainder-setup-card__title {

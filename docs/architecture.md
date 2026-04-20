@@ -23,6 +23,7 @@
   - `/remainder` -> `RemainderController@index`
   - `POST /remainder/sessions` -> `RemainderController@store`
   - `GET /remainder/sessions/{gameSession}` -> `RemainderController@showSession`
+  - `/ready-dictionaries` -> `ReadyDictionariesController@index`
   - `/dictionaries` -> `App\Livewire\Dictionaries\Index`
   - `/dictionaries/{dictionary}` -> `App\Livewire\Dictionaries\Show`
 
@@ -44,6 +45,9 @@
   - renders remainder settings page
   - starts manual game sessions
   - renders the game session page shell
+- `App\Http\Controllers\ReadyDictionariesController`
+  - renders the authenticated Ready dictionaries page shell
+  - delegates ready dictionary catalog queries and filter normalization to `ReadyDictionaryCatalogService`
 - Auth controllers are the standard Breeze-style controllers under `app/Http/Controllers/Auth`
 - Dictionaries are not handled by traditional controllers; they are handled by Livewire page components
 - Locale switching is currently handled by a small route closure plus web middleware, not by a dedicated controller
@@ -131,6 +135,11 @@
   - `GlobalStatisticsService`
     - aggregates site-wide counts for dictionaries, word entries, and game sessions
     - computes overall answer accuracy across all game sessions
+- Ready dictionary read-model services live under `app/Services/ReadyDictionaries`
+  - `ReadyDictionaryCatalogService`
+    - returns ready dictionaries for the authenticated page
+    - supports backend filters for language, level, and part of speech
+    - normalizes unsupported filters so query parameters do not break the page
 - Remainder game services live under `app/Services/Remainder`
   - `PrepareGameService`
     - validates dictionary ownership at the domain layer
@@ -175,6 +184,30 @@
   - `comment`
 - Relationship:
   - `belongsToMany(UserDictionary::class)` via `dictionaries()`
+
+### ReadyDictionary
+- Model: `App\Models\ReadyDictionary`
+- Purpose: stores developer-managed dictionaries that are not owned by a user
+- Fillable:
+  - `name`
+  - `language`
+  - `level`
+  - `part_of_speech`
+  - `comment`
+- Relationships:
+  - `hasMany(ReadyDictionaryWord::class)` via `words()`
+
+### ReadyDictionaryWord
+- Model: `App\Models\ReadyDictionaryWord`
+- Purpose: stores words that belong to developer-managed ready dictionaries
+- Fillable:
+  - `ready_dictionary_id`
+  - `word`
+  - `translation`
+  - `part_of_speech`
+  - `comment`
+- Relationships:
+  - `belongsTo(ReadyDictionary::class)` via `readyDictionary()`
 
 ### GameSession
 - Model: `App\Models\GameSession`
@@ -277,6 +310,38 @@
   - composite primary key on `user_dictionary_id + word_id`
   - index on `word_id`
 
+#### `ready_dictionaries`
+- Created in `2026_04_21_000015_create_ready_dictionaries_tables.php`
+- Purpose: stores developer-managed dictionaries that are visible to authenticated users but are not owned by a user
+- Fields:
+  - `id`
+  - `name`
+  - `language`
+  - `level` nullable
+  - `part_of_speech` nullable
+  - `comment` nullable
+  - `created_at`
+  - `updated_at`
+- Constraints and indexes:
+  - unique composite key on `name + language`
+  - indexes on `language`, `level`, and `part_of_speech`
+
+#### `ready_dictionary_words`
+- Created in `2026_04_21_000015_create_ready_dictionaries_tables.php`
+- Purpose: stores words attached to developer-managed ready dictionaries
+- Fields:
+  - `id`
+  - `ready_dictionary_id` -> FK to `ready_dictionaries.id`
+  - `word`
+  - `translation`
+  - `part_of_speech` nullable
+  - `comment` nullable
+  - `created_at`
+  - `updated_at`
+- Constraints and indexes:
+  - `ready_dictionary_id` cascades on delete
+  - indexes on `ready_dictionary_id`, `word`, and `part_of_speech`
+
 #### `game_sessions`
 - Created in `2026_04_10_000008_create_game_sessions_table.php`
 - Purpose: stores one started game snapshot
@@ -345,6 +410,7 @@
   - `English`
   - `Spanish`
 - Dictionary creation validates language against this fixed set
+- Ready dictionaries store `language` as required metadata and are filtered independently through `ReadyDictionaryCatalogService`
 
 ### Part of Speech
 - Current supported values:
@@ -366,6 +432,8 @@
 - Current deletion behavior follows the product assumption above:
   - deleting a dictionary also deletes all words attached to that dictionary
   - this is intentional under the current product model, where words are effectively treated as belonging to one dictionary at creation time
+- Ready dictionary words are stored separately from user words and are not attached to `user_dictionary_word`
+- Users cannot create ready dictionaries through the current application UI; they are developer-managed content
 
 ### Remainder Game Modes
 - Current implemented modes:
