@@ -111,6 +111,8 @@ class ReadyDictionaryCatalogTest extends TestCase
 
         $this->assertCount(3, $catalog['dictionaries']);
         $this->assertSame(['English', 'Spanish'], $catalog['filterOptions']['languages']);
+        $this->assertSame('A0 Beginner', $catalog['filterOptions']['levels']['A0']);
+        $this->assertSame('C2 Proficiency', $catalog['filterOptions']['levels']['C2']);
         $this->assertSame([
             'language' => null,
             'level' => null,
@@ -202,10 +204,20 @@ class ReadyDictionaryCatalogTest extends TestCase
         $this->actingAs($user)
             ->get('/ready-dictionaries?language=English&level=A1&part_of_speech=noun')
             ->assertOk()
+            ->assertSee('Ready dictionaries')
+            ->assertSee('English nouns')
+            ->assertSee('English')
+            ->assertSee('2 words')
+            ->assertSee('A1 Elementary')
+            ->assertSee('Noun')
+            ->assertSee('Language')
+            ->assertSee('Level')
+            ->assertSee('Part of speech')
+            ->assertDontSee('New Dictionary')
             ->assertViewHas('readyDictionaries', fn ($dictionaries): bool => $dictionaries->count() === 1
                 && $dictionaries->first()->words_count === 2)
             ->assertViewHas('filterOptions', fn (array $filterOptions): bool => $filterOptions['languages'] === ['English']
-                && $filterOptions['levels'] === ['A1']
+                && $filterOptions['levels']['A1'] === 'A1 Elementary'
                 && array_key_exists('noun', $filterOptions['parts_of_speech']))
             ->assertViewHas('selectedFilters', [
                 'language' => 'English',

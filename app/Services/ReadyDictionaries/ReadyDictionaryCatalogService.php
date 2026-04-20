@@ -3,6 +3,7 @@
 namespace App\Services\ReadyDictionaries;
 
 use App\Models\ReadyDictionary;
+use App\Support\LanguageLevelCatalog;
 use App\Support\PartOfSpeechCatalog;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -12,7 +13,7 @@ class ReadyDictionaryCatalogService
      * @param array{language?: mixed, level?: mixed, part_of_speech?: mixed} $filters
      * @return array{
      *     dictionaries: Collection<int, ReadyDictionary>,
-     *     filterOptions: array{languages: array<int, string>, levels: array<int, string>, parts_of_speech: array<string, string>},
+     *     filterOptions: array{languages: array<int, string>, levels: array<string, string>, parts_of_speech: array<string, string>},
      *     selectedFilters: array{language: ?string, level: ?string, part_of_speech: ?string}
      * }
      */
@@ -38,26 +39,29 @@ class ReadyDictionaryCatalogService
     }
 
     /**
-     * @return array{languages: array<int, string>, levels: array<int, string>, parts_of_speech: array<string, string>}
+     * @return array{languages: array<int, string>, levels: array<string, string>, parts_of_speech: array<string, string>}
      */
     public function filterOptions(): array
     {
         return [
             'languages' => $this->distinctValues('language'),
-            'levels' => $this->distinctValues('level'),
+            'levels' => LanguageLevelCatalog::labels(),
             'parts_of_speech' => PartOfSpeechCatalog::labels(),
         ];
     }
 
     /**
      * @param array{language?: mixed, level?: mixed, part_of_speech?: mixed} $filters
-     * @param array{languages: array<int, string>, levels: array<int, string>, parts_of_speech: array<string, string>} $filterOptions
+     * @param array{languages: array<int, string>, levels: array<string, string>, parts_of_speech: array<string, string>} $filterOptions
      * @return array{language: ?string, level: ?string, part_of_speech: ?string}
      */
     private function selectedFilters(array $filters, array $filterOptions): array
     {
         $language = $this->normalizeTextFilter($filters['language'] ?? null, $filterOptions['languages']);
-        $level = $this->normalizeTextFilter($filters['level'] ?? null, $filterOptions['levels']);
+
+        $level = is_string($filters['level'] ?? null)
+            ? trim((string) $filters['level'])
+            : '';
 
         $partOfSpeech = is_string($filters['part_of_speech'] ?? null)
             ? trim((string) $filters['part_of_speech'])
@@ -65,7 +69,7 @@ class ReadyDictionaryCatalogService
 
         return [
             'language' => $language,
-            'level' => $level,
+            'level' => in_array($level, LanguageLevelCatalog::values(), true) ? $level : null,
             'part_of_speech' => in_array($partOfSpeech, PartOfSpeechCatalog::values(), true) ? $partOfSpeech : null,
         ];
     }

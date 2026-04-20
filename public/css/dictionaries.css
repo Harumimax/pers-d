@@ -151,6 +151,10 @@
     align-items: end;
 }
 
+.dictionaries-filter-form {
+    grid-template-columns: 1fr 1fr 1fr auto;
+}
+
 .dictionaries-field {
     display: flex;
     flex-direction: column;
@@ -325,6 +329,11 @@
     font-size: calc(1.15rem * var(--dictionaries-text-scale));
 }
 
+.dictionary-card__description {
+    margin-top: 10px;
+    line-height: 1.5;
+}
+
 .dictionary-card__dot {
     margin: 0 8px;
 }
@@ -476,6 +485,10 @@
     }
 
     .dictionaries-create-form {
+        grid-template-columns: 1fr;
+    }
+
+    .dictionaries-filter-form {
         grid-template-columns: 1fr;
     }
 

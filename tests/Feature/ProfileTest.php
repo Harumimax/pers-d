@@ -43,7 +43,12 @@ class ProfileTest extends TestCase
             ->get('/ready-dictionaries')
             ->assertOk()
             ->assertSee('Ready dictionaries')
-            ->assertSee('Curated dictionaries for future practice')
+            ->assertSee('100 English words')
+            ->assertSee('100 words')
+            ->assertSee('Language')
+            ->assertSee('Level')
+            ->assertSee('Part of speech')
+            ->assertDontSee('New Dictionary')
             ->assertSee('My Dictionaries')
             ->assertSee('Remainder');
     }
@@ -57,7 +62,11 @@ class ProfileTest extends TestCase
             ->get('/ready-dictionaries')
             ->assertOk()
             ->assertSee('Готовые словари')
-            ->assertSee('Подготовленные словари для будущих тренировок')
+            ->assertSee('100 English words')
+            ->assertSee('100 слов')
+            ->assertSee('Язык')
+            ->assertSee('Уровень')
+            ->assertSee('Часть речи')
             ->assertSee('Мои словари')
             ->assertSee('Повторение');
     }

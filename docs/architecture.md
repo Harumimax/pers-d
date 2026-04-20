@@ -46,7 +46,7 @@
   - starts manual game sessions
   - renders the game session page shell
 - `App\Http\Controllers\ReadyDictionariesController`
-  - renders the authenticated Ready dictionaries page shell
+  - renders the authenticated Ready dictionaries catalog page
   - delegates ready dictionary catalog queries and filter normalization to `ReadyDictionaryCatalogService`
 - Auth controllers are the standard Breeze-style controllers under `app/Http/Controllers/Auth`
 - Dictionaries are not handled by traditional controllers; they are handled by Livewire page components
@@ -140,6 +140,11 @@
     - returns ready dictionaries for the authenticated page
     - supports backend filters for language, level, and part of speech
     - normalizes unsupported filters so query parameters do not break the page
+- Catalogs under `app/Support`
+  - `PartOfSpeechCatalog`
+    - stores the canonical part-of-speech values and UI labels
+  - `LanguageLevelCatalog`
+    - stores the canonical language level values from `A0` to `C2` and their labels
 - Remainder game services live under `app/Services/Remainder`
   - `PrepareGameService`
     - validates dictionary ownership at the domain layer
@@ -411,6 +416,17 @@
   - `Spanish`
 - Dictionary creation validates language against this fixed set
 - Ready dictionaries store `language` as required metadata and are filtered independently through `ReadyDictionaryCatalogService`
+
+### Language Level
+- Current supported ready dictionary levels:
+  - `A0 Beginner`
+  - `A1 Elementary`
+  - `A2 Pre-intermediate`
+  - `B1 Intermediate`
+  - `B2 Upper-Intermediate`
+  - `C1 Advanced`
+  - `C2 Proficiency`
+- Level values and labels are centralized in `LanguageLevelCatalog`
 
 ### Part of Speech
 - Current supported values:
