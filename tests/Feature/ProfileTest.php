@@ -29,6 +29,39 @@ class ProfileTest extends TestCase
             ->assertRedirect('/login');
     }
 
+    public function test_guest_is_redirected_from_ready_dictionaries_page(): void
+    {
+        $this->get('/ready-dictionaries')
+            ->assertRedirect('/login');
+    }
+
+    public function test_ready_dictionaries_page_is_displayed_for_authenticated_user(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get('/ready-dictionaries')
+            ->assertOk()
+            ->assertSee('Ready dictionaries')
+            ->assertSee('Curated dictionaries for future practice')
+            ->assertSee('My Dictionaries')
+            ->assertSee('Remainder');
+    }
+
+    public function test_ready_dictionaries_page_is_translated_to_russian_when_locale_is_set(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->withSession(['ui_locale' => 'ru'])
+            ->get('/ready-dictionaries')
+            ->assertOk()
+            ->assertSee('Готовые словари')
+            ->assertSee('Подготовленные словари для будущих тренировок')
+            ->assertSee('Мои словари')
+            ->assertSee('Повторение');
+    }
+
     public function test_about_page_is_displayed_for_authenticated_user(): void
     {
         $user = User::factory()->create();
@@ -68,8 +101,9 @@ class ProfileTest extends TestCase
             ->assertSee('Текущий функционал')
             ->assertSee('Политика конфиденциальности и обработки персональных данных')
             ->assertSee('Политика использования файлов cookie')
+            ->assertSee('Готовые словари')
             ->assertSee('Повторение')
-            ->assertSee('Словари')
+            ->assertSee('Мои словари')
             ->assertSee('Профиль')
             ->assertSee('Выйти')
             ->assertSee('О проекте');

@@ -15,6 +15,7 @@
 
         <x-site-header :label="__('common.navigation.auth')">
                 @auth
+                    <a href="{{ route('ready-dictionaries.index') }}" class="btn btn-secondary">{{ __('common.links.ready_dictionaries') }}</a>
                     <a href="{{ route('remainder') }}" class="btn btn-secondary">{{ __('common.links.remainder') }}</a>
                     <a href="{{ url('/dashboard') }}" class="btn btn-primary">{{ __('common.links.dictionaries') }}</a>
                     <form method="POST" action="{{ route('logout') }}" style="display:inline">

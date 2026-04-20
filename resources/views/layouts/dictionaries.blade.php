@@ -23,6 +23,12 @@
     @php($dictionariesNavActive = request()->routeIs('dictionaries.index') || request()->routeIs('dictionaries.show'))
     <body class="dictionaries-shell">
         <x-site-header nav-class="dictionaries-header-nav" :label="__('common.navigation.dictionaries')">
+            <a
+                href="{{ route('ready-dictionaries.index') }}"
+                class="dictionaries-header-nav__link {{ request()->routeIs('ready-dictionaries.*') ? 'dictionaries-header-nav__link--active' : '' }}"
+            >
+                {{ __('common.links.ready_dictionaries') }}
+            </a>
             <a href="{{ route('remainder') }}" class="dictionaries-header-nav__link">
                 {{ __('common.links.remainder') }}
             </a>

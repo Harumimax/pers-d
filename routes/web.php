@@ -3,6 +3,7 @@
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\AboutContactController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReadyDictionariesController;
 use App\Http\Controllers\RemainderController;
 use App\Livewire\Dictionaries\Index;
 use App\Livewire\Dictionaries\Show;
@@ -39,6 +40,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/about', [AboutController::class, 'index'])->name('about');
     Route::post('/about/contact', [AboutContactController::class, 'store'])->name('about.contact.store');
+    Route::get('/ready-dictionaries', [ReadyDictionariesController::class, 'index'])->name('ready-dictionaries.index');
     Route::get('/remainder', [RemainderController::class, 'index'])->name('remainder');
     Route::post('/remainder/sessions', [RemainderController::class, 'store'])->name('remainder.sessions.store');
     Route::get('/remainder/sessions/{gameSession}', [RemainderController::class, 'showSession'])->name('remainder.sessions.show');

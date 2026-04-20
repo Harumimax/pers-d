@@ -23,6 +23,12 @@
     <body class="profile-shell">
         <x-site-header nav-class="profile-header-nav" :label="__('common.navigation.profile')">
             <a
+                href="{{ route('ready-dictionaries.index') }}"
+                class="profile-header-nav__link {{ $activeNav === 'ready-dictionaries' ? 'profile-header-nav__link--active' : '' }}"
+            >
+                {{ __('common.links.ready_dictionaries') }}
+            </a>
+            <a
                 href="{{ route('remainder') }}"
                 class="profile-header-nav__link {{ $activeNav === 'remainder' ? 'profile-header-nav__link--active' : '' }}"
             >

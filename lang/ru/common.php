@@ -7,8 +7,9 @@ return [
         'auth' => 'Ссылки авторизации',
     ],
     'links' => [
+        'ready_dictionaries' => 'Готовые словари',
         'remainder' => 'Повторение',
-        'dictionaries' => 'Словари',
+        'dictionaries' => 'Мои словари',
         'profile' => 'Профиль',
         'login' => 'Войти',
         'signup' => 'Регистрация',
