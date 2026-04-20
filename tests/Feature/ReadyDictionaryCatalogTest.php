@@ -13,6 +13,39 @@ class ReadyDictionaryCatalogTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_seeded_100_english_words_dictionary_exists_with_words(): void
+    {
+        $dictionary = ReadyDictionary::query()
+            ->where('name', '100 English words')
+            ->where('language', 'English')
+            ->firstOrFail();
+
+        $this->assertNull($dictionary->level);
+        $this->assertNull($dictionary->part_of_speech);
+        $this->assertSame(100, $dictionary->words()->count());
+
+        $this->assertDatabaseHas('ready_dictionary_words', [
+            'ready_dictionary_id' => $dictionary->id,
+            'word' => 'Abandon',
+            'translation' => 'Покидать, оставлять',
+            'part_of_speech' => 'verb',
+        ]);
+
+        $this->assertDatabaseHas('ready_dictionary_words', [
+            'ready_dictionary_id' => $dictionary->id,
+            'word' => 'Abundant',
+            'translation' => 'Обильный, избыточный',
+            'part_of_speech' => 'adjective',
+        ]);
+
+        $this->assertDatabaseHas('ready_dictionary_words', [
+            'ready_dictionary_id' => $dictionary->id,
+            'word' => 'Bias',
+            'translation' => 'Предвзятость',
+            'part_of_speech' => 'noun',
+        ]);
+    }
+
     public function test_ready_dictionary_can_be_created_without_user_and_has_words(): void
     {
         $dictionary = ReadyDictionary::factory()->create([
@@ -76,7 +109,7 @@ class ReadyDictionaryCatalogTest extends TestCase
 
         $catalog = app(ReadyDictionaryCatalogService::class)->catalog();
 
-        $this->assertCount(2, $catalog['dictionaries']);
+        $this->assertCount(3, $catalog['dictionaries']);
         $this->assertSame(['English', 'Spanish'], $catalog['filterOptions']['languages']);
         $this->assertSame([
             'language' => null,
@@ -145,7 +178,7 @@ class ReadyDictionaryCatalogTest extends TestCase
             'part_of_speech' => 'invalid',
         ]);
 
-        $this->assertCount(1, $catalog['dictionaries']);
+        $this->assertCount(2, $catalog['dictionaries']);
         $this->assertSame([
             'language' => null,
             'level' => null,
