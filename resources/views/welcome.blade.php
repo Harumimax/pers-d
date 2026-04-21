@@ -163,5 +163,43 @@
             </div>
         </div>
     </section>
+
+    <section class="closing-section" aria-labelledby="closing-title">
+        <div class="container">
+            <div class="closing-shell">
+                <div class="closing-benefits">
+                    @foreach (['collect', 'practice', 'repeat'] as $benefitKey)
+                        <article class="closing-benefit-card">
+                            <h3 class="closing-benefit-title">{{ __('welcome.closing.benefits.' . $benefitKey . '.title') }}</h3>
+                            <p class="closing-benefit-text">{{ __('welcome.closing.benefits.' . $benefitKey . '.text') }}</p>
+                        </article>
+                    @endforeach
+                </div>
+
+                <div class="closing-cta">
+                    <p class="closing-eyebrow">{{ __('welcome.closing.eyebrow') }}</p>
+                    <h2 id="closing-title" class="closing-title">
+                        {{ __('welcome.closing.title') }}
+                    </h2>
+                    <p class="closing-text">
+                        {{ __('welcome.closing.text') }}
+                    </p>
+
+                    <div class="closing-actions">
+                        @auth
+                            <a href="{{ url('/dashboard') }}" class="btn btn-primary btn-large">{{ __('welcome.actions.dictionaries') }}</a>
+                        @else
+                            <a href="{{ route('register') }}" class="btn btn-primary btn-large">{{ __('welcome.actions.signup') }}</a>
+                            <a href="{{ route('login') }}" class="btn btn-secondary btn-large">{{ __('welcome.actions.login') }}</a>
+                        @endauth
+                    </div>
+
+                    <p class="closing-note">
+                        {{ __('welcome.closing.note') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
 </body>
 </html>

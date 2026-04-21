@@ -101,5 +101,25 @@ return [
             ],
         ],
     ],
+    'closing' => [
+        'benefits' => [
+            'collect' => [
+                'title' => 'Keep words in one place',
+                'text' => 'Collect vocabulary from reading, lessons, and daily practice without scattered notes.',
+            ],
+            'practice' => [
+                'title' => 'Practice with focused sessions',
+                'text' => 'Review only the words and categories you want, in a format that matches your learning style.',
+            ],
+            'repeat' => [
+                'title' => 'See what needs repetition',
+                'text' => 'Get clear feedback after each session and quickly notice which words still need more work.',
+            ],
+        ],
+        'eyebrow' => 'Ready to begin?',
+        'title' => 'Start building your vocabulary today',
+        'text' => 'Save words, organize meanings, and return to them in simple review sessions whenever you need.',
+        'note' => 'A calm, focused tool for personal vocabulary learning.',
+    ],
     'image_alt' => 'Open dictionary book',
 ];

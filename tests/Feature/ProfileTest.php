@@ -355,6 +355,8 @@ class ProfileTest extends TestCase
             ->assertSee('See WordKeeper in action')
             ->assertSee('Add a new word in dictionary quickly')
             ->assertSee('Review results and weak spots')
+            ->assertSee('Keep words in one place')
+            ->assertSee('Start building your vocabulary today')
             ->assertSee('Ru')
             ->assertSee('En')
             ->assertDontSee('mc.yandex.ru/metrika/tag.js');
@@ -375,6 +377,8 @@ class ProfileTest extends TestCase
             ->assertSee('Просматривайте результаты и слабые места')
             ->assertSee('Сценарии использования')
             ->assertSee('Как можно использовать WordKeeper')
+            ->assertSee('Храните слова в одном месте')
+            ->assertSee('Начните собирать словарный запас уже сегодня')
             ->assertSee('Регистрация')
             ->assertSee('Войти');
     }
