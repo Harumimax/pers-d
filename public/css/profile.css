@@ -72,16 +72,6 @@
     color: var(--primary-color);
 }
 
-.profile-header-nav__menu-empty {
-    margin: 0;
-    padding: 10px 12px;
-    border-radius: 12px;
-    font-size: 0.96rem;
-    font-weight: 600;
-    line-height: 1.35;
-    color: var(--muted-color);
-}
-
 .profile-header-nav__link--active {
     color: var(--text-color);
     font-weight: 700;

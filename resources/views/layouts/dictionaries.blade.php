@@ -40,18 +40,18 @@
                     {{ __('common.links.dictionaries') }}
                 </a>
 
-                <div class="dictionaries-header-nav__menu" aria-label="Your dictionaries">
-                    @forelse (($headerDictionaries ?? collect()) as $headerDictionary)
+                @if (($headerDictionaries ?? collect())->isNotEmpty())
+                    <div class="dictionaries-header-nav__menu" aria-label="Your dictionaries">
+                        @foreach ($headerDictionaries as $headerDictionary)
                         <a
                             href="{{ route('dictionaries.show', $headerDictionary) }}"
                             class="dictionaries-header-nav__menu-link"
                         >
                             {{ $headerDictionary->name }}
                         </a>
-                    @empty
-                        <p class="dictionaries-header-nav__menu-empty">{{ __('common.dictionaries_dropdown.empty') }}</p>
-                    @endforelse
-                </div>
+                        @endforeach
+                    </div>
+                @endif
             </div>
             <a href="{{ route('profile.edit') }}" class="dictionaries-header-nav__link">
                 {{ __('common.links.profile') }}

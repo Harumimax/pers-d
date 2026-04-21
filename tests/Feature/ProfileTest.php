@@ -440,14 +440,14 @@ class ProfileTest extends TestCase
             ->assertSee('Spanish Travel');
     }
 
-    public function test_profile_page_renders_empty_dictionaries_dropdown_message(): void
+    public function test_profile_page_does_not_render_dictionaries_dropdown_without_user_dictionaries(): void
     {
         $user = User::factory()->create();
 
         $this->actingAs($user)
             ->get('/profile')
             ->assertOk()
-            ->assertSee('Create your dictionary');
+            ->assertDontSee('aria-label="Your dictionaries"', false);
     }
 
     public function test_profile_page_is_displayed(): void

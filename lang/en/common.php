@@ -19,7 +19,4 @@ return [
     'language_switcher' => [
         'label' => 'Switch interface language',
     ],
-    'dictionaries_dropdown' => [
-        'empty' => 'Create your dictionary',
-    ],
 ];
