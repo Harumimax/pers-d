@@ -440,6 +440,16 @@ class ProfileTest extends TestCase
             ->assertSee('Spanish Travel');
     }
 
+    public function test_profile_page_renders_empty_dictionaries_dropdown_message(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get('/profile')
+            ->assertOk()
+            ->assertSee('Create your dictionary');
+    }
+
     public function test_profile_page_is_displayed(): void
     {
         $user = User::factory()->create();

@@ -40,14 +40,16 @@
                 </a>
 
                 <div class="profile-header-nav__menu" aria-label="Your dictionaries">
-                    @foreach (($headerDictionaries ?? collect()) as $headerDictionary)
+                    @forelse (($headerDictionaries ?? collect()) as $headerDictionary)
                         <a
                             href="{{ route('dictionaries.show', $headerDictionary) }}"
                             class="profile-header-nav__menu-link"
                         >
                             {{ $headerDictionary->name }}
                         </a>
-                    @endforeach
+                    @empty
+                        <p class="profile-header-nav__menu-empty">{{ __('common.dictionaries_dropdown.empty') }}</p>
+                    @endforelse
                 </div>
             </div>
             <a

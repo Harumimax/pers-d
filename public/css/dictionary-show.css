@@ -56,6 +56,44 @@
     color: var(--muted-color);
 }
 
+.dictionary-show-transfer-alert {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    font-size: 0.94rem;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+.dictionary-show-transfer-alert--success {
+    border: 1px solid rgba(22, 163, 74, 0.18);
+    background: rgba(240, 253, 244, 0.92);
+    color: #166534;
+}
+
+.dictionary-show-transfer-alert--error {
+    border: 1px solid rgba(220, 38, 38, 0.18);
+    background: rgba(254, 242, 242, 0.92);
+    color: #991b1b;
+}
+
+.dictionary-show-transfer-alert__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+    border-radius: 999px;
+    background: currentColor;
+    color: #fff;
+    font-size: 0.82rem;
+    line-height: 1;
+}
+
 .dictionary-show-card {
     border: 1px solid #d8dce4;
     border-radius: 16px;

@@ -6,6 +6,7 @@ use App\Models\ReadyDictionary;
 use App\Models\ReadyDictionaryWord;
 use App\Models\User;
 use App\Models\UserDictionary;
+use App\Models\Word;
 use App\Services\ReadyDictionaries\ReadyDictionaryCatalogService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -274,6 +275,110 @@ class ReadyDictionaryCatalogTest extends TestCase
             ->assertDontSee('Add Word')
             ->assertDontSee('Edit word')
             ->assertDontSee('Delete word');
+    }
+
+    public function test_ready_dictionary_word_can_be_copied_to_users_dictionary(): void
+    {
+        $user = User::factory()->create();
+        $userDictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'My English',
+            'language' => 'English',
+        ]);
+        $dictionary = ReadyDictionary::factory()->create([
+            'name' => 'Readonly English',
+            'language' => 'English',
+        ]);
+        $oldTimestamp = now()->subYear()->startOfSecond();
+
+        $readyWord = ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $dictionary->id,
+            'word' => 'apple',
+            'translation' => 'яблоко',
+            'part_of_speech' => 'noun',
+            'comment' => 'Fruit.',
+            'created_at' => $oldTimestamp,
+            'updated_at' => $oldTimestamp,
+        ]);
+
+        $copiedAt = now()->startOfSecond();
+        $this->travelTo($copiedAt);
+
+        Livewire::actingAs($user)
+            ->test(\App\Livewire\ReadyDictionaries\Show::class, ['readyDictionary' => $dictionary])
+            ->call('transferWordToDictionary', $readyWord->id, $userDictionary->id)
+            ->assertSet('transferBannerType', 'success')
+            ->assertSee('"apple" has been added to "My English".');
+
+        $copiedWord = Word::query()
+            ->where('word', 'apple')
+            ->where('translation', 'яблоко')
+            ->where('part_of_speech', 'noun')
+            ->where('comment', 'Fruit.')
+            ->firstOrFail();
+
+        $this->assertSame($copiedAt->toDateTimeString(), $copiedWord->created_at?->toDateTimeString());
+        $this->assertNotSame($oldTimestamp->toDateTimeString(), $copiedWord->created_at?->toDateTimeString());
+        $this->assertDatabaseHas('user_dictionary_word', [
+            'user_dictionary_id' => $userDictionary->id,
+            'word_id' => $copiedWord->id,
+        ]);
+
+        $this->travelBack();
+    }
+
+    public function test_ready_dictionary_word_cannot_be_copied_to_another_users_dictionary(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $foreignDictionary = UserDictionary::create([
+            'user_id' => $otherUser->id,
+            'name' => 'Foreign English',
+            'language' => 'English',
+        ]);
+        $dictionary = ReadyDictionary::factory()->create([
+            'name' => 'Readonly English',
+            'language' => 'English',
+        ]);
+
+        $readyWord = ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $dictionary->id,
+            'word' => 'apple',
+            'translation' => 'яблоко',
+            'part_of_speech' => 'noun',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(\App\Livewire\ReadyDictionaries\Show::class, ['readyDictionary' => $dictionary])
+            ->call('transferWordToDictionary', $readyWord->id, $foreignDictionary->id)
+            ->assertSet('transferBannerType', 'error')
+            ->assertSee('We could not add this word to the selected dictionary. Please try again.');
+
+        $this->assertDatabaseMissing('words', [
+            'word' => 'apple',
+            'translation' => 'яблоко',
+        ]);
+    }
+
+    public function test_ready_dictionary_show_page_explains_when_user_has_no_personal_dictionaries(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = ReadyDictionary::factory()->create([
+            'name' => 'Readonly English',
+            'language' => 'English',
+        ]);
+
+        ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $dictionary->id,
+            'word' => 'apple',
+            'translation' => 'яблоко',
+            'part_of_speech' => 'noun',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('ready-dictionaries.show', $dictionary))
+            ->assertOk()
+            ->assertSee('Create your own dictionary to add a word to it.');
     }
 
     public function test_ready_dictionary_show_component_filters_searches_and_paginates_words(): void

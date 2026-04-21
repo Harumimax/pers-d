@@ -25,7 +25,9 @@ return [
         'transfer' => [
             'aria' => 'Choose a personal dictionary for :word',
             'title' => 'Add to dictionary',
-            'empty' => 'Create a personal dictionary first.',
+            'empty' => 'Create your own dictionary to add a word to it.',
+            'success' => '":word" has been added to ":dictionary".',
+            'error' => 'We could not add this word to the selected dictionary. Please try again.',
         ],
     ],
 ];

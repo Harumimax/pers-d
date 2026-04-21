@@ -60,6 +60,16 @@ class UserDictionaryCrudTest extends TestCase
         $response->assertSee('Spanish Travel');
     }
 
+    public function test_dictionaries_index_page_renders_empty_dropdown_message_without_user_dictionaries(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('dictionaries.index'));
+
+        $response->assertOk();
+        $response->assertSee('Create your dictionary');
+    }
+
     public function test_user_sees_only_their_own_dictionaries(): void
     {
         $user = User::factory()->create();

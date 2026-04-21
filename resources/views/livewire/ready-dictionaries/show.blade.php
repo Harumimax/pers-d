@@ -15,6 +15,19 @@
             </p>
         </header>
 
+        @if ($transferBannerMessage !== null)
+            <div class="dictionary-show-transfer-alert dictionary-show-transfer-alert--{{ $transferBannerType }}" role="{{ $transferBannerType === 'success' ? 'status' : 'alert' }}">
+                <span class="dictionary-show-transfer-alert__icon" aria-hidden="true">
+                    @if ($transferBannerType === 'success')
+                        ✓
+                    @else
+                        !
+                    @endif
+                </span>
+                <span>{{ $transferBannerMessage }}</span>
+            </div>
+        @endif
+
         <article class="dictionary-show-card" aria-label="{{ __('dictionaries.show.word_list.title') }}">
             <div class="word-list-header">
                 <div>
@@ -105,7 +118,15 @@
                                                     @if ($userDictionaries->isNotEmpty())
                                                         <p class="word-list-transfer-menu__title">{{ __('ready_dictionaries.show.transfer.title') }}</p>
                                                         @foreach ($userDictionaries as $userDictionary)
-                                                            <button type="button" class="word-list-transfer-menu__item" role="menuitem">
+                                                            <button
+                                                                type="button"
+                                                                class="word-list-transfer-menu__item"
+                                                                role="menuitem"
+                                                                wire:key="ready-word-{{ $wordItem->id }}-transfer-dictionary-{{ $userDictionary->id }}"
+                                                                wire:click="transferWordToDictionary({{ $wordItem->id }}, {{ $userDictionary->id }})"
+                                                                wire:loading.attr="disabled"
+                                                                wire:target="transferWordToDictionary({{ $wordItem->id }}, {{ $userDictionary->id }})"
+                                                            >
                                                                 {{ $userDictionary->name }}
                                                             </button>
                                                         @endforeach

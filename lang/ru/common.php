@@ -19,4 +19,7 @@ return [
     'language_switcher' => [
         'label' => 'Переключить язык интерфейса',
     ],
+    'dictionaries_dropdown' => [
+        'empty' => 'Создай свой словарь',
+    ],
 ];

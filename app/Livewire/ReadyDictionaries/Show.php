@@ -3,13 +3,18 @@
 namespace App\Livewire\ReadyDictionaries;
 
 use App\Models\ReadyDictionary;
+use App\Models\ReadyDictionaryWord;
 use App\Models\User;
+use App\Models\UserDictionary;
+use App\Models\Word;
 use App\Support\PartOfSpeechCatalog;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Throwable;
 
 class Show extends Component
 {
@@ -24,6 +29,8 @@ class Show extends Component
     public string $partOfSpeechFilter = self::PART_OF_SPEECH_FILTER_ALL;
     public string $search = '';
     public string $sort = self::SORT_NEWEST;
+    public ?string $transferBannerType = null;
+    public ?string $transferBannerMessage = null;
 
     public function mount(ReadyDictionary $readyDictionary): void
     {
@@ -108,6 +115,48 @@ class Show extends Component
         $this->resetPage();
     }
 
+    public function transferWordToDictionary(int $readyDictionaryWordId, int $userDictionaryId): void
+    {
+        $this->resetTransferBanner();
+
+        $user = $this->currentUser();
+        $userDictionary = $user->dictionaries()
+            ->whereKey($userDictionaryId)
+            ->first();
+        $readyDictionaryWord = $this->readyDictionary->words()
+            ->whereKey($readyDictionaryWordId)
+            ->first();
+
+        if (! $userDictionary instanceof UserDictionary || ! $readyDictionaryWord instanceof ReadyDictionaryWord) {
+            $this->showTransferError();
+
+            return;
+        }
+
+        try {
+            DB::transaction(function () use ($readyDictionaryWord, $userDictionary): void {
+                $word = Word::create([
+                    'word' => $readyDictionaryWord->word,
+                    'part_of_speech' => $readyDictionaryWord->part_of_speech,
+                    'translation' => $readyDictionaryWord->translation,
+                    'comment' => $readyDictionaryWord->comment,
+                ]);
+
+                $userDictionary->words()->attach($word->id);
+            });
+        } catch (Throwable) {
+            $this->showTransferError();
+
+            return;
+        }
+
+        $this->transferBannerType = 'success';
+        $this->transferBannerMessage = __('ready_dictionaries.show.transfer.success', [
+            'word' => $readyDictionaryWord->word,
+            'dictionary' => $userDictionary->name,
+        ]);
+    }
+
     private function currentUser(): User
     {
         $user = Auth::user();
@@ -115,5 +164,17 @@ class Show extends Component
         abort_unless($user instanceof User, 401);
 
         return $user;
+    }
+
+    private function resetTransferBanner(): void
+    {
+        $this->transferBannerType = null;
+        $this->transferBannerMessage = null;
+    }
+
+    private function showTransferError(): void
+    {
+        $this->transferBannerType = 'error';
+        $this->transferBannerMessage = __('ready_dictionaries.show.transfer.error');
     }
 }
