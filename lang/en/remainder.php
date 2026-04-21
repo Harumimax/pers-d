@@ -35,6 +35,7 @@ return [
             'empty_text' => 'Create a dictionary first, then come back here to configure a repetition session.',
             'ready_empty_title' => 'No ready dictionaries yet.',
             'ready_empty_text' => 'Ready dictionaries will appear here when they are added.',
+            'select_all' => 'Select all dictionaries',
             'words_count' => '{1} :count word|[2,*] :count words',
         ],
         'parts_of_speech' => [

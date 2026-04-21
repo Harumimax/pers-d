@@ -258,6 +258,26 @@
     color: var(--primary-color);
 }
 
+.remainder-dictionary-select-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    color: var(--text-color);
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.35;
+    cursor: pointer;
+    user-select: none;
+}
+
+.remainder-dictionary-select-all__input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-color);
+    cursor: pointer;
+}
+
 .remainder-dictionary-item {
     width: 100%;
     display: flex;
