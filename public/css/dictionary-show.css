@@ -379,7 +379,7 @@
 }
 
 .word-list-table-wrap {
-    overflow-x: auto;
+    overflow: visible;
 }
 
 .word-list-table {
@@ -506,13 +506,19 @@
 .word-list-transfer-picker {
     position: relative;
     display: inline-flex;
+    z-index: 1;
+}
+
+.word-list-transfer-picker:hover,
+.word-list-transfer-picker:focus-within {
+    z-index: 30;
 }
 
 .word-list-transfer-menu {
     position: absolute;
     top: 100%;
     right: 0;
-    z-index: 20;
+    z-index: 30;
     display: none;
     min-width: 220px;
     max-width: 300px;
@@ -884,6 +890,10 @@
 }
 
 @media (max-width: 640px) {
+    .word-list-table-wrap {
+        overflow-x: auto;
+    }
+
     .dictionary-show-main {
         padding-top: 34px;
     }
