@@ -49,6 +49,7 @@
 - `App\Http\Controllers\ReadyDictionariesController`
   - renders the authenticated Ready dictionaries catalog page
   - delegates ready dictionary catalog queries and filter normalization to `ReadyDictionaryCatalogService`
+- Header dropdown data is assembled through `HeaderNavigationService` so shared layouts receive personal dictionaries and ready dictionaries without querying from Blade
 - Auth controllers are the standard Breeze-style controllers under `app/Http/Controllers/Auth`
 - Dictionaries are not handled by traditional controllers; they are handled by Livewire page components
 - Locale switching is currently handled by a small route closure plus web middleware, not by a dedicated controller
@@ -117,7 +118,7 @@
   - `public/css/remainder-game.css`
 - Important design choice:
   - shared layouts do not query dictionaries directly
-  - data needed by authenticated layouts is passed from controllers/Livewire
+  - data needed by authenticated layouts is passed from controllers/Livewire through `HeaderNavigationService`
   - the game page keeps the existing profile layout and embeds a Livewire component inside a Blade page instead of turning the whole authenticated layout into a Livewire layout
 
 ### Services
@@ -146,6 +147,11 @@
     - returns ready dictionaries for the authenticated page
     - supports backend filters for language, level, and part of speech
     - normalizes unsupported filters so query parameters do not break the page
+- Navigation read-model services live under `app/Services/Navigation`
+  - `HeaderNavigationService`
+    - returns the authenticated user's personal dictionaries for the `My Dictionaries` dropdown
+    - returns all ready dictionaries for the `Ready dictionaries` dropdown
+    - keeps shared layouts free from direct database queries
 - Catalogs under `app/Support`
   - `PartOfSpeechCatalog`
     - stores the canonical part-of-speech values and UI labels

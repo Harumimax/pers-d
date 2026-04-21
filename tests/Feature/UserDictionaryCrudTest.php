@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Livewire\Dictionaries\Index;
+use App\Models\ReadyDictionary;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
@@ -58,6 +59,21 @@ class UserDictionaryCrudTest extends TestCase
         $response->assertOk();
         $response->assertSee('English Core');
         $response->assertSee('Spanish Travel');
+    }
+
+    public function test_dictionaries_index_page_renders_dropdown_with_ready_dictionaries(): void
+    {
+        $user = User::factory()->create();
+        $readyDictionary = ReadyDictionary::factory()->create([
+            'name' => 'Travel Starter',
+            'language' => 'English',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dictionaries.index'));
+
+        $response->assertOk();
+        $response->assertSee('Travel Starter');
+        $response->assertSee(route('ready-dictionaries.show', $readyDictionary), false);
     }
 
     public function test_dictionaries_index_page_does_not_render_dropdown_without_user_dictionaries(): void

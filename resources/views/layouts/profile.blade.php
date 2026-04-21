@@ -22,12 +22,27 @@
     @php($activeNav = $activeNav ?? null)
     <body class="profile-shell">
         <x-site-header nav-class="profile-header-nav" :label="__('common.navigation.profile')">
-            <a
-                href="{{ route('ready-dictionaries.index') }}"
-                class="profile-header-nav__link {{ $activeNav === 'ready-dictionaries' ? 'profile-header-nav__link--active' : '' }}"
-            >
-                {{ __('common.links.ready_dictionaries') }}
-            </a>
+            <div class="profile-header-nav__dropdown">
+                <a
+                    href="{{ route('ready-dictionaries.index') }}"
+                    class="profile-header-nav__link {{ $activeNav === 'ready-dictionaries' ? 'profile-header-nav__link--active' : '' }}"
+                >
+                    {{ __('common.links.ready_dictionaries') }}
+                </a>
+
+                @if (($headerReadyDictionaries ?? collect())->isNotEmpty())
+                    <div class="profile-header-nav__menu" aria-label="Ready dictionaries">
+                        @foreach ($headerReadyDictionaries as $headerReadyDictionary)
+                            <a
+                                href="{{ route('ready-dictionaries.show', $headerReadyDictionary) }}"
+                                class="profile-header-nav__menu-link"
+                            >
+                                {{ $headerReadyDictionary->name }}
+                            </a>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
             <a
                 href="{{ route('remainder') }}"
                 class="profile-header-nav__link {{ $activeNav === 'remainder' ? 'profile-header-nav__link--active' : '' }}"

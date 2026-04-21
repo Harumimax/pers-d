@@ -7,9 +7,9 @@ use App\Models\ReadyDictionaryWord;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
+use App\Services\Navigation\HeaderNavigationService;
 use App\Support\PartOfSpeechCatalog;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -47,10 +47,8 @@ class Show extends Component
         $searchTerm = trim($this->search);
         $normalizedSearchTerm = mb_strtolower($searchTerm);
 
-        /** @var Collection<int, \App\Models\UserDictionary> $userDictionaries */
-        $userDictionaries = $user->dictionaries()
-            ->orderByDesc('created_at')
-            ->get(['id', 'name']);
+        $headerNavigation = app(HeaderNavigationService::class)->forUser($user);
+        $userDictionaries = $headerNavigation['headerDictionaries'];
 
         if ($this->partOfSpeechFilter !== self::PART_OF_SPEECH_FILTER_ALL) {
             $wordsQuery->where('part_of_speech', $this->partOfSpeechFilter);
@@ -77,9 +75,7 @@ class Show extends Component
             'partOfSpeechFilterOptions' => PartOfSpeechCatalog::dictionaryFilterLabels(),
             'partOfSpeechDisplayMap' => PartOfSpeechCatalog::labels(),
             'userDictionaries' => $userDictionaries,
-        ])->layout('layouts.dictionaries', [
-            'headerDictionaries' => $userDictionaries,
-        ]);
+        ])->layout('layouts.dictionaries', $headerNavigation);
     }
 
     public function applySearch(): void

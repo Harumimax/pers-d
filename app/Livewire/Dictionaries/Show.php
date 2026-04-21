@@ -5,10 +5,10 @@ namespace App\Livewire\Dictionaries;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
+use App\Services\Navigation\HeaderNavigationService;
 use App\Support\PartOfSpeechCatalog;
 use App\Services\Translation\TranslationServiceInterface;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Auth;
@@ -77,10 +77,7 @@ class Show extends Component
         $partOfSpeechOptions = $this->partOfSpeechOptions();
         $searchTerm = trim($this->search);
         $normalizedSearchTerm = mb_strtolower($searchTerm);
-        /** @var Collection<int, \App\Models\UserDictionary> $headerDictionaries */
-        $headerDictionaries = $user->dictionaries()
-            ->orderByDesc('created_at')
-            ->get(['id', 'name']);
+        $headerNavigation = app(HeaderNavigationService::class)->forUser($user);
 
         if ($this->partOfSpeechFilter !== self::PART_OF_SPEECH_FILTER_ALL) {
             $wordsQuery->where('words.part_of_speech', $this->partOfSpeechFilter);
@@ -110,9 +107,7 @@ class Show extends Component
             'partOfSpeechFilterOptions' => PartOfSpeechCatalog::dictionaryFilterLabels(),
             'partOfSpeechDisplayMap' => PartOfSpeechCatalog::labels(),
             'autoTranslationUnavailableMessage' => __('dictionaries.show.translation.unavailable'),
-        ])->layout('layouts.dictionaries', [
-            'headerDictionaries' => $headerDictionaries,
-        ]);
+        ])->layout('layouts.dictionaries', $headerNavigation);
     }
 
     public function addWord(): void

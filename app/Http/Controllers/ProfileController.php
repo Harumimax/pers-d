@@ -3,10 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
-use App\Models\UserDictionary;
+use App\Services\Navigation\HeaderNavigationService;
 use App\Services\Profile\RemainderStatisticsService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -17,15 +16,18 @@ class ProfileController extends Controller
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request, RemainderStatisticsService $remainderStatisticsService): View
+    public function edit(
+        Request $request,
+        RemainderStatisticsService $remainderStatisticsService,
+        HeaderNavigationService $headerNavigationService,
+    ): View
     {
         $user = $request->user();
 
         return view('profile.edit', [
             'user' => $user,
-            'headerDictionaries' => $this->headerDictionaries($request),
             'remainderStatistics' => $remainderStatisticsService->forUser($user?->id),
-        ]);
+        ] + $headerNavigationService->forUser($user));
     }
 
     /**
@@ -66,13 +68,4 @@ class ProfileController extends Controller
         return Redirect::to('/');
     }
 
-    /**
-     * @return Collection<int, UserDictionary>
-     */
-    private function headerDictionaries(Request $request): Collection
-    {
-        return $request->user()?->dictionaries()
-            ->orderByDesc('created_at')
-            ->get(['id', 'name']) ?? collect();
-    }
 }

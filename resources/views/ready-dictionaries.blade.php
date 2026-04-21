@@ -1,4 +1,7 @@
-@component('layouts.dictionaries', ['headerDictionaries' => $headerDictionaries])
+@component('layouts.dictionaries', [
+    'headerDictionaries' => $headerDictionaries,
+    'headerReadyDictionaries' => $headerReadyDictionaries,
+])
     <main class="dictionaries-main">
         <section class="dictionaries-container dictionaries-intro">
             <div class="dictionaries-intro__copy">

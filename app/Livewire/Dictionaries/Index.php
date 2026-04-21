@@ -4,6 +4,7 @@ namespace App\Livewire\Dictionaries;
 
 use App\Models\User;
 use App\Models\Word;
+use App\Services\Navigation\HeaderNavigationService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -184,16 +185,11 @@ class Index extends Component
             ->orderByDesc('created_at')
             ->get();
 
-        /** @var Collection<int, \App\Models\UserDictionary> $headerDictionaries */
-        $headerDictionaries = $user->dictionaries()
-            ->orderByDesc('created_at')
-            ->get(['id', 'name']);
+        $headerNavigation = app(HeaderNavigationService::class)->forUser($user);
 
         return view('livewire.dictionaries.index', [
             'dictionaries' => $dictionaries,
-        ])->layout('layouts.dictionaries', [
-            'headerDictionaries' => $headerDictionaries,
-        ]);
+        ])->layout('layouts.dictionaries', $headerNavigation);
     }
 
     private function currentUser(): User

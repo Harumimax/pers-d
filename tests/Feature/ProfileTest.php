@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Mail\AboutContactMessage as AboutContactMail;
 use App\Models\AboutContactMessage;
 use App\Models\GameSession;
+use App\Models\ReadyDictionary;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
@@ -414,6 +415,10 @@ class ProfileTest extends TestCase
     public function test_profile_and_about_pages_render_dictionaries_dropdown_links(): void
     {
         $user = User::factory()->create();
+        $readyDictionary = ReadyDictionary::factory()->create([
+            'name' => 'Travel Starter',
+            'language' => 'English',
+        ]);
 
         UserDictionary::create([
             'user_id' => $user->id,
@@ -431,13 +436,17 @@ class ProfileTest extends TestCase
             ->get('/profile')
             ->assertOk()
             ->assertSee('English Core')
-            ->assertSee('Spanish Travel');
+            ->assertSee('Spanish Travel')
+            ->assertSee('Travel Starter')
+            ->assertSee(route('ready-dictionaries.show', $readyDictionary), false);
 
         $this->actingAs($user)
             ->get('/about')
             ->assertOk()
             ->assertSee('English Core')
-            ->assertSee('Spanish Travel');
+            ->assertSee('Spanish Travel')
+            ->assertSee('Travel Starter')
+            ->assertSee(route('ready-dictionaries.show', $readyDictionary), false);
     }
 
     public function test_profile_page_does_not_render_dictionaries_dropdown_without_user_dictionaries(): void
