@@ -5,8 +5,10 @@ namespace Tests\Feature;
 use App\Models\ReadyDictionary;
 use App\Models\ReadyDictionaryWord;
 use App\Models\User;
+use App\Models\UserDictionary;
 use App\Services\ReadyDictionaries\ReadyDictionaryCatalogService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class ReadyDictionaryCatalogTest extends TestCase
@@ -206,6 +208,7 @@ class ReadyDictionaryCatalogTest extends TestCase
             ->assertOk()
             ->assertSee('Ready dictionaries')
             ->assertSee('English nouns')
+            ->assertSee(route('ready-dictionaries.show', ReadyDictionary::where('name', 'English nouns')->first()), false)
             ->assertSee('English')
             ->assertSee('2 words')
             ->assertSee('A1 Elementary')
@@ -224,5 +227,103 @@ class ReadyDictionaryCatalogTest extends TestCase
                 'level' => 'A1',
                 'part_of_speech' => 'noun',
             ]);
+    }
+
+    public function test_ready_dictionary_show_page_displays_words_without_write_actions(): void
+    {
+        $user = User::factory()->create();
+        UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'My English',
+            'language' => 'English',
+        ]);
+        UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'Travel Words',
+            'language' => 'English',
+        ]);
+        $dictionary = ReadyDictionary::factory()->create([
+            'name' => 'Readonly English',
+            'language' => 'English',
+        ]);
+
+        ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $dictionary->id,
+            'word' => 'apple',
+            'translation' => 'яблоко',
+            'part_of_speech' => 'noun',
+            'comment' => 'Fruit.',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('ready-dictionaries.show', $dictionary))
+            ->assertOk()
+            ->assertSee('Readonly English')
+            ->assertSee('A ready dictionary in')
+            ->assertSee('Word List')
+            ->assertSee('apple')
+            ->assertSee('яблоко')
+            ->assertSee('Noun')
+            ->assertSee('Fruit.')
+            ->assertSee('Search word or translation...')
+            ->assertSee('Action')
+            ->assertSee('Add to dictionary')
+            ->assertSee('Choose a personal dictionary for apple')
+            ->assertSee('My English')
+            ->assertSee('Travel Words')
+            ->assertDontSee('Add Word')
+            ->assertDontSee('Edit word')
+            ->assertDontSee('Delete word');
+    }
+
+    public function test_ready_dictionary_show_component_filters_searches_and_paginates_words(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = ReadyDictionary::factory()->create([
+            'name' => 'Interactive English',
+            'language' => 'English',
+        ]);
+
+        ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $dictionary->id,
+            'word' => 'apple',
+            'translation' => 'яблоко',
+            'part_of_speech' => 'noun',
+            'created_at' => now()->subMinutes(3),
+        ]);
+
+        ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $dictionary->id,
+            'word' => 'run',
+            'translation' => 'бежать',
+            'part_of_speech' => 'verb',
+            'created_at' => now()->subMinutes(2),
+        ]);
+
+        for ($i = 1; $i <= 21; $i++) {
+            ReadyDictionaryWord::factory()->create([
+                'ready_dictionary_id' => $dictionary->id,
+                'word' => 'page-word-'.$i,
+                'translation' => 'страница '.$i,
+                'part_of_speech' => 'noun',
+                'created_at' => now()->subMinutes(30 + $i),
+            ]);
+        }
+
+        Livewire::actingAs($user)
+            ->test(\App\Livewire\ReadyDictionaries\Show::class, ['readyDictionary' => $dictionary])
+            ->assertSee('run')
+            ->set('partOfSpeechFilter', 'verb')
+            ->assertSee('run')
+            ->assertDontSee('apple')
+            ->set('partOfSpeechFilter', 'all')
+            ->set('search', 'яблоко')
+            ->call('applySearch')
+            ->assertSee('apple')
+            ->assertDontSee('run')
+            ->set('search', '')
+            ->call('applySearch')
+            ->call('nextPage')
+            ->assertSee('page-word-19');
     }
 }

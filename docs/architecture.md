@@ -24,6 +24,7 @@
   - `POST /remainder/sessions` -> `RemainderController@store`
   - `GET /remainder/sessions/{gameSession}` -> `RemainderController@showSession`
   - `/ready-dictionaries` -> `ReadyDictionariesController@index`
+  - `/ready-dictionaries/{readyDictionary}` -> `App\Livewire\ReadyDictionaries\Show`
   - `/dictionaries` -> `App\Livewire\Dictionaries\Index`
   - `/dictionaries/{dictionary}` -> `App\Livewire\Dictionaries\Show`
 
@@ -76,6 +77,11 @@
   - supports automatic translation flow
   - deletes words with confirmation modal state
   - passes `headerDictionaries` into the shared dictionaries layout
+- `App\Livewire\ReadyDictionaries\Show`
+  - shows one developer-managed ready dictionary
+  - lists ready dictionary words with pagination
+  - supports read-only search, sorting, and part-of-speech filtering
+  - does not expose word creation, editing, or deletion actions
 - `App\Livewire\Remainder\Show`
   - drives one active game session on the remainder game page
   - renders either the current question, immediate feedback, or the final result summary

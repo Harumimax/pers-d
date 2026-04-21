@@ -72,7 +72,9 @@
 
                 <article class="dictionary-card">
                     <div class="dictionary-card__content">
-                        <h2 class="dictionary-card__title">{{ $dictionary->name }}</h2>
+                        <h2 class="dictionary-card__title">
+                            <a href="{{ route('ready-dictionaries.show', $dictionary) }}">{{ $dictionary->name }}</a>
+                        </h2>
                         <p class="dictionary-card__meta">
                             @foreach ($meta as $metaItem)
                                 @if (! $loop->first)

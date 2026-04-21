@@ -7,6 +7,7 @@ use App\Http\Controllers\ReadyDictionariesController;
 use App\Http\Controllers\RemainderController;
 use App\Livewire\Dictionaries\Index;
 use App\Livewire\Dictionaries\Show;
+use App\Livewire\ReadyDictionaries\Show as ReadyDictionaryShow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -41,6 +42,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/about', [AboutController::class, 'index'])->name('about');
     Route::post('/about/contact', [AboutContactController::class, 'store'])->name('about.contact.store');
     Route::get('/ready-dictionaries', [ReadyDictionariesController::class, 'index'])->name('ready-dictionaries.index');
+    Route::get('/ready-dictionaries/{readyDictionary}', ReadyDictionaryShow::class)->name('ready-dictionaries.show');
     Route::get('/remainder', [RemainderController::class, 'index'])->name('remainder');
     Route::post('/remainder/sessions', [RemainderController::class, 'store'])->name('remainder.sessions.store');
     Route::get('/remainder/sessions/{gameSession}', [RemainderController::class, 'showSession'])->name('remainder.sessions.show');

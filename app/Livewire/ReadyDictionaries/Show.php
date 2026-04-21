@@ -1,0 +1,119 @@
+<?php
+
+namespace App\Livewire\ReadyDictionaries;
+
+use App\Models\ReadyDictionary;
+use App\Models\User;
+use App\Support\PartOfSpeechCatalog;
+use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
+use Livewire\WithPagination;
+
+class Show extends Component
+{
+    use WithPagination;
+
+    private const PART_OF_SPEECH_FILTER_ALL = PartOfSpeechCatalog::ALL;
+    private const SORT_NEWEST = 'newest';
+    private const SORT_OLDEST = 'oldest';
+    private const SORT_A_TO_Z = 'a-z';
+
+    public ReadyDictionary $readyDictionary;
+    public string $partOfSpeechFilter = self::PART_OF_SPEECH_FILTER_ALL;
+    public string $search = '';
+    public string $sort = self::SORT_NEWEST;
+
+    public function mount(ReadyDictionary $readyDictionary): void
+    {
+        abort_unless(Auth::check(), 401);
+
+        $this->readyDictionary = $readyDictionary;
+    }
+
+    public function render(): View
+    {
+        $user = $this->currentUser();
+        $totalWordsCount = $this->readyDictionary->words()->count();
+        $wordsQuery = $this->readyDictionary->words();
+        $searchTerm = trim($this->search);
+        $normalizedSearchTerm = mb_strtolower($searchTerm);
+
+        /** @var Collection<int, \App\Models\UserDictionary> $userDictionaries */
+        $userDictionaries = $user->dictionaries()
+            ->orderByDesc('created_at')
+            ->get(['id', 'name']);
+
+        if ($this->partOfSpeechFilter !== self::PART_OF_SPEECH_FILTER_ALL) {
+            $wordsQuery->where('part_of_speech', $this->partOfSpeechFilter);
+        }
+
+        if ($searchTerm !== '') {
+            $wordsQuery->where(function ($query) use ($normalizedSearchTerm): void {
+                $query->whereRaw('LOWER(word) LIKE ?', ['%'.$normalizedSearchTerm.'%'])
+                    ->orWhereRaw('LOWER(translation) LIKE ?', ['%'.$normalizedSearchTerm.'%']);
+            });
+        }
+
+        if ($this->sort === self::SORT_OLDEST) {
+            $wordsQuery->orderBy('created_at');
+        } elseif ($this->sort === self::SORT_A_TO_Z) {
+            $wordsQuery->orderBy('word');
+        } else {
+            $wordsQuery->orderByDesc('created_at');
+        }
+
+        return view('livewire.ready-dictionaries.show', [
+            'words' => $wordsQuery->paginate(20),
+            'totalWordsCount' => $totalWordsCount,
+            'partOfSpeechFilterOptions' => PartOfSpeechCatalog::dictionaryFilterLabels(),
+            'partOfSpeechDisplayMap' => PartOfSpeechCatalog::labels(),
+            'userDictionaries' => $userDictionaries,
+        ])->layout('layouts.dictionaries', [
+            'headerDictionaries' => $userDictionaries,
+        ]);
+    }
+
+    public function applySearch(): void
+    {
+        $this->search = trim($this->search);
+        $this->resetPage();
+    }
+
+    public function updatedSort(string $value): void
+    {
+        if (! in_array($value, [
+            self::SORT_NEWEST,
+            self::SORT_OLDEST,
+            self::SORT_A_TO_Z,
+        ], true)) {
+            $this->sort = self::SORT_NEWEST;
+        }
+
+        $this->resetPage();
+    }
+
+    public function updatedPartOfSpeechFilter(string $value): void
+    {
+        $allowedValues = [
+            self::PART_OF_SPEECH_FILTER_ALL,
+            ...PartOfSpeechCatalog::values(),
+        ];
+
+        if (! in_array($value, $allowedValues, true)) {
+            $this->partOfSpeechFilter = self::PART_OF_SPEECH_FILTER_ALL;
+        }
+
+        $this->resetPage();
+    }
+
+    private function currentUser(): User
+    {
+        $user = Auth::user();
+
+        abort_unless($user instanceof User, 401);
+
+        return $user;
+    }
+}

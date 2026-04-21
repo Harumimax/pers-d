@@ -20,4 +20,12 @@ return [
         'title' => 'No ready dictionaries found',
         'text' => 'Try changing the filters or come back later when more ready dictionaries are added.',
     ],
+    'show' => [
+        'subtitle' => 'A ready dictionary in :language with :count words. Created :date.',
+        'transfer' => [
+            'aria' => 'Choose a personal dictionary for :word',
+            'title' => 'Add to dictionary',
+            'empty' => 'Create a personal dictionary first.',
+        ],
+    ],
 ];

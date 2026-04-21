@@ -227,6 +227,14 @@
                                     <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
                                 </tr>
                                 <tr>
+                                    <td>{{ __('about.status.items.edit_dictionaries') }}</td>
+                                    <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td>{{ __('about.status.items.edit_words') }}</td>
+                                    <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
+                                </tr>
+                                <tr>
                                     <td>{{ __('about.status.items.search_filter_sort') }}</td>
                                     <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
                                 </tr>
@@ -236,6 +244,18 @@
                                 </tr>
                                 <tr>
                                     <td>{{ __('about.status.items.delete_confirmations') }}</td>
+                                    <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td>{{ __('about.status.items.ready_dictionaries') }}</td>
+                                    <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td>{{ __('about.status.items.ready_dictionary_words') }}</td>
+                                    <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td>{{ __('about.status.items.ready_dictionary_filters') }}</td>
                                     <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
                                 </tr>
                                 <tr>
@@ -256,6 +276,10 @@
                                 </tr>
                                 <tr>
                                     <td>{{ __('about.status.items.about_contact_form') }}</td>
+                                    <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td>{{ __('about.status.items.real_contact_delivery') }}</td>
                                     <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
                                 </tr>
                                 <tr>
@@ -284,10 +308,6 @@
                                 </tr>
                                 <tr>
                                     <td>{{ __('about.status.items.local_translation_provider') }}</td>
-                                    <td><span class="about-status-badge about-status-badge--planning">{{ __('about.status.badges.planning') }}</span></td>
-                                </tr>
-                                <tr>
-                                    <td>{{ __('about.status.items.real_contact_delivery') }}</td>
                                     <td><span class="about-status-badge about-status-badge--planning">{{ __('about.status.badges.planning') }}</span></td>
                                 </tr>
                                 <tr>

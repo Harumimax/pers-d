@@ -12,6 +12,7 @@ WordKeeper is designed to keep the learning flow simple:
 - add words manually or through assisted translation
 - store part of speech and comments
 - search, sort, and filter vocabulary inside each dictionary
+- browse developer-managed ready dictionaries
 - keep everything in one clean authenticated workspace
 
 The product is intentionally lightweight, practical, and built around personal use first.
@@ -22,9 +23,15 @@ The product is intentionally lightweight, practical, and built around personal u
 | --- | --- |
 | Create and manage personal dictionaries | `done` |
 | Add words manually with translation, part of speech, and comment | `done` |
+| Rename personal dictionaries | `done` |
+| Edit word translation, part of speech, and comment | `done` |
 | Search, filter, sort, and paginate words inside a dictionary | `done` |
 | Automatic translation suggestions during word creation | `done` |
 | Delete dictionaries and words with confirmation dialogs | `done` |
+| Browse ready dictionaries managed by the project | `done` |
+| Open a ready dictionary and browse its words read-only | `done` |
+| Filter ready dictionaries by language, level, and part of speech | `done` |
+| Seed the first ready dictionary, `100 English words`, through a data migration | `done` |
 | Play Remainder sessions with manual translation input | `done` |
 | Play Remainder sessions in multiple choice mode | `done` |
 | Store part of speech inside the game session snapshot | `done` |
@@ -32,12 +39,17 @@ The product is intentionally lightweight, practical, and built around personal u
 | Switch the interface between Russian and English | `done` |
 | Remember a preferred interface language for authenticated users | `done` |
 | Localize auth, welcome, and product flows in Russian and English | `done` |
-| Add a placeholder contact form on the About page | `done` |
+| Send About page contact form messages by email and store delivery status | `done` |
+| Show aggregate site statistics on the About page | `done` |
+| Publish privacy and cookie policy sections on the About page | `done` |
+| Add Yandex Metrika through environment-based configuration | `done` |
+| Show welcome-page use cases and product preview screenshots | `done` |
 | Create a Telegram bot | `planning` |
 | Connect site functionality to the Telegram bot | `planning` |
 | Create a mode for sending words to the Telegram bot | `planning` |
 | Switch to another local translation provider | `planning` |
-| Connect the About page contact form to real email delivery | `planning` |
+| Add a flow for copying words from ready dictionaries into personal dictionaries | `planning` |
+| Make the game interface more varied with alternate progress images and memes | `planning` |
 
 ## Product feel
 
@@ -67,6 +79,7 @@ Authenticated users can:
 
 - create dictionaries
 - choose a dictionary language
+- rename dictionaries
 - open a dictionary page
 - browse all words in a structured table
 
@@ -77,10 +90,22 @@ Inside a dictionary, users can:
 - use assisted translation mode
 - choose part of speech
 - save comments
+- edit translation, part of speech, and comments
 - search by word or translation
 - filter by part of speech
 - sort results
 - paginate large word lists
+
+### Ready dictionaries
+Authenticated users can:
+
+- browse ready dictionaries managed by the project
+- filter ready dictionaries by language, level, and part of speech
+- open a ready dictionary page
+- view ready dictionary words in a read-only table
+- search, filter, sort, and paginate ready dictionary words
+
+The first seeded ready dictionary is `100 English words`.
 
 ### Profile and About
 Authenticated users can:
@@ -91,7 +116,9 @@ Authenticated users can:
 - delete account
 - read an About page describing the project and roadmap
 - view personal Remainder statistics on the profile page
-- open a placeholder contact form section on the About page
+- view aggregate site statistics on the About page
+- send a message through the About page contact form
+- read privacy and cookie policy sections
 
 ### Remainder
 Authenticated users can:
@@ -138,7 +165,7 @@ php artisan test
 
 ## Roadmap direction
 
-The current product already covers the main dictionary workflow, a working Remainder game flow, and a bilingual interface with remembered user language preference. The next major steps are mail-backed feedback delivery and later Telegram-based workflows with deeper learning scenarios.
+The current product already covers the main dictionary workflow, ready dictionary browsing, a working Remainder game flow, mail-backed feedback delivery, and a bilingual interface with remembered user language preference. The next major steps are copying words from ready dictionaries into personal dictionaries and later Telegram-based workflows with deeper learning scenarios.
 
 ---
 
