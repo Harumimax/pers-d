@@ -25,30 +25,6 @@
         <x-site-header nav-class="dictionaries-header-nav" :label="__('common.navigation.dictionaries')">
             <div class="dictionaries-header-nav__dropdown">
                 <a
-                    href="{{ route('ready-dictionaries.index') }}"
-                    class="dictionaries-header-nav__link {{ request()->routeIs('ready-dictionaries.*') ? 'dictionaries-header-nav__link--active' : '' }}"
-                >
-                    {{ __('common.links.ready_dictionaries') }}
-                </a>
-
-                @if (($headerReadyDictionaries ?? collect())->isNotEmpty())
-                    <div class="dictionaries-header-nav__menu" aria-label="Ready dictionaries">
-                        @foreach ($headerReadyDictionaries as $headerReadyDictionary)
-                            <a
-                                href="{{ route('ready-dictionaries.show', $headerReadyDictionary) }}"
-                                class="dictionaries-header-nav__menu-link"
-                            >
-                                {{ $headerReadyDictionary->name }}
-                            </a>
-                        @endforeach
-                    </div>
-                @endif
-            </div>
-            <a href="{{ route('remainder') }}" class="dictionaries-header-nav__link">
-                {{ __('common.links.remainder') }}
-            </a>
-            <div class="dictionaries-header-nav__dropdown">
-                <a
                     href="{{ route('dictionaries.index') }}"
                     class="dictionaries-header-nav__link {{ $dictionariesNavActive ? 'dictionaries-header-nav__link--active' : '' }}"
                 >
@@ -64,6 +40,30 @@
                         >
                             {{ $headerDictionary->name }}
                         </a>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+            <a href="{{ route('remainder') }}" class="dictionaries-header-nav__link">
+                {{ __('common.links.remainder') }}
+            </a>
+            <div class="dictionaries-header-nav__dropdown">
+                <a
+                    href="{{ route('ready-dictionaries.index') }}"
+                    class="dictionaries-header-nav__link {{ request()->routeIs('ready-dictionaries.*') ? 'dictionaries-header-nav__link--active' : '' }}"
+                >
+                    {{ __('common.links.ready_dictionaries') }}
+                </a>
+
+                @if (($headerReadyDictionaries ?? collect())->isNotEmpty())
+                    <div class="dictionaries-header-nav__menu" aria-label="{{ __('common.links.ready_dictionaries') }}">
+                        @foreach ($headerReadyDictionaries as $headerReadyDictionary)
+                            <a
+                                href="{{ route('ready-dictionaries.show', $headerReadyDictionary) }}"
+                                class="dictionaries-header-nav__menu-link"
+                            >
+                                {{ $headerReadyDictionary->name }}
+                            </a>
                         @endforeach
                     </div>
                 @endif

@@ -7,7 +7,7 @@ return [
         'auth' => 'Authentication links',
     ],
     'links' => [
-        'ready_dictionaries' => 'Ready dictionaries',
+        'ready_dictionaries' => 'Prepared dictionaries',
         'remainder' => 'Remainder',
         'dictionaries' => 'My Dictionaries',
         'profile' => 'Profile',

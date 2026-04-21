@@ -12,12 +12,20 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                    <x-nav-link :href="route('dictionaries.index')" :active="request()->routeIs('dictionaries.*')">
+                        {{ __('common.links.dictionaries') }}
+                    </x-nav-link>
+
+                    <x-nav-link :href="route('remainder')" :active="request()->routeIs('remainder') || request()->routeIs('remainder.sessions.*')">
+                        {{ __('common.links.remainder') }}
+                    </x-nav-link>
+
                     <x-nav-link :href="route('ready-dictionaries.index')" :active="request()->routeIs('ready-dictionaries.*')">
                         {{ __('common.links.ready_dictionaries') }}
                     </x-nav-link>
 
-                    <x-nav-link :href="route('dictionaries.index')" :active="request()->routeIs('dictionaries.*')">
-                        {{ __('common.links.dictionaries') }}
+                    <x-nav-link :href="route('profile.edit')" :active="request()->routeIs('profile.edit')">
+                        {{ __('common.links.profile') }}
                     </x-nav-link>
                 </div>
             </div>
@@ -71,12 +79,20 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
+            <x-responsive-nav-link :href="route('dictionaries.index')" :active="request()->routeIs('dictionaries.*')">
+                {{ __('common.links.dictionaries') }}
+            </x-responsive-nav-link>
+
+            <x-responsive-nav-link :href="route('remainder')" :active="request()->routeIs('remainder') || request()->routeIs('remainder.sessions.*')">
+                {{ __('common.links.remainder') }}
+            </x-responsive-nav-link>
+
             <x-responsive-nav-link :href="route('ready-dictionaries.index')" :active="request()->routeIs('ready-dictionaries.*')">
                 {{ __('common.links.ready_dictionaries') }}
             </x-responsive-nav-link>
 
-            <x-responsive-nav-link :href="route('dictionaries.index')" :active="request()->routeIs('dictionaries.*')">
-                {{ __('common.links.dictionaries') }}
+            <x-responsive-nav-link :href="route('profile.edit')" :active="request()->routeIs('profile.edit')">
+                {{ __('common.links.profile') }}
             </x-responsive-nav-link>
         </div>
 
