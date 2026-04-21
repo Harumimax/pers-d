@@ -20,6 +20,9 @@ return [
         'title' => 'No ready dictionaries found',
         'text' => 'Try changing the filters or come back later when more ready dictionaries are added.',
     ],
+    'card' => [
+        'open_aria' => 'Open ready dictionary :name',
+    ],
     'show' => [
         'subtitle' => 'A ready dictionary in :language with :count words. Created :date.',
         'transfer' => [

@@ -36,6 +36,8 @@ class UserDictionaryCrudTest extends TestCase
         $response->assertOk();
         $response->assertSee('My Dictionaries');
         $response->assertSee('Edit dictionary English Core');
+        $response->assertSee('Open dictionary English Core');
+        $response->assertSee(route('dictionaries.show', UserDictionary::where('name', 'English Core')->first()), false);
     }
 
     public function test_dictionaries_index_page_renders_dropdown_with_user_dictionaries(): void

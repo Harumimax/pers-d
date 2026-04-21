@@ -73,7 +73,13 @@
                     }
                 @endphp
 
-                <article class="dictionary-card">
+                <article class="dictionary-card dictionary-card--clickable">
+                    <a
+                        href="{{ route('ready-dictionaries.show', $dictionary) }}"
+                        class="dictionary-card__overlay-link"
+                        aria-label="{{ __('ready_dictionaries.card.open_aria', ['name' => $dictionary->name]) }}"
+                    ></a>
+
                     <div class="dictionary-card__content">
                         <h2 class="dictionary-card__title">
                             <a href="{{ route('ready-dictionaries.show', $dictionary) }}">{{ $dictionary->name }}</a>

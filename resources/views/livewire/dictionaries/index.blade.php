@@ -63,7 +63,15 @@
             @php
                 $languageKey = $dictionary->language !== null ? 'dictionaries.index.languages.' . strtolower($dictionary->language) : 'dictionaries.index.languages.not_specified';
             @endphp
-            <article class="dictionary-card" wire:key="dictionary-{{ $dictionary->id }}">
+            <article class="dictionary-card {{ $editingDictionaryId === $dictionary->id ? '' : 'dictionary-card--clickable' }}" wire:key="dictionary-{{ $dictionary->id }}">
+                @if ($editingDictionaryId !== $dictionary->id)
+                    <a
+                        href="{{ route('dictionaries.show', $dictionary) }}"
+                        class="dictionary-card__overlay-link"
+                        aria-label="{{ __('dictionaries.index.card.open_aria', ['name' => $dictionary->name]) }}"
+                    ></a>
+                @endif
+
                 <div class="dictionary-card__content">
                     @if ($editingDictionaryId === $dictionary->id)
                         <div class="dictionary-card__edit-form">

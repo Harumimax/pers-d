@@ -31,6 +31,9 @@ return [
             'title' => 'No dictionaries yet',
             'text' => 'Create your first dictionary to start organizing words.',
         ],
+        'card' => [
+            'open_aria' => 'Open dictionary :name',
+        ],
         'edit' => [
             'aria' => 'Edit dictionary :name',
             'field_aria' => 'Dictionary name for :name',

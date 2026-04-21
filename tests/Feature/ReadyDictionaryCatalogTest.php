@@ -209,6 +209,7 @@ class ReadyDictionaryCatalogTest extends TestCase
             ->assertOk()
             ->assertSee('Ready dictionaries')
             ->assertSee('English nouns')
+            ->assertSee('Open ready dictionary English nouns')
             ->assertSee(route('ready-dictionaries.show', ReadyDictionary::where('name', 'English nouns')->first()), false)
             ->assertSee('English')
             ->assertSee('2 words')
