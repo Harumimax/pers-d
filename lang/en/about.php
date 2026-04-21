@@ -33,7 +33,7 @@ return [
         'subtitle' => 'A quick snapshot of aggregate activity across the whole site.',
         'rows' => [
             'dictionaries_count' => 'Total dictionaries across all users',
-            'word_entries_count' => 'Total word entries across all user dictionaries',
+            'word_entries_count' => 'Total word entries across all dictionaries',
             'sessions_count' => 'Total game sessions played by all users',
             'accuracy_percentage' => 'Overall correct answers percentage across all games',
         ],

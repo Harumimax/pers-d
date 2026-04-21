@@ -527,7 +527,8 @@
 
 ## Important Implementation Notes
 - Dictionary page totals show the total number of words in the dictionary, independent of active filters
-- About page global word totals are counted as total dictionary-word pivot entries, not as unique `words` rows
+- About page global dictionary totals include both user dictionaries and ready dictionaries
+- About page global word totals include user dictionary-word pivot entries plus ready dictionary words, not unique `words` rows only
 - About contact form submissions are currently available only to authenticated users and are delivered to a fixed recipient email while also being stored in `about_contact_messages`
 - Search, sorting, part-of-speech filter, and pagination are all handled inside `App\Livewire\Dictionaries\Show`
 - Dictionary header dropdown data is passed from Livewire/controllers into the layout; the layout should not query dictionaries directly

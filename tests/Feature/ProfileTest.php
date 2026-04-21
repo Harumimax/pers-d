@@ -6,6 +6,7 @@ use App\Mail\AboutContactMessage as AboutContactMail;
 use App\Models\AboutContactMessage;
 use App\Models\GameSession;
 use App\Models\ReadyDictionary;
+use App\Models\ReadyDictionaryWord;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
@@ -242,6 +243,13 @@ class ProfileTest extends TestCase
         $secondDictionary->words()->attach($sharedWord->id);
         $thirdDictionary->words()->attach($secondWord->id);
 
+        ReadyDictionary::factory()
+            ->has(ReadyDictionaryWord::factory()->count(3), 'words')
+            ->create([
+                'name' => 'Ready English',
+                'language' => 'English',
+            ]);
+
         GameSession::create([
             'user_id' => $user->id,
             'mode' => GameSession::MODE_MANUAL,
@@ -270,11 +278,11 @@ class ProfileTest extends TestCase
             ->get('/about')
             ->assertOk()
             ->assertSee('Total dictionaries across all users')
-            ->assertSee('Total word entries across all user dictionaries')
+            ->assertSee('Total word entries across all dictionaries')
             ->assertSee('Total game sessions played by all users')
             ->assertSee('Overall correct answers percentage across all games')
-            ->assertSee('3')
             ->assertSee('4')
+            ->assertSee('7')
             ->assertSee('2')
             ->assertSee('66.7%');
     }

@@ -3,6 +3,8 @@
 namespace App\Services\About;
 
 use App\Models\GameSession;
+use App\Models\ReadyDictionary;
+use App\Models\ReadyDictionaryWord;
 use App\Models\UserDictionary;
 use Illuminate\Support\Facades\DB;
 
@@ -13,8 +15,10 @@ class GlobalStatisticsService
      */
     public function summary(): array
     {
-        $dictionariesCount = UserDictionary::query()->count();
-        $wordEntriesCount = (int) DB::table('user_dictionary_word')->count();
+        $dictionariesCount = UserDictionary::query()->count()
+            + ReadyDictionary::query()->count();
+        $wordEntriesCount = (int) DB::table('user_dictionary_word')->count()
+            + ReadyDictionaryWord::query()->count();
         $sessionsCount = GameSession::query()->count();
 
         $answersSummary = GameSession::query()
