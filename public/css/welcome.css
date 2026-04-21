@@ -325,7 +325,8 @@ img {
 #slide-2:checked ~ .showcase-stage .slide-2,
 #slide-3:checked ~ .showcase-stage .slide-3,
 #slide-4:checked ~ .showcase-stage .slide-4,
-#slide-5:checked ~ .showcase-stage .slide-5 {
+#slide-5:checked ~ .showcase-stage .slide-5,
+#slide-6:checked ~ .showcase-stage .slide-6 {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
@@ -425,16 +426,16 @@ img {
 
 .showcase-thumbs {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 10px;
     margin-top: 24px;
 }
 
 .showcase-thumb {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 12px;
+    gap: 8px;
+    padding: 9px;
     border: 1px solid #d8dce4;
     border-radius: 18px;
     background: rgba(255, 255, 255, 0.72);
@@ -471,12 +472,12 @@ img {
 }
 
 .thumb-copy strong {
-    font-size: 0.95rem;
+    font-size: 0.86rem;
     line-height: 1.2;
 }
 
 .thumb-copy small {
-    font-size: 0.84rem;
+    font-size: 0.76rem;
     color: var(--muted-color);
 }
 
@@ -484,7 +485,8 @@ img {
 #slide-2:checked ~ .showcase-thumbs .thumb-2,
 #slide-3:checked ~ .showcase-thumbs .thumb-3,
 #slide-4:checked ~ .showcase-thumbs .thumb-4,
-#slide-5:checked ~ .showcase-thumbs .thumb-5 {
+#slide-5:checked ~ .showcase-thumbs .thumb-5,
+#slide-6:checked ~ .showcase-thumbs .thumb-6 {
     border-color: rgba(30, 58, 138, 0.38);
     background: #eef2ff;
     box-shadow: 0 12px 26px rgba(30, 58, 138, 0.08);

@@ -84,9 +84,10 @@
                 <input type="radio" name="showcase-slide" id="slide-3">
                 <input type="radio" name="showcase-slide" id="slide-4">
                 <input type="radio" name="showcase-slide" id="slide-5">
+                <input type="radio" name="showcase-slide" id="slide-6">
 
                 <div class="showcase-stage">
-                    @foreach (['add_word', 'session_setup', 'multiple_choice', 'feedback', 'results'] as $index => $slideKey)
+                    @foreach (['add_word', 'dictionary_interface', 'session_setup', 'multiple_choice', 'feedback', 'results'] as $index => $slideKey)
                         <article class="showcase-slide slide-{{ $index + 1 }}">
                             <div class="showcase-browser">
                                 <div class="browser-dots" aria-hidden="true">
@@ -114,7 +115,7 @@
                 </div>
 
                 <div class="showcase-thumbs" aria-label="{{ __('welcome.showcase.navigation_label') }}">
-                    @foreach (['add_word', 'session_setup', 'multiple_choice', 'feedback', 'results'] as $index => $slideKey)
+                    @foreach (['add_word', 'dictionary_interface', 'session_setup', 'multiple_choice', 'feedback', 'results'] as $index => $slideKey)
                         <label for="slide-{{ $index + 1 }}" class="showcase-thumb thumb-{{ $index + 1 }}">
                             <span class="thumb-image">
                                 <img
