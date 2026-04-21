@@ -37,6 +37,7 @@ return [
         'autoTranslation' => 'перевод',
         'autoComment' => 'комментарий',
         'dictionary_ids' => 'словари',
+        'ready_dictionary_ids' => 'готовые словари',
         'words_count' => 'количество слов',
         'selectedChoice' => 'вариант ответа',
         'answer' => 'перевод',

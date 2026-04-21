@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StartGameRequest;
 use App\Models\GameSession;
+use App\Models\ReadyDictionary;
 use App\Services\Navigation\HeaderNavigationService;
 use App\Services\Remainder\PrepareGameService;
 use Illuminate\Http\RedirectResponse;
@@ -21,6 +22,11 @@ class RemainderController extends Controller
                 ->withCount('words')
                 ->orderByDesc('created_at')
                 ->get(['id', 'name', 'language']) ?? collect(),
+            'remainderReadyDictionaries' => ReadyDictionary::query()
+                ->withCount('words')
+                ->orderBy('language')
+                ->orderBy('name')
+                ->get(['id', 'name', 'language']),
         ] + $headerNavigationService->forUser($user));
     }
 

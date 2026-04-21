@@ -27,9 +27,14 @@ return [
         'dictionaries' => [
             'title' => 'Dictionaries',
             'description' => 'Select one or several dictionaries to combine into the same session.',
+            'user_title' => 'My dictionaries',
+            'ready_title' => 'Ready dictionaries',
             'available_aria' => 'Available dictionaries',
+            'ready_available_aria' => 'Available ready dictionaries',
             'empty_title' => 'No dictionaries yet.',
             'empty_text' => 'Create a dictionary first, then come back here to configure a repetition session.',
+            'ready_empty_title' => 'No ready dictionaries yet.',
+            'ready_empty_text' => 'Ready dictionaries will appear here when they are added.',
             'words_count' => '{1} :count word|[2,*] :count words',
         ],
         'parts_of_speech' => [
@@ -81,6 +86,7 @@ return [
     'messages' => [
         'start' => [
             'not_owner' => 'You can use only your own dictionaries in the game configuration.',
+            'ready_not_found' => 'The selected ready dictionary is not available.',
             'no_words' => 'No words matched the selected dictionaries and filters.',
             'partial_notice' => 'Only :count :word_label matched the current filters, so the game was created with :count.',
             'word_label_singular' => 'word',

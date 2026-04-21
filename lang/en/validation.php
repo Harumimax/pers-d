@@ -37,6 +37,7 @@ return [
         'autoTranslation' => 'translation',
         'autoComment' => 'comment',
         'dictionary_ids' => 'dictionaries',
+        'ready_dictionary_ids' => 'ready dictionaries',
         'words_count' => 'words count',
         'selectedChoice' => 'answer option',
         'answer' => 'translation',

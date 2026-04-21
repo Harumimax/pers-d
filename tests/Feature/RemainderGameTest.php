@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Livewire\Remainder\Show;
 use App\Models\GameSession;
 use App\Models\GameSessionItem;
+use App\Models\ReadyDictionary;
+use App\Models\ReadyDictionaryWord;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
@@ -39,6 +41,84 @@ class RemainderGameTest extends TestCase
         $this->assertSame(GameSession::MODE_MANUAL, $gameSession->mode);
         $this->assertSame(GameSession::STATUS_ACTIVE, $gameSession->status);
         $this->assertSame(2, $gameSession->items()->count());
+    }
+
+    public function test_authenticated_user_can_start_game_from_ready_dictionary_only(): void
+    {
+        $user = User::factory()->create();
+        $readyDictionary = ReadyDictionary::factory()->create([
+            'name' => 'Ready English',
+            'language' => 'English',
+        ]);
+        ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $readyDictionary->id,
+            'word' => 'accurate',
+            'translation' => 'точный',
+            'part_of_speech' => 'adjective',
+            'comment' => 'Ready dictionary source',
+        ]);
+        ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $readyDictionary->id,
+            'word' => 'adapt',
+            'translation' => 'адаптироваться',
+            'part_of_speech' => 'verb',
+            'comment' => null,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'ready_dictionary_ids' => [$readyDictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 2,
+        ]);
+
+        $gameSession = GameSession::query()->firstOrFail();
+        $items = $gameSession->items()->with('word')->get();
+
+        $response->assertRedirect(route('remainder.sessions.show', $gameSession));
+        $this->assertSame(2, $gameSession->items()->count());
+        $this->assertSame([$readyDictionary->id], $gameSession->config_snapshot['ready_dictionary_ids']);
+        $this->assertSame([], $gameSession->config_snapshot['dictionary_ids']);
+        $this->assertEqualsCanonicalizing(['accurate', 'adapt'], $items->pluck('word.word')->all());
+        $this->assertDatabaseMissing('user_dictionary_word', [
+            'word_id' => $items->first()->word_id,
+        ]);
+    }
+
+    public function test_game_can_combine_personal_and_ready_dictionaries(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = $this->createDictionaryForUser($user, 'My deck', 'English');
+        $this->attachWord($dictionary, 'personal', 'личный', 'adjective');
+
+        $readyDictionary = ReadyDictionary::factory()->create([
+            'name' => 'Ready deck',
+            'language' => 'English',
+        ]);
+        ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $readyDictionary->id,
+            'word' => 'ready',
+            'translation' => 'готовый',
+            'part_of_speech' => 'adjective',
+        ]);
+
+        $this->actingAs($user)->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'dictionary_ids' => [$dictionary->id],
+            'ready_dictionary_ids' => [$readyDictionary->id],
+            'parts_of_speech' => ['adjective'],
+            'words_count' => 2,
+        ]);
+
+        $gameSession = GameSession::query()->firstOrFail();
+
+        $this->assertSame(2, $gameSession->items()->count());
+        $this->assertEqualsCanonicalizing(
+            ['personal', 'ready'],
+            $gameSession->items()->pluck('prompt_text')->all(),
+        );
     }
 
     public function test_user_cannot_use_another_users_dictionary_in_game_configuration(): void

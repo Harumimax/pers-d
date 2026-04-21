@@ -514,11 +514,12 @@
 - `StartGameRequest` validates request shape
 - `PrepareGameService`:
   - verifies dictionary ownership
-  - filters available words by selected dictionaries and parts of speech
-  - deduplicates words across many-to-many dictionary selection
+  - filters available words by selected personal dictionaries, selected ready dictionaries, and parts of speech
+  - deduplicates personal words across many-to-many dictionary selection
   - randomizes order
   - creates `GameSession`
   - creates `GameSessionItem` snapshot rows, including `part_of_speech_snapshot`
+- Ready dictionary words are stored in separate `ready_dictionary_words`; when they are selected for a game, `PrepareGameService` copies them into `words` as session snapshot records so the existing `game_session_items.word_id` flow remains stable
 - if mode is `choice`, `ChoiceOptionsBuilder` also precomputes `options_json` for every session item from the full filtered answer pool, while `words_count` still controls only the number of rounds
 - Game page (`/remainder/sessions/{gameSession}`) renders a Blade shell with embedded `App\Livewire\Remainder\Show`
 - `GameEngineService` validates and checks each answer, updates counters, and finishes the session after the last item

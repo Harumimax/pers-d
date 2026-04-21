@@ -11,6 +11,10 @@
             ->map(fn ($id) => (int) $id)
             ->filter()
             ->values();
+        $initialReadyDictionaryIds = collect(old('ready_dictionary_ids', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->values();
         $initialPartsOfSpeech = collect(old('parts_of_speech', ['all']))
             ->map(fn ($value) => (string) $value)
             ->filter()
@@ -40,6 +44,7 @@
                     gameType: @js(old('mode', 'manual')),
                     direction: @js(old('direction', 'foreign_to_ru')),
                     selectedDictionaries: @js($initialDictionaryIds->all()),
+                    selectedReadyDictionaries: @js($initialReadyDictionaryIds->all()),
                     selectedPartsOfSpeech: @js($initialPartsOfSpeech->all()),
                     wordsCount: @js((string) old('words_count', '10')),
                     toggleDictionary(id) {
@@ -52,6 +57,17 @@
                     },
                     isDictionarySelected(id) {
                         return this.selectedDictionaries.includes(id);
+                    },
+                    toggleReadyDictionary(id) {
+                        if (this.selectedReadyDictionaries.includes(id)) {
+                            this.selectedReadyDictionaries = this.selectedReadyDictionaries.filter(dictionaryId => dictionaryId !== id);
+                            return;
+                        }
+
+                        this.selectedReadyDictionaries = [...this.selectedReadyDictionaries, id];
+                    },
+                    isReadyDictionarySelected(id) {
+                        return this.selectedReadyDictionaries.includes(id);
                     },
                     togglePartOfSpeech(value) {
                         if (value === 'all') {
@@ -86,6 +102,7 @@
                         this.gameType = this.defaultGameType;
                         this.direction = this.defaultDirection;
                         this.selectedDictionaries = [];
+                        this.selectedReadyDictionaries = [];
                         this.selectedPartsOfSpeech = ['all'];
                         this.wordsCount = this.defaultWordsCount;
                     }
@@ -98,6 +115,10 @@
 
                 <template x-for="dictionaryId in selectedDictionaries" :key="`dictionary-${dictionaryId}`">
                     <input type="hidden" name="dictionary_ids[]" :value="dictionaryId">
+                </template>
+
+                <template x-for="dictionaryId in selectedReadyDictionaries" :key="`ready-dictionary-${dictionaryId}`">
+                    <input type="hidden" name="ready_dictionary_ids[]" :value="dictionaryId">
                 </template>
 
                 <template x-for="part in selectedPartsOfSpeech" :key="`part-${part}`">
@@ -192,38 +213,81 @@
                         <p class="remainder-section__description">{{ __('remainder.settings.dictionaries.description') }}</p>
                     </div>
 
-                    @if ($remainderDictionaries->isNotEmpty())
-                        <div class="remainder-dictionary-list" role="list" aria-label="{{ __('remainder.settings.dictionaries.available_aria') }}">
-                            @foreach ($remainderDictionaries as $dictionary)
-                                @php
-                                    $dictionaryLanguageKey = $dictionary->language !== null
-                                        ? 'dictionaries.index.languages.' . strtolower($dictionary->language)
-                                        : 'dictionaries.index.languages.not_specified';
-                                @endphp
-                                <button
-                                    type="button"
-                                    class="remainder-dictionary-item"
-                                    :class="{ 'remainder-dictionary-item--active': isDictionarySelected({{ $dictionary->id }}) }"
-                                    @click="toggleDictionary({{ $dictionary->id }})"
-                                >
-                                    <span class="remainder-dictionary-item__main">
-                                        <span class="remainder-dictionary-item__name">{{ $dictionary->name }}</span>
-                                        <span class="remainder-dictionary-item__meta">
-                                            {{ __($dictionaryLanguageKey) }}
-                                            <span aria-hidden="true">&middot;</span>
-                                            {{ trans_choice('remainder.settings.dictionaries.words_count', $dictionary->words_count, ['count' => $dictionary->words_count]) }}
-                                        </span>
-                                    </span>
-                                    <span class="remainder-dictionary-item__status" aria-hidden="true"></span>
-                                </button>
-                            @endforeach
+                    <div class="remainder-dictionary-columns">
+                        <div class="remainder-dictionary-column">
+                            <h4 class="remainder-dictionary-column__title">{{ __('remainder.settings.dictionaries.user_title') }}</h4>
+
+                            @if ($remainderDictionaries->isNotEmpty())
+                                <div class="remainder-dictionary-list" role="list" aria-label="{{ __('remainder.settings.dictionaries.available_aria') }}">
+                                    @foreach ($remainderDictionaries as $dictionary)
+                                        @php
+                                            $dictionaryLanguageKey = $dictionary->language !== null
+                                                ? 'dictionaries.index.languages.' . strtolower($dictionary->language)
+                                                : 'dictionaries.index.languages.not_specified';
+                                        @endphp
+                                        <button
+                                            type="button"
+                                            class="remainder-dictionary-item"
+                                            :class="{ 'remainder-dictionary-item--active': isDictionarySelected({{ $dictionary->id }}) }"
+                                            @click="toggleDictionary({{ $dictionary->id }})"
+                                        >
+                                            <span class="remainder-dictionary-item__main">
+                                                <span class="remainder-dictionary-item__name">{{ $dictionary->name }}</span>
+                                                <span class="remainder-dictionary-item__meta">
+                                                    {{ __($dictionaryLanguageKey) }}
+                                                    <span aria-hidden="true">&middot;</span>
+                                                    {{ trans_choice('remainder.settings.dictionaries.words_count', $dictionary->words_count, ['count' => $dictionary->words_count]) }}
+                                                </span>
+                                            </span>
+                                            <span class="remainder-dictionary-item__status" aria-hidden="true"></span>
+                                        </button>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="remainder-empty-state">
+                                    <p class="remainder-empty-state__title">{{ __('remainder.settings.dictionaries.empty_title') }}</p>
+                                    <p class="remainder-empty-state__text">{{ __('remainder.settings.dictionaries.empty_text') }}</p>
+                                </div>
+                            @endif
                         </div>
-                    @else
-                        <div class="remainder-empty-state">
-                            <p class="remainder-empty-state__title">{{ __('remainder.settings.dictionaries.empty_title') }}</p>
-                            <p class="remainder-empty-state__text">{{ __('remainder.settings.dictionaries.empty_text') }}</p>
+
+                        <div class="remainder-dictionary-column">
+                            <h4 class="remainder-dictionary-column__title">{{ __('remainder.settings.dictionaries.ready_title') }}</h4>
+
+                            @if ($remainderReadyDictionaries->isNotEmpty())
+                                <div class="remainder-dictionary-list" role="list" aria-label="{{ __('remainder.settings.dictionaries.ready_available_aria') }}">
+                                    @foreach ($remainderReadyDictionaries as $dictionary)
+                                        @php
+                                            $dictionaryLanguageKey = $dictionary->language !== null
+                                                ? 'dictionaries.index.languages.' . strtolower($dictionary->language)
+                                                : 'dictionaries.index.languages.not_specified';
+                                        @endphp
+                                        <button
+                                            type="button"
+                                            class="remainder-dictionary-item"
+                                            :class="{ 'remainder-dictionary-item--active': isReadyDictionarySelected({{ $dictionary->id }}) }"
+                                            @click="toggleReadyDictionary({{ $dictionary->id }})"
+                                        >
+                                            <span class="remainder-dictionary-item__main">
+                                                <span class="remainder-dictionary-item__name">{{ $dictionary->name }}</span>
+                                                <span class="remainder-dictionary-item__meta">
+                                                    {{ __($dictionaryLanguageKey) }}
+                                                    <span aria-hidden="true">&middot;</span>
+                                                    {{ trans_choice('remainder.settings.dictionaries.words_count', $dictionary->words_count, ['count' => $dictionary->words_count]) }}
+                                                </span>
+                                            </span>
+                                            <span class="remainder-dictionary-item__status" aria-hidden="true"></span>
+                                        </button>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="remainder-empty-state">
+                                    <p class="remainder-empty-state__title">{{ __('remainder.settings.dictionaries.ready_empty_title') }}</p>
+                                    <p class="remainder-empty-state__text">{{ __('remainder.settings.dictionaries.ready_empty_text') }}</p>
+                                </div>
+                            @endif
                         </div>
-                    @endif
+                    </div>
                 </section>
 
                 <div class="remainder-setup-grid remainder-setup-grid--secondary">

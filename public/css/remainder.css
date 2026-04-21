@@ -236,6 +236,28 @@
     padding: 2px 6px 2px 0;
 }
 
+.remainder-dictionary-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.remainder-dictionary-column {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.remainder-dictionary-column__title {
+    margin: 0;
+    font-size: 0.94rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--primary-color);
+}
+
 .remainder-dictionary-item {
     width: 100%;
     display: flex;
@@ -438,7 +460,8 @@
     }
 
     .remainder-setup-grid,
-    .remainder-option-grid--two {
+    .remainder-option-grid--two,
+    .remainder-dictionary-columns {
         grid-template-columns: 1fr;
     }
 }
