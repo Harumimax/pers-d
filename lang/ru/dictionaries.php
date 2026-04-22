@@ -108,6 +108,8 @@ return [
             ],
             'part_of_speech_not_specified' => 'Часть речи не указана',
             'no_comment' => 'Комментария нет',
+            'remainder_mistake_marker_aria' => 'Предыдущая ошибка в Remainder',
+            'remainder_mistake_legend' => 'Красная большая точка означает, что пользователь ранее допускал ошибку в этом слове в игре Remainder.',
             'pagination' => [
                 'showing' => 'Показано :from-:to из :total слов',
                 'prev' => 'Назад',

@@ -73,6 +73,7 @@
 - `App\Livewire\Dictionaries\Show`
   - shows a single dictionary
   - lists words with pagination
+  - receives each word's `remainder_had_mistake` flag for Remainder error markers
   - supports search, sorting, and part-of-speech filtering
   - supports manual word creation
   - supports automatic translation flow
@@ -170,6 +171,7 @@
     - finds the current unanswered item
     - checks manual answers and selected choice answers
     - updates progress counters and finished status
+    - updates `words.remainder_had_mistake` for finished personal-dictionary session items
     - produces final result summaries
 
 ## Domain Model
@@ -199,6 +201,7 @@
   - `part_of_speech`
   - `translation`
   - `comment`
+  - `remainder_had_mistake`
 - Relationship:
   - `belongsToMany(UserDictionary::class)` via `dictionaries()`
 
@@ -309,6 +312,7 @@
   - `part_of_speech` nullable
   - `translation`
   - `comment` nullable
+  - `remainder_had_mistake` boolean, defaults to `false`
   - `created_at`
   - `updated_at`
 - Indexes:
@@ -519,7 +523,9 @@
   - randomizes order
   - creates `GameSession`
   - creates `GameSessionItem` snapshot rows, including `part_of_speech_snapshot`
+- Personal dictionary session items store the original `words.id`, so `GameEngineService` updates `words.remainder_had_mistake` for words attached to the current user's dictionaries when the session finishes
 - Ready dictionary words are stored in separate `ready_dictionary_words`; when they are selected for a game, `PrepareGameService` copies them into `words` as session snapshot records so the existing `game_session_items.word_id` flow remains stable
+- Ready dictionary snapshot words are not attached to `user_dictionary_word`, so Remainder mistake flags should ignore them when applying finished-session updates
 - if mode is `choice`, `ChoiceOptionsBuilder` also precomputes `options_json` for every session item from the full filtered answer pool, while `words_count` still controls only the number of rounds
 - Game page (`/remainder/sessions/{gameSession}`) renders a Blade shell with embedded `App\Livewire\Remainder\Show`
 - `GameEngineService` validates and checks each answer, updates counters, and finishes the session after the last item

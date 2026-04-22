@@ -664,6 +664,89 @@ class RemainderGameTest extends TestCase
         $this->assertFalse((bool) $secondItem->is_correct);
     }
 
+    public function test_finished_session_marks_incorrect_personal_words_as_remainder_mistakes(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = $this->createDictionaryForUser($user, 'Training deck', 'English');
+        $word = $this->attachWord($dictionary, 'Apple', 'apple', 'noun');
+
+        $this->actingAs($user)->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'dictionary_ids' => [$dictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 1,
+        ]);
+
+        $gameSession = GameSession::query()->latest('id')->firstOrFail();
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['gameSession' => $gameSession])
+            ->set('answer', 'wrong answer')
+            ->call('submitAnswer');
+
+        $this->assertTrue($word->refresh()->remainder_had_mistake);
+    }
+
+    public function test_finished_session_clears_previous_remainder_mistake_for_correct_personal_words(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = $this->createDictionaryForUser($user, 'Training deck', 'English');
+        $word = $this->attachWord($dictionary, 'Apple', 'apple', 'noun', true);
+
+        $this->actingAs($user)->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'dictionary_ids' => [$dictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 1,
+        ]);
+
+        $gameSession = GameSession::query()->latest('id')->firstOrFail();
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['gameSession' => $gameSession])
+            ->set('answer', 'apple')
+            ->call('submitAnswer');
+
+        $this->assertFalse($word->refresh()->remainder_had_mistake);
+    }
+
+    public function test_finished_session_ignores_ready_dictionary_snapshot_words_for_remainder_mistakes(): void
+    {
+        $user = User::factory()->create();
+        $readyDictionary = ReadyDictionary::factory()->create([
+            'name' => 'Ready English',
+            'language' => 'English',
+        ]);
+        ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $readyDictionary->id,
+            'word' => 'accurate',
+            'translation' => 'accurate',
+            'part_of_speech' => 'adjective',
+        ]);
+
+        $this->actingAs($user)->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'ready_dictionary_ids' => [$readyDictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 1,
+        ]);
+
+        $gameSession = GameSession::query()->latest('id')->firstOrFail();
+        $snapshotWord = $gameSession->items()->firstOrFail()->word;
+
+        $snapshotWord->forceFill(['remainder_had_mistake' => true])->save();
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['gameSession' => $gameSession])
+            ->set('answer', 'accurate')
+            ->call('submitAnswer');
+
+        $this->assertTrue($snapshotWord->refresh()->remainder_had_mistake);
+    }
+
     public function test_user_cannot_open_another_users_game_session(): void
     {
         $owner = User::factory()->create();
@@ -713,13 +796,20 @@ class RemainderGameTest extends TestCase
         ]);
     }
 
-    private function attachWord(UserDictionary $dictionary, string $word, string $translation, ?string $partOfSpeech): Word
+    private function attachWord(
+        UserDictionary $dictionary,
+        string $word,
+        string $translation,
+        ?string $partOfSpeech,
+        bool $remainderHadMistake = false,
+    ): Word
     {
         $wordModel = Word::create([
             'word' => $word,
             'translation' => $translation,
             'part_of_speech' => $partOfSpeech,
             'comment' => null,
+            'remainder_had_mistake' => $remainderHadMistake,
         ]);
 
         $dictionary->words()->attach($wordModel->id);

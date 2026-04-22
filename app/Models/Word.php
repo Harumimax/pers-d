@@ -12,7 +12,15 @@ class Word extends Model
         'part_of_speech',
         'translation',
         'comment',
+        'remainder_had_mistake',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'remainder_had_mistake' => 'boolean',
+        ];
+    }
 
     public function dictionaries(): BelongsToMany
     {

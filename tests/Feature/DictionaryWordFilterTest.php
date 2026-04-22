@@ -91,6 +91,43 @@ class DictionaryWordFilterTest extends TestCase
             ->assertSee('Cancel');
     }
 
+    public function test_word_list_displays_remainder_mistake_marker_and_legend(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English',
+            'language' => 'English',
+        ]);
+
+        $mistakeWord = Word::create([
+            'word' => 'apple',
+            'part_of_speech' => 'noun',
+            'translation' => 'apple',
+            'comment' => null,
+            'remainder_had_mistake' => true,
+        ]);
+        $cleanWord = Word::create([
+            'word' => 'book',
+            'part_of_speech' => 'noun',
+            'translation' => 'book',
+            'comment' => null,
+            'remainder_had_mistake' => false,
+        ]);
+
+        $dictionary->words()->attach([$mistakeWord->id, $cleanWord->id]);
+
+        $response = $this->actingAs($user)->get(route('dictionaries.show', $dictionary));
+
+        $response
+            ->assertOk()
+            ->assertSee('apple')
+            ->assertSee('book')
+            ->assertSee('The red dot means you previously made a mistake with this word in the Remainder game.');
+
+        $this->assertSame(1, substr_count($response->getContent(), 'aria-label="Previous Remainder mistake"'));
+    }
+
     public function test_user_can_update_word_translation_part_of_speech_and_comment(): void
     {
         $user = User::factory()->create();
@@ -339,7 +376,7 @@ class DictionaryWordFilterTest extends TestCase
             'comment' => null,
         ]);
         $nonMatch = Word::create([
-            'word' => 'red',
+            'word' => 'purple',
             'part_of_speech' => 'adjective',
             'translation' => 'warm tone',
             'comment' => null,
@@ -353,12 +390,12 @@ class DictionaryWordFilterTest extends TestCase
             ->call('applySearch')
             ->assertSee('Green')
             ->assertDontSee('blue')
-            ->assertDontSee('red')
+            ->assertDontSee('purple')
             ->set('search', 'sky')
             ->call('applySearch')
             ->assertSee('blue')
             ->assertDontSee('Green')
-            ->assertDontSee('red');
+            ->assertDontSee('purple');
     }
 
     public function test_user_can_add_word_from_translate_automatically_mode(): void

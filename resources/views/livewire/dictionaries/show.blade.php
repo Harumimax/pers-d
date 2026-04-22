@@ -316,7 +316,7 @@
                     <table class="word-list-table">
                         <thead>
                             <tr>
-                                <th style="width: 28%;">{{ __('dictionaries.show.word_list.table.word') }}</th>
+                                <th class="word-list-table__word-heading" style="width: 28%;">{{ __('dictionaries.show.word_list.table.word') }}</th>
                                 <th style="width: 22%;">{{ __('dictionaries.show.word_list.table.translation') }}</th>
                                 <th style="width: 30%;">{{ __('dictionaries.show.word_list.table.comment') }}</th>
                                 <th style="width: 12%;">{{ __('dictionaries.show.word_list.table.added') }}</th>
@@ -330,31 +330,44 @@
                                 @endphp
                                 <tr wire:key="word-row-{{ $wordItem->id }}-{{ $wordItem->pivot->created_at?->timestamp ?? 'na' }}">
                                     <td>
-                                        <div class="word-list-main">{{ $wordItem->word }}</div>
-                                        @if ($editingWordId === $wordItem->id)
-                                            <div class="word-list-edit-panel">
-                                                <select
-                                                    id="word-edit-part-of-speech-{{ $wordItem->id }}"
-                                                    class="word-list-edit-select"
-                                                    wire:model.defer="editingWordPartOfSpeech"
-                                                    aria-label="{{ __('dictionaries.show.fields.part_of_speech') }}"
-                                                >
-                                                    @foreach ($partOfSpeechOptions as $partOfSpeechValue => $partOfSpeechLabel)
-                                                        <option value="{{ $partOfSpeechValue }}">{!! $partOfSpeechLabel !!}</option>
-                                                    @endforeach
-                                                </select>
+                                        <div class="word-list-word-cell">
+                                            <span class="word-list-mistake-marker-slot">
+                                                @if ($wordItem->remainder_had_mistake)
+                                                    <span
+                                                        class="word-list-mistake-marker"
+                                                        aria-label="{{ __('dictionaries.show.word_list.remainder_mistake_marker_aria') }}"
+                                                    ></span>
+                                                @endif
+                                            </span>
 
-                                                @error('editingWordPartOfSpeech')
-                                                    <p class="dictionaries-error word-list-edit-error">{{ $message }}</p>
-                                                @enderror
+                                            <div class="word-list-word-content">
+                                                <div class="word-list-main">{{ $wordItem->word }}</div>
+                                                @if ($editingWordId === $wordItem->id)
+                                                    <div class="word-list-edit-panel">
+                                                        <select
+                                                            id="word-edit-part-of-speech-{{ $wordItem->id }}"
+                                                            class="word-list-edit-select"
+                                                            wire:model.defer="editingWordPartOfSpeech"
+                                                            aria-label="{{ __('dictionaries.show.fields.part_of_speech') }}"
+                                                        >
+                                                            @foreach ($partOfSpeechOptions as $partOfSpeechValue => $partOfSpeechLabel)
+                                                                <option value="{{ $partOfSpeechValue }}">{!! $partOfSpeechLabel !!}</option>
+                                                            @endforeach
+                                                        </select>
+
+                                                        @error('editingWordPartOfSpeech')
+                                                            <p class="dictionaries-error word-list-edit-error">{{ $message }}</p>
+                                                        @enderror
+                                                    </div>
+                                                @else
+                                                    <div class="word-list-meta">
+                                                        {{ __($wordLanguageKey) }}
+                                                        &middot;
+                                                        {{ $partOfSpeechDisplayMap[$wordItem->part_of_speech] ?? __('dictionaries.show.word_list.part_of_speech_not_specified') }}
+                                                    </div>
+                                                @endif
                                             </div>
-                                        @else
-                                            <div class="word-list-meta">
-                                                {{ __($wordLanguageKey) }}
-                                                &middot;
-                                                {{ $partOfSpeechDisplayMap[$wordItem->part_of_speech] ?? __('dictionaries.show.word_list.part_of_speech_not_specified') }}
-                                            </div>
-                                        @endif
+                                        </div>
                                     </td>
                                     <td>
                                         @if ($editingWordId === $wordItem->id)
@@ -453,6 +466,11 @@
                         </tbody>
                     </table>
                 </div>
+
+                <p class="word-list-mistake-legend">
+                    <span class="word-list-mistake-marker" aria-hidden="true"></span>
+                    <span>{{ __('dictionaries.show.word_list.remainder_mistake_legend') }}</span>
+                </p>
 
                 <div class="word-list-pagination">
                     <p class="word-list-pagination__info">

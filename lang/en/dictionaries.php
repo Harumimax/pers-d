@@ -108,6 +108,8 @@ return [
             ],
             'part_of_speech_not_specified' => 'Part of speech not specified',
             'no_comment' => 'No comment',
+            'remainder_mistake_marker_aria' => 'Previous Remainder mistake',
+            'remainder_mistake_legend' => 'The red dot means you previously made a mistake with this word in the Remainder game.',
             'pagination' => [
                 'showing' => 'Showing :from-:to of :total words',
                 'prev' => 'Prev',
