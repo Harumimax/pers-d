@@ -1,10 +1,4 @@
 <div class="remainder-game-shell">
-    @if ($gameSession->isDemo())
-        <div class="remainder-game-banner remainder-game-banner--warning">
-            {{ __('remainder.game.demo_banner') }}
-        </div>
-    @endif
-
     @if ($gameNotice)
         <div class="remainder-game-banner remainder-game-banner--info">
             {{ $gameNotice }}
@@ -86,7 +80,11 @@
             @endif
 
             <div class="remainder-game-summary-card__actions">
-                <a href="{{ route('remainder') }}" class="btn btn-primary remainder-game-action-btn">{{ __('remainder.game.result.back_to_settings') }}</a>
+                @if ($gameSession->isDemo())
+                    <x-demo-result-cta :correct="$resultSummary['correct_answers']" :total="$resultSummary['total_words']" />
+                @else
+                    <a href="{{ route('remainder') }}" class="btn btn-primary remainder-game-action-btn">{{ __('remainder.game.result.back_to_settings') }}</a>
+                @endif
             </div>
         </section>
     @else

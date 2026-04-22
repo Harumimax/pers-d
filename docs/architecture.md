@@ -21,10 +21,11 @@
   - `/remainder` -> `RemainderController@index`, available to guests as demo Remainder using ready dictionaries only
   - `POST /remainder/sessions` -> `RemainderController@store`, creates either authenticated user sessions or guest demo sessions
   - `GET /remainder/sessions/{gameSession}` -> `RemainderController@showSession`, allows owners to open user sessions and guests to open demo sessions
+  - `/about` -> `AboutController`, readable by guests with demo banner and guest header
 - Authenticated routes:
   - `/dashboard` -> redirects to dictionaries index
   - `/profile` -> `ProfileController`
-  - `/about` -> `AboutController`
+  - `POST /about/contact` -> `AboutContactController@store`
   - `/dictionaries` -> `App\Livewire\Dictionaries\Index`
   - `/dictionaries/{dictionary}` -> `App\Livewire\Dictionaries\Show`
 
@@ -35,7 +36,7 @@
   - updates profile
   - deletes account
 - `App\Http\Controllers\AboutController`
-  - renders the authenticated About page
+  - renders the About page for authenticated users and guests
   - delegates aggregate site-wide About statistics to `GlobalStatisticsService`
 - `App\Http\Controllers\AboutContactController`
   - handles authenticated About contact form submissions
@@ -106,6 +107,10 @@
 - Reusable shared components:
   - `resources/views/components/language-switcher.blade.php`
   - `resources/views/components/site-footer.blade.php`
+  - `resources/views/components/demo-banner.blade.php`
+  - `resources/views/components/demo-sticky-cta.blade.php`
+  - `resources/views/components/demo-result-cta.blade.php`
+  - demo components keep guest conversion UI reusable across Prepared dictionaries and Remainder pages
 - Translation files:
   - `lang/en/common.php`
   - `lang/ru/common.php`

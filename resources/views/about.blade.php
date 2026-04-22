@@ -124,67 +124,75 @@
                 <div id="about-contact-panel" x-show="contactOpen" x-cloak>
                     <p class="about-contact-card__subtitle">{{ __('about.contact.subtitle') }}</p>
 
-                    <form method="POST" action="{{ route('about.contact.store') }}" class="about-contact-form">
-                    @csrf
+                    @auth
+                        <form method="POST" action="{{ route('about.contact.store') }}" class="about-contact-form">
+                        @csrf
 
-                        <div class="about-contact-form__grid">
+                            <div class="about-contact-form__grid">
+                                <div class="about-contact-field">
+                                    <label for="contact-email" class="about-contact-field__label">{{ __('about.contact.email') }}</label>
+                                    <input
+                                        id="contact-email"
+                                        name="contact_email"
+                                        type="email"
+                                        class="about-contact-field__input @error('contact_email') about-contact-field__input--error @enderror"
+                                        placeholder="{{ __('about.contact.email_placeholder') }}"
+                                        value="{{ old('contact_email') }}"
+                                        aria-invalid="{{ $errors->has('contact_email') ? 'true' : 'false' }}"
+                                        required
+                                    >
+                                    @error('contact_email')
+                                        <p class="about-contact-field__error">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div class="about-contact-field">
+                                    <label for="contact-subject" class="about-contact-field__label">{{ __('about.contact.subject') }}</label>
+                                    <input
+                                        id="contact-subject"
+                                        name="subject"
+                                        type="text"
+                                        class="about-contact-field__input @error('subject') about-contact-field__input--error @enderror"
+                                        placeholder="{{ __('about.contact.subject_placeholder') }}"
+                                        value="{{ old('subject') }}"
+                                        maxlength="128"
+                                        aria-invalid="{{ $errors->has('subject') ? 'true' : 'false' }}"
+                                        required
+                                    >
+                                    @error('subject')
+                                        <p class="about-contact-field__error">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+
                             <div class="about-contact-field">
-                                <label for="contact-email" class="about-contact-field__label">{{ __('about.contact.email') }}</label>
-                                <input
-                                    id="contact-email"
-                                    name="contact_email"
-                                    type="email"
-                                    class="about-contact-field__input @error('contact_email') about-contact-field__input--error @enderror"
-                                    placeholder="{{ __('about.contact.email_placeholder') }}"
-                                    value="{{ old('contact_email') }}"
-                                    aria-invalid="{{ $errors->has('contact_email') ? 'true' : 'false' }}"
+                                <label for="contact-message" class="about-contact-field__label">{{ __('about.contact.message') }}</label>
+                                <textarea
+                                    id="contact-message"
+                                    name="message"
+                                    class="about-contact-field__textarea @error('message') about-contact-field__input--error @enderror"
+                                    placeholder="{{ __('about.contact.message_placeholder') }}"
+                                    maxlength="600"
+                                    aria-invalid="{{ $errors->has('message') ? 'true' : 'false' }}"
                                     required
-                                >
-                                @error('contact_email')
+                                >{{ old('message') }}</textarea>
+                                @error('message')
                                     <p class="about-contact-field__error">{{ $message }}</p>
                                 @enderror
                             </div>
 
-                            <div class="about-contact-field">
-                                <label for="contact-subject" class="about-contact-field__label">{{ __('about.contact.subject') }}</label>
-                                <input
-                                    id="contact-subject"
-                                    name="subject"
-                                    type="text"
-                                    class="about-contact-field__input @error('subject') about-contact-field__input--error @enderror"
-                                    placeholder="{{ __('about.contact.subject_placeholder') }}"
-                                    value="{{ old('subject') }}"
-                                    maxlength="128"
-                                    aria-invalid="{{ $errors->has('subject') ? 'true' : 'false' }}"
-                                    required
-                                >
-                                @error('subject')
-                                    <p class="about-contact-field__error">{{ $message }}</p>
-                                @enderror
+                            <div class="about-contact-form__actions">
+                                <button type="submit" class="btn btn-primary about-contact-form__button">{{ __('about.contact.send') }}</button>
+                                <button type="reset" class="btn btn-secondary about-contact-form__button">{{ __('about.contact.clear') }}</button>
                             </div>
+                        </form>
+                    @else
+                        <div class="about-contact-guest-cta">
+                            <p class="about-contact-guest-cta__title">{{ __('about.contact.guest_title') }}</p>
+                            <p class="about-contact-guest-cta__text">{{ __('about.contact.guest_text') }}</p>
+                            <a href="{{ route('register') }}" class="btn btn-primary about-contact-form__button">{{ __('common.demo.create_account') }}</a>
                         </div>
-
-                        <div class="about-contact-field">
-                            <label for="contact-message" class="about-contact-field__label">{{ __('about.contact.message') }}</label>
-                            <textarea
-                                id="contact-message"
-                                name="message"
-                                class="about-contact-field__textarea @error('message') about-contact-field__input--error @enderror"
-                                placeholder="{{ __('about.contact.message_placeholder') }}"
-                                maxlength="600"
-                                aria-invalid="{{ $errors->has('message') ? 'true' : 'false' }}"
-                                required
-                            >{{ old('message') }}</textarea>
-                            @error('message')
-                                <p class="about-contact-field__error">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div class="about-contact-form__actions">
-                            <button type="submit" class="btn btn-primary about-contact-form__button">{{ __('about.contact.send') }}</button>
-                            <button type="reset" class="btn btn-secondary about-contact-form__button">{{ __('about.contact.clear') }}</button>
-                        </div>
-                    </form>
+                    @endauth
                 </div>
             </section>
 

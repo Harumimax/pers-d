@@ -40,7 +40,10 @@
                         <p class="remainder-description">{{ __('remainder.settings.description') }}</p>
                     </div>
                     @if ($isDemoMode)
-                        <p class="remainder-demo-note">{{ __('remainder.settings.demo_note') }}</p>
+                        <div class="remainder-demo-note">
+                            <p class="remainder-demo-note__title">{{ __('remainder.settings.demo_heading') }}</p>
+                            <p class="remainder-demo-note__text">{{ __('remainder.settings.demo_note') }}</p>
+                        </div>
                     @endif
                 </div>
             </section>
@@ -50,10 +53,10 @@
                 action="{{ route('remainder.sessions.store') }}"
                 class="remainder-setup-card"
                 x-data="{
-                    defaultGameType: 'manual',
+                    defaultGameType: 'choice',
                     defaultDirection: 'foreign_to_ru',
                     defaultWordsCount: '10',
-                    gameType: @js(old('mode', 'manual')),
+                    gameType: @js(old('mode', 'choice')),
                     direction: @js(old('direction', 'foreign_to_ru')),
                     dictionaryIds: @js($dictionaryIds->all()),
                     readyDictionaryIds: @js($readyDictionaryIds->all()),

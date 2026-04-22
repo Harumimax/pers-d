@@ -53,16 +53,30 @@
 }
 
 .remainder-demo-note {
-    width: fit-content;
+    width: min(100%, 560px);
     margin: 4px 0 0;
-    padding: 10px 14px;
+    padding: 12px 14px;
     border: 1px solid rgba(30, 58, 138, 0.18);
     border-radius: 12px;
     background: rgba(30, 58, 138, 0.08);
     color: var(--primary-color);
-    font-size: 0.94rem;
-    font-weight: 700;
     line-height: 1.4;
+}
+
+.remainder-demo-note__title,
+.remainder-demo-note__text {
+    margin: 0;
+}
+
+.remainder-demo-note__title {
+    font-size: 0.95rem;
+    font-weight: 800;
+}
+
+.remainder-demo-note__text {
+    margin-top: 4px;
+    font-size: 0.9rem;
+    color: var(--muted-color);
 }
 
 .remainder-setup-card {

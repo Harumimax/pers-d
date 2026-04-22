@@ -162,17 +162,22 @@ class RemainderGameTest extends TestCase
 
         $this->get(route('remainder.sessions.show', $gameSession))
             ->assertOk()
-            ->assertSee('Demo mode — results are not saved')
+            ->assertSee('You are in demo mode')
+            ->assertSee('Your progress is not saved')
+            ->assertSee('Create account')
             ->assertSee('Apple');
 
         Livewire::test(Show::class, ['gameSession' => $gameSession])
-            ->assertSee('Demo mode — results are not saved')
             ->set('answer', 'apple')
             ->call('submitAnswer')
             ->assertSet('showFeedback', true)
             ->call('continueToNext')
             ->assertSee('Remainder results')
-            ->assertSee('Correct 1 of 1.');
+            ->assertSee('Correct 1 of 1.')
+            ->assertSee('You answered 1 out of 1 correctly')
+            ->assertSee('Create account to save your progress and build your own dictionaries.')
+            ->assertSee('Create account')
+            ->assertSee('Try again');
 
         $gameSession->refresh();
         $this->assertSame(GameSession::STATUS_FINISHED, $gameSession->status);

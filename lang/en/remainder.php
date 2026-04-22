@@ -4,7 +4,8 @@ return [
     'settings' => [
         'title' => 'Remainder',
         'description' => 'is a game for reminding words.',
-        'demo_note' => 'Demo mode: you are practicing with ready-made dictionaries.',
+        'demo_heading' => 'Practice with ready-made dictionaries',
+        'demo_note' => 'Create account to track your progress.',
         'setup_eyebrow' => 'Remainder setup',
         'setup_title' => 'Configure your next repetition session',
         'setup_subtitle' => 'Choose how you want to practice, which dictionaries to include, and how focused the round should be.',
@@ -63,7 +64,6 @@ return [
             'manual' => 'Manual translation input',
         ],
         'progress' => 'Word :current of :total',
-        'demo_banner' => 'Demo mode — results are not saved',
         'feedback' => [
             'correct' => 'Correct',
             'incorrect' => 'Incorrect',

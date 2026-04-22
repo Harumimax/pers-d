@@ -112,6 +112,9 @@
             <x-language-switcher />
         </x-site-header>
 
+        <x-demo-banner />
+        <x-demo-sticky-cta />
+
         <div class="dictionaries-page">
             {{ $slot }}
         </div>

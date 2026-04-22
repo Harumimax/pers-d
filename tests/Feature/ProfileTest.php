@@ -19,17 +19,33 @@ class ProfileTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_is_redirected_from_about_page(): void
+    public function test_guest_can_open_about_page_with_demo_header(): void
     {
         $this->get('/about')
-            ->assertRedirect('/login');
+            ->assertOk()
+            ->assertSee('About WordKeeper')
+            ->assertSee('You are in demo mode')
+            ->assertSee('Your progress is not saved')
+            ->assertSee('Create account')
+            ->assertSee('Prepared dictionaries')
+            ->assertSee('Remainder')
+            ->assertSee('Sign up')
+            ->assertSee('Log in')
+            ->assertSee('Create account to contact us from this page')
+            ->assertDontSee('Contact email')
+            ->assertDontSee('My Dictionaries')
+            ->assertDontSee('Log out');
     }
 
     public function test_guest_can_open_remainder_page_as_demo_mode(): void
     {
         $this->get('/remainder')
             ->assertOk()
-            ->assertSee('Demo mode: you are practicing with ready-made dictionaries.')
+            ->assertSee('You are in demo mode')
+            ->assertSee('Your progress is not saved')
+            ->assertSee('Create account')
+            ->assertSee('Practice with ready-made dictionaries')
+            ->assertSee('Create account to track your progress')
             ->assertSee('No personal dictionaries yet')
             ->assertSee('Ready dictionaries')
             ->assertSee('Sign up')
@@ -43,6 +59,9 @@ class ProfileTest extends TestCase
         $this->get('/ready-dictionaries')
             ->assertOk()
             ->assertSee('Prepared dictionaries')
+            ->assertSee('You are in demo mode')
+            ->assertSee('Your progress is not saved')
+            ->assertSee('Create account')
             ->assertSee('Remainder')
             ->assertSee('Sign up')
             ->assertSee('Log in')
@@ -63,6 +82,8 @@ class ProfileTest extends TestCase
             ->assertSee('Language')
             ->assertSee('Level')
             ->assertSee('Part of speech')
+            ->assertDontSee('You are in demo mode')
+            ->assertDontSee('Your progress is not saved')
             ->assertDontSee('New Dictionary')
             ->assertSee('My Dictionaries')
             ->assertSee('Remainder');
@@ -440,6 +461,9 @@ class ProfileTest extends TestCase
             ->assertOk()
             ->assertSee('Remainder')
             ->assertSee('Configure your next repetition session')
+            ->assertSee("defaultGameType: 'choice'", false)
+            ->assertSee("gameType: 'choice'", false)
+            ->assertDontSee("defaultGameType: 'manual'", false)
             ->assertSee('Game type')
             ->assertSee('Translation direction')
             ->assertSee('Dictionaries')
@@ -450,6 +474,8 @@ class ProfileTest extends TestCase
             ->assertSee('1 word')
             ->assertSee('Manual translation input')
             ->assertSee('Choose from 6 options')
+            ->assertDontSee('You are in demo mode')
+            ->assertDontSee('Your progress is not saved')
             ->assertSee('Start')
             ->assertSee('Reset');
     }
