@@ -115,7 +115,8 @@
                                                 </button>
 
                                                 <div class="word-list-transfer-menu" role="menu">
-                                                    @if ($userDictionaries->isNotEmpty())
+                                                    @auth
+                                                        @if ($userDictionaries->isNotEmpty())
                                                         <p class="word-list-transfer-menu__title">{{ __('ready_dictionaries.show.transfer.title') }}</p>
                                                         @foreach ($userDictionaries as $userDictionary)
                                                             <button
@@ -130,9 +131,12 @@
                                                                 {{ $userDictionary->name }}
                                                             </button>
                                                         @endforeach
+                                                        @else
+                                                            <p class="word-list-transfer-menu__empty">{{ __('ready_dictionaries.show.transfer.empty') }}</p>
+                                                        @endif
                                                     @else
-                                                        <p class="word-list-transfer-menu__empty">{{ __('ready_dictionaries.show.transfer.empty') }}</p>
-                                                    @endif
+                                                        <p class="word-list-transfer-menu__empty">{{ __('ready_dictionaries.show.transfer.guest_empty') }}</p>
+                                                    @endauth
                                                 </div>
                                             </div>
                                         </div>

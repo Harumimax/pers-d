@@ -24,6 +24,7 @@
                     </form>
                     <x-language-switcher />
                 @else
+                    <a href="{{ route('ready-dictionaries.index') }}" class="btn btn-demo">{{ __('common.links.demo') }}</a>
                     <a href="{{ route('login') }}" class="btn btn-secondary">{{ __('common.links.login') }}</a>
                     <a href="{{ route('register') }}" class="btn btn-primary">{{ __('common.links.signup') }}</a>
                     <x-language-switcher />
@@ -33,7 +34,10 @@
     <main class="hero">
         <div class="container hero-inner">
             <section class="hero-content">
-                <h1 class="hero-title">
+                <h1 @class([
+                    'hero-title',
+                    'hero-title--ru' => app()->getLocale() === 'ru',
+                ])>
                     {{ __('welcome.title_line_1') }}<br>
                     {{ __('welcome.title_line_2') }}
                 </h1>
@@ -46,12 +50,19 @@
                     {{ __('welcome.description_secondary') }}
                 </p>
 
+                @guest
+                    <p class="hero-demo-note">
+                        {{ __('welcome.demo_note') }}
+                    </p>
+                @endguest
+
                 <div class="hero-actions">
                     @auth
                         <a href="{{ url('/dashboard') }}" class="btn btn-primary btn-large">{{ __('welcome.actions.dictionaries') }}</a>
                     @else
                         <a href="{{ route('register') }}" class="btn btn-primary btn-large">{{ __('welcome.actions.signup') }}</a>
-                        <a href="{{ route('login') }}" class="btn btn-secondary btn-large">{{ __('welcome.actions.login') }}</a>
+                        <a href="{{ route('ready-dictionaries.index') }}" class="btn btn-demo btn-large">{{ __('welcome.actions.demo') }}</a>
+                        <a href="{{ route('login') }}" class="hero-login-link">{{ __('welcome.actions.login') }}</a>
                     @endauth
                 </div>
 

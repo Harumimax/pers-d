@@ -11,6 +11,7 @@ return [
         'remainder' => 'Remainder',
         'dictionaries' => 'My Dictionaries',
         'profile' => 'Profile',
+        'demo' => 'Demo',
         'login' => 'Log in',
         'signup' => 'Sign up',
         'logout' => 'Log out',

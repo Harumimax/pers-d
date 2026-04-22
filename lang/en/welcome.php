@@ -5,11 +5,13 @@ return [
     'title_line_2' => 'Word Dictionary',
     'description' => 'Build and organize your vocabulary across multiple languages. Track words, meanings, and examples in one simple place.',
     'description_secondary' => 'Save words instantly while reading and review them with spaced repetition.',
+    'demo_note' => 'Try prepared dictionaries first: browse real word sets without creating an account.',
     'supporting_line' => 'Save words. Practice them. Remember more.',
     'actions' => [
         'dictionaries' => 'Dictionaries',
         'signup' => 'Sign up',
         'login' => 'Log in',
+        'demo' => 'Try demo',
     ],
     'showcase' => [
         'eyebrow' => 'Product preview',

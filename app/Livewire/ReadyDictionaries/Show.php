@@ -34,14 +34,12 @@ class Show extends Component
 
     public function mount(ReadyDictionary $readyDictionary): void
     {
-        abort_unless(Auth::check(), 401);
-
         $this->readyDictionary = $readyDictionary;
     }
 
     public function render(): View
     {
-        $user = $this->currentUser();
+        $user = Auth::user();
         $totalWordsCount = $this->readyDictionary->words()->count();
         $wordsQuery = $this->readyDictionary->words();
         $searchTerm = trim($this->search);

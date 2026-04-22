@@ -304,6 +304,35 @@ class ReadyDictionaryCatalogTest extends TestCase
             ->assertDontSee('Delete word');
     }
 
+    public function test_guest_can_open_ready_dictionary_show_page_with_demo_header_and_signup_prompt(): void
+    {
+        $dictionary = ReadyDictionary::factory()->create([
+            'name' => 'Readonly English',
+            'language' => 'English',
+        ]);
+
+        ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $dictionary->id,
+            'word' => 'apple',
+            'translation' => 'apple',
+            'part_of_speech' => 'noun',
+            'comment' => 'Fruit.',
+        ]);
+
+        $this->get(route('ready-dictionaries.show', $dictionary))
+            ->assertOk()
+            ->assertSee('Readonly English')
+            ->assertSee('Ready dictionaries')
+            ->assertSee('Remainder')
+            ->assertSee('Sign up')
+            ->assertSee('Log in')
+            ->assertSee('apple')
+            ->assertSee('Fruit.')
+            ->assertSee('Sign up and create your first dictionary.')
+            ->assertDontSee('My Dictionaries')
+            ->assertDontSee('Log out');
+    }
+
     public function test_ready_dictionary_word_can_be_copied_to_users_dictionary(): void
     {
         $user = User::factory()->create();

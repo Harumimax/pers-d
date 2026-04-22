@@ -31,10 +31,16 @@ class ProfileTest extends TestCase
             ->assertRedirect('/login');
     }
 
-    public function test_guest_is_redirected_from_ready_dictionaries_page(): void
+    public function test_guest_can_open_ready_dictionaries_page_as_demo_entry(): void
     {
         $this->get('/ready-dictionaries')
-            ->assertRedirect('/login');
+            ->assertOk()
+            ->assertSee('Ready dictionaries')
+            ->assertSee('Remainder')
+            ->assertSee('Sign up')
+            ->assertSee('Log in')
+            ->assertDontSee('My Dictionaries')
+            ->assertDontSee('Log out');
     }
 
     public function test_ready_dictionaries_page_is_displayed_for_authenticated_user(): void
@@ -350,6 +356,9 @@ class ProfileTest extends TestCase
 
         $this->get('/')
             ->assertOk()
+            ->assertSee('Demo')
+            ->assertSee('Try demo')
+            ->assertSee('Try prepared dictionaries first')
             ->assertSee('Save words. Practice them. Remember more.')
             ->assertSee('Product preview')
             ->assertSee('See WordKeeper in action')
@@ -360,6 +369,20 @@ class ProfileTest extends TestCase
             ->assertSee('Ru')
             ->assertSee('En')
             ->assertDontSee('mc.yandex.ru/metrika/tag.js');
+    }
+
+    public function test_authenticated_welcome_page_keeps_existing_header_without_demo_entry(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get('/')
+            ->assertOk()
+            ->assertSee('My Dictionaries')
+            ->assertSee('Remainder')
+            ->assertSee('Prepared dictionaries')
+            ->assertDontSee('Try demo')
+            ->assertDontSee('Try prepared dictionaries first');
     }
 
     public function test_welcome_page_is_translated_to_russian_when_locale_is_set(): void

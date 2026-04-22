@@ -29,6 +29,7 @@ return [
             'aria' => 'Choose a personal dictionary for :word',
             'title' => 'Add to dictionary',
             'empty' => 'Create your own dictionary to add a word to it.',
+            'guest_empty' => 'Sign up and create your first dictionary.',
             'success' => '":word" has been added to ":dictionary".',
             'error' => 'We could not add this word to the selected dictionary. Please try again.',
         ],

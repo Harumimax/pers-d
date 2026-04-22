@@ -16,6 +16,8 @@
 - Public route:
   - `/` -> `welcome` view
   - `POST /interface-language` -> stores `ru|en` in session, also updates authenticated user's preferred locale when available, and redirects back
+  - `/ready-dictionaries` -> `ReadyDictionariesController@index`, also used as the guest demo entry page
+  - `/ready-dictionaries/{readyDictionary}` -> `App\Livewire\ReadyDictionaries\Show`, readable by guests as part of demo mode
 - Authenticated routes:
   - `/dashboard` -> redirects to dictionaries index
   - `/profile` -> `ProfileController`
@@ -23,8 +25,6 @@
   - `/remainder` -> `RemainderController@index`
   - `POST /remainder/sessions` -> `RemainderController@store`
   - `GET /remainder/sessions/{gameSession}` -> `RemainderController@showSession`
-  - `/ready-dictionaries` -> `ReadyDictionariesController@index`
-  - `/ready-dictionaries/{readyDictionary}` -> `App\Livewire\ReadyDictionaries\Show`
   - `/dictionaries` -> `App\Livewire\Dictionaries\Index`
   - `/dictionaries/{dictionary}` -> `App\Livewire\Dictionaries\Show`
 
@@ -47,7 +47,8 @@
   - starts manual game sessions
   - renders the game session page shell
 - `App\Http\Controllers\ReadyDictionariesController`
-  - renders the authenticated Ready dictionaries catalog page
+  - renders the Ready dictionaries catalog page for authenticated users and guests
+  - serves as the first guest demo entry point
   - delegates ready dictionary catalog queries and filter normalization to `ReadyDictionaryCatalogService`
 - Header dropdown data is assembled through `HeaderNavigationService` so shared layouts receive personal dictionaries and ready dictionaries without querying from Blade
 - Auth controllers are the standard Breeze-style controllers under `app/Http/Controllers/Auth`
@@ -83,7 +84,9 @@
   - shows one developer-managed ready dictionary
   - lists ready dictionary words with pagination
   - supports read-only search, sorting, and part-of-speech filtering
+  - allows guests to browse ready dictionary words as demo content
   - does not expose word creation, editing, or deletion actions
+  - copying ready words into personal dictionaries remains available only to authenticated users
 - `App\Livewire\Remainder\Show`
   - drives one active game session on the remainder game page
   - renders either the current question, immediate feedback, or the final result summary

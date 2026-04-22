@@ -11,6 +11,7 @@ return [
         'remainder' => 'Повторение',
         'dictionaries' => 'Мои словари',
         'profile' => 'Профиль',
+        'demo' => 'Демо',
         'login' => 'Войти',
         'signup' => 'Регистрация',
         'logout' => 'Выйти',

@@ -172,6 +172,17 @@ img {
     background-color: #e5e7eb;
 }
 
+.btn-demo {
+    background-color: var(--white);
+    color: var(--primary-color);
+    border-color: rgba(30, 58, 138, 0.72);
+}
+
+.btn-demo:hover {
+    background-color: #f8fafc;
+    border-color: var(--primary-color);
+}
+
 .header-actions .btn {
     min-width: 104px;
     height: 48px;
@@ -219,6 +230,12 @@ img {
     color: var(--text-color);
 }
 
+.hero-title--ru {
+    max-width: 520px;
+    font-size: 3.45rem;
+    line-height: 1.04;
+}
+
 .hero-description {
     margin: 0 0 36px;
     max-width: 520px;
@@ -236,10 +253,39 @@ img {
     color: var(--text-color);
 }
 
+.hero-demo-note {
+    display: inline-flex;
+    align-items: center;
+    margin: 0 0 24px;
+    padding: 10px 14px;
+    border: 1px solid rgba(30, 58, 138, 0.18);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.78);
+    color: var(--primary-color);
+    font-size: 0.94rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
 .hero-actions {
     display: flex;
     align-items: center;
     gap: 18px;
+}
+
+.hero-login-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    color: var(--muted-color);
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.hero-login-link:hover {
+    color: var(--text-color);
 }
 
 .hero-image-wrapper {
@@ -685,6 +731,10 @@ img {
         font-size: 4rem;
     }
 
+    .hero-title--ru {
+        font-size: 3.3rem;
+    }
+
     .hero-image {
         height: 340px;
     }
@@ -732,6 +782,10 @@ img {
 
     .hero-title {
         font-size: 3.25rem;
+    }
+
+    .hero-title--ru {
+        font-size: 2.85rem;
     }
 
     .hero-description {
@@ -783,6 +837,11 @@ img {
     .hero-title {
         font-size: 2.5rem;
         line-height: 1.05;
+    }
+
+    .hero-title--ru {
+        font-size: 2.15rem;
+        line-height: 1.08;
     }
 
     .hero-description {

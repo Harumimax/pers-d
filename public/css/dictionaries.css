@@ -90,6 +90,10 @@
     border-radius: 12px;
 }
 
+.dictionaries-header-nav__auth-btn {
+    min-width: 104px;
+}
+
 .dictionaries-main {
     padding: 56px 0 72px;
 }
@@ -539,6 +543,7 @@
     .dictionaries-header-nav {
         width: 100%;
         justify-content: center;
+        flex-wrap: wrap;
         gap: 20px;
     }
 
