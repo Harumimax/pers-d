@@ -172,6 +172,10 @@ class GameEngineService
 
     private function syncRemainderMistakeFlags(GameSession $session): void
     {
+        if ($session->isDemo()) {
+            return;
+        }
+
         $this->sessionUserWordsQuery($session, false)
             ->update(['remainder_had_mistake' => true]);
 

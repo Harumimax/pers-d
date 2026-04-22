@@ -52,6 +52,19 @@
     white-space: nowrap;
 }
 
+.remainder-demo-note {
+    width: fit-content;
+    margin: 4px 0 0;
+    padding: 10px 14px;
+    border: 1px solid rgba(30, 58, 138, 0.18);
+    border-radius: 12px;
+    background: rgba(30, 58, 138, 0.08);
+    color: var(--primary-color);
+    font-size: 0.94rem;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
 .remainder-setup-card {
     border: 1px solid #d8dce4;
     border-radius: 18px;

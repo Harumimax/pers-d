@@ -18,8 +18,9 @@ class PrepareGameService
      * @param array{mode:string,direction:string,dictionary_ids:array<int,int|string>,ready_dictionary_ids?:array<int,int|string>,parts_of_speech:array<int,string>,words_count:int} $config
      * @return array{gameSession: GameSession, notice: string|null}
      */
-    public function prepare(User $user, array $config): array
+    public function prepare(?User $user, array $config): array
     {
+        $isDemo = $user === null;
         $dictionaryIds = collect($config['dictionary_ids'] ?? [])
             ->map(static fn ($id): int => (int) $id)
             ->unique()
@@ -31,11 +32,15 @@ class PrepareGameService
             ->values()
             ->all();
 
-        $ownedDictionaryIds = $user->dictionaries()
-            ->whereIn('id', $dictionaryIds)
-            ->pluck('id')
-            ->map(static fn ($id): int => (int) $id)
-            ->all();
+        $ownedDictionaryIds = [];
+
+        if ($user !== null && $dictionaryIds !== []) {
+            $ownedDictionaryIds = $user->dictionaries()
+                ->whereIn('id', $dictionaryIds)
+                ->pluck('id')
+                ->map(static fn ($id): int => (int) $id)
+                ->all();
+        }
 
         sort($dictionaryIds);
         sort($ownedDictionaryIds);
@@ -62,7 +67,7 @@ class PrepareGameService
         }
 
         $partsOfSpeech = $this->normalizePartsOfSpeech($config['parts_of_speech']);
-        $availableWords = $this->availableWordCandidates($user->id, $dictionaryIds, $readyDictionaryIds, $partsOfSpeech);
+        $availableWords = $this->availableWordCandidates($user?->id, $dictionaryIds, $readyDictionaryIds, $partsOfSpeech);
 
         if ($availableWords->isEmpty()) {
             throw ValidationException::withMessages([
@@ -128,9 +133,9 @@ class PrepareGameService
         }
 
         /** @var GameSession $gameSession */
-        $gameSession = DB::transaction(function () use ($user, $config, $dictionaryIds, $readyDictionaryIds, $partsOfSpeech, $requestedWordsCount, $selectedWords, $warnings, $itemPayloads): GameSession {
+        $gameSession = DB::transaction(function () use ($user, $config, $dictionaryIds, $readyDictionaryIds, $partsOfSpeech, $requestedWordsCount, $selectedWords, $warnings, $itemPayloads, $isDemo): GameSession {
             $session = GameSession::create([
-                'user_id' => $user->id,
+                'user_id' => $user?->id,
                 'mode' => $config['mode'],
                 'direction' => $config['direction'],
                 'total_words' => $selectedWords->count(),
@@ -148,6 +153,7 @@ class PrepareGameService
                     'parts_of_speech' => $partsOfSpeech,
                     'warnings' => $warnings,
                     'options_target_count' => $config['mode'] === GameSession::MODE_CHOICE ? 6 : null,
+                    'is_demo' => $isDemo,
                 ],
             ]);
 
@@ -222,11 +228,11 @@ class PrepareGameService
      * @param array<int, string> $partsOfSpeech
      * @return Collection<int, array{source:string,word_id:int|null,word:string,translation:string,part_of_speech:?string,comment:?string}>
      */
-    private function availableWordCandidates(int $userId, array $dictionaryIds, array $readyDictionaryIds, array $partsOfSpeech): Collection
+    private function availableWordCandidates(?int $userId, array $dictionaryIds, array $readyDictionaryIds, array $partsOfSpeech): Collection
     {
         $userWords = collect();
 
-        if ($dictionaryIds !== []) {
+        if ($userId !== null && $dictionaryIds !== []) {
             $query = Word::query()
                 ->select('words.*')
                 ->join('user_dictionary_word', 'user_dictionary_word.word_id', '=', 'words.id')

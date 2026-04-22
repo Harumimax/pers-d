@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('game_sessions', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained()->cascadeOnDelete();
             $table->string('mode', 32);
             $table->string('direction', 32);
             $table->unsignedInteger('total_words');

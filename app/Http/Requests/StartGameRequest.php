@@ -13,7 +13,7 @@ class StartGameRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        return true;
     }
 
     protected function prepareForValidation(): void
@@ -61,6 +61,12 @@ class StartGameRequest extends FormRequest
         return [
             function (Validator $validator): void {
                 if ($validator->errors()->has('dictionary_ids') || $validator->errors()->has('ready_dictionary_ids')) {
+                    return;
+                }
+
+                if ($this->user() === null && $this->input('dictionary_ids', []) !== []) {
+                    $validator->errors()->add('dictionary_ids', __('remainder.messages.start.demo_user_dictionaries'));
+
                     return;
                 }
 

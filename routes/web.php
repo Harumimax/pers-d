@@ -34,6 +34,9 @@ Route::post('/interface-language', function (Request $request) {
 
 Route::get('/ready-dictionaries', [ReadyDictionariesController::class, 'index'])->name('ready-dictionaries.index');
 Route::get('/ready-dictionaries/{readyDictionary}', ReadyDictionaryShow::class)->name('ready-dictionaries.show');
+Route::get('/remainder', [RemainderController::class, 'index'])->name('remainder');
+Route::post('/remainder/sessions', [RemainderController::class, 'store'])->name('remainder.sessions.store');
+Route::get('/remainder/sessions/{gameSession}', [RemainderController::class, 'showSession'])->name('remainder.sessions.show');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', fn () => redirect()->route('dictionaries.index'))
@@ -44,10 +47,6 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/about', [AboutController::class, 'index'])->name('about');
     Route::post('/about/contact', [AboutContactController::class, 'store'])->name('about.contact.store');
-    Route::get('/remainder', [RemainderController::class, 'index'])->name('remainder');
-    Route::post('/remainder/sessions', [RemainderController::class, 'store'])->name('remainder.sessions.store');
-    Route::get('/remainder/sessions/{gameSession}', [RemainderController::class, 'showSession'])->name('remainder.sessions.show');
-
     Route::get('/dictionaries', Index::class)->name('dictionaries.index');
     Route::get('/dictionaries/{dictionary}', Show::class)->name('dictionaries.show');
 });

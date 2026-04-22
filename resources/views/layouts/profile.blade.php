@@ -22,62 +22,94 @@
     @php($activeNav = $activeNav ?? null)
     <body class="profile-shell">
         <x-site-header nav-class="profile-header-nav" :label="__('common.navigation.profile')">
-            <div class="profile-header-nav__dropdown">
-                <a href="{{ route('dictionaries.index') }}" class="profile-header-nav__link">
-                    {{ __('common.links.dictionaries') }}
-                </a>
+            @auth
+                <div class="profile-header-nav__dropdown">
+                    <a href="{{ route('dictionaries.index') }}" class="profile-header-nav__link">
+                        {{ __('common.links.dictionaries') }}
+                    </a>
 
-                @if (($headerDictionaries ?? collect())->isNotEmpty())
-                    <div class="profile-header-nav__menu" aria-label="Your dictionaries">
-                        @foreach ($headerDictionaries as $headerDictionary)
-                        <a
-                            href="{{ route('dictionaries.show', $headerDictionary) }}"
-                            class="profile-header-nav__menu-link"
-                        >
-                            {{ $headerDictionary->name }}
-                        </a>
-                        @endforeach
-                    </div>
-                @endif
-            </div>
-            <a
-                href="{{ route('remainder') }}"
-                class="profile-header-nav__link {{ $activeNav === 'remainder' ? 'profile-header-nav__link--active' : '' }}"
-            >
-                {{ __('common.links.remainder') }}
-            </a>
-            <div class="profile-header-nav__dropdown">
-                <a
-                    href="{{ route('ready-dictionaries.index') }}"
-                    class="profile-header-nav__link {{ $activeNav === 'ready-dictionaries' ? 'profile-header-nav__link--active' : '' }}"
-                >
-                    {{ __('common.links.ready_dictionaries') }}
-                </a>
-
-                @if (($headerReadyDictionaries ?? collect())->isNotEmpty())
-                    <div class="profile-header-nav__menu" aria-label="{{ __('common.links.ready_dictionaries') }}">
-                        @foreach ($headerReadyDictionaries as $headerReadyDictionary)
+                    @if (($headerDictionaries ?? collect())->isNotEmpty())
+                        <div class="profile-header-nav__menu" aria-label="Your dictionaries">
+                            @foreach ($headerDictionaries as $headerDictionary)
                             <a
-                                href="{{ route('ready-dictionaries.show', $headerReadyDictionary) }}"
+                                href="{{ route('dictionaries.show', $headerDictionary) }}"
                                 class="profile-header-nav__menu-link"
                             >
-                                {{ $headerReadyDictionary->name }}
+                                {{ $headerDictionary->name }}
                             </a>
-                        @endforeach
-                    </div>
-                @endif
-            </div>
-            <a
-                href="{{ route('profile.edit') }}"
-                class="profile-header-nav__link {{ $activeNav === 'profile' ? 'profile-header-nav__link--active' : '' }}"
-            >
-                {{ __('common.links.profile') }}
-            </a>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+                <a
+                    href="{{ route('remainder') }}"
+                    class="profile-header-nav__link {{ $activeNav === 'remainder' ? 'profile-header-nav__link--active' : '' }}"
+                >
+                    {{ __('common.links.remainder') }}
+                </a>
+                <div class="profile-header-nav__dropdown">
+                    <a
+                        href="{{ route('ready-dictionaries.index') }}"
+                        class="profile-header-nav__link {{ $activeNav === 'ready-dictionaries' ? 'profile-header-nav__link--active' : '' }}"
+                    >
+                        {{ __('common.links.ready_dictionaries') }}
+                    </a>
 
-            <form method="POST" action="{{ route('logout') }}" class="profile-header-nav__form">
-                @csrf
-                <button type="submit" class="btn btn-secondary">{{ __('common.links.logout') }}</button>
-            </form>
+                    @if (($headerReadyDictionaries ?? collect())->isNotEmpty())
+                        <div class="profile-header-nav__menu" aria-label="{{ __('common.links.ready_dictionaries') }}">
+                            @foreach ($headerReadyDictionaries as $headerReadyDictionary)
+                                <a
+                                    href="{{ route('ready-dictionaries.show', $headerReadyDictionary) }}"
+                                    class="profile-header-nav__menu-link"
+                                >
+                                    {{ $headerReadyDictionary->name }}
+                                </a>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+                <a
+                    href="{{ route('profile.edit') }}"
+                    class="profile-header-nav__link {{ $activeNav === 'profile' ? 'profile-header-nav__link--active' : '' }}"
+                >
+                    {{ __('common.links.profile') }}
+                </a>
+
+                <form method="POST" action="{{ route('logout') }}" class="profile-header-nav__form">
+                    @csrf
+                    <button type="submit" class="btn btn-secondary">{{ __('common.links.logout') }}</button>
+                </form>
+            @else
+                <div class="profile-header-nav__dropdown">
+                    <a
+                        href="{{ route('ready-dictionaries.index') }}"
+                        class="profile-header-nav__link {{ $activeNav === 'ready-dictionaries' ? 'profile-header-nav__link--active' : '' }}"
+                    >
+                        {{ __('common.links.ready_dictionaries') }}
+                    </a>
+
+                    @if (($headerReadyDictionaries ?? collect())->isNotEmpty())
+                        <div class="profile-header-nav__menu" aria-label="{{ __('common.links.ready_dictionaries') }}">
+                            @foreach ($headerReadyDictionaries as $headerReadyDictionary)
+                                <a
+                                    href="{{ route('ready-dictionaries.show', $headerReadyDictionary) }}"
+                                    class="profile-header-nav__menu-link"
+                                >
+                                    {{ $headerReadyDictionary->name }}
+                                </a>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+                <a
+                    href="{{ route('remainder') }}"
+                    class="profile-header-nav__link {{ $activeNav === 'remainder' ? 'profile-header-nav__link--active' : '' }}"
+                >
+                    {{ __('common.links.remainder') }}
+                </a>
+                <a href="{{ route('register') }}" class="btn btn-primary">{{ __('common.links.signup') }}</a>
+                <a href="{{ route('login') }}" class="profile-header-nav__link">{{ __('common.links.login') }}</a>
+            @endauth
             <x-language-switcher />
         </x-site-header>
 

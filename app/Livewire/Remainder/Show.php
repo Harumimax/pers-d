@@ -24,8 +24,10 @@ class Show extends Component
 
     public function mount(GameSession $gameSession): void
     {
-        abort_unless(auth()->check(), 401);
-        abort_if($gameSession->user_id !== auth()->id(), 403);
+        if (! $gameSession->isDemo()) {
+            abort_unless(auth()->check(), 401);
+            abort_if($gameSession->user_id !== auth()->id(), 403);
+        }
 
         $this->gameSession = $gameSession;
     }

@@ -1,4 +1,10 @@
 <div class="remainder-game-shell">
+    @if ($gameSession->isDemo())
+        <div class="remainder-game-banner remainder-game-banner--warning">
+            {{ __('remainder.game.demo_banner') }}
+        </div>
+    @endif
+
     @if ($gameNotice)
         <div class="remainder-game-banner remainder-game-banner--info">
             {{ $gameNotice }}

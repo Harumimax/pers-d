@@ -45,4 +45,9 @@ class GameSession extends Model
     {
         return $this->hasMany(GameSessionItem::class)->orderBy('order_index');
     }
+
+    public function isDemo(): bool
+    {
+        return $this->user_id === null || (bool) ($this->config_snapshot['is_demo'] ?? false);
+    }
 }

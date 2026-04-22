@@ -86,6 +86,133 @@ class RemainderGameTest extends TestCase
         ]);
     }
 
+    public function test_guest_can_start_demo_game_from_ready_dictionary_only(): void
+    {
+        $readyDictionary = ReadyDictionary::factory()->create([
+            'name' => 'Demo English',
+            'language' => 'English',
+        ]);
+        ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $readyDictionary->id,
+            'word' => 'apple',
+            'translation' => 'apple',
+            'part_of_speech' => 'noun',
+        ]);
+
+        $response = $this->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'ready_dictionary_ids' => [$readyDictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 1,
+        ]);
+
+        $gameSession = GameSession::query()->firstOrFail();
+
+        $response->assertRedirect(route('remainder.sessions.show', $gameSession));
+        $this->assertNull($gameSession->user_id);
+        $this->assertTrue($gameSession->isDemo());
+        $this->assertTrue($gameSession->config_snapshot['is_demo']);
+        $this->assertSame([], $gameSession->config_snapshot['dictionary_ids']);
+        $this->assertSame([$readyDictionary->id], $gameSession->config_snapshot['ready_dictionary_ids']);
+        $this->assertSame(1, $gameSession->items()->count());
+    }
+
+    public function test_guest_cannot_start_demo_game_from_user_dictionary(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = $this->createDictionaryForUser($user, 'Private deck', 'English');
+        $this->attachWord($dictionary, 'secret', 'secret', 'noun');
+
+        $response = $this->from(route('remainder'))->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'dictionary_ids' => [$dictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 1,
+        ]);
+
+        $response->assertRedirect(route('remainder'));
+        $response->assertSessionHasErrors('dictionary_ids');
+        $this->assertDatabaseCount('game_sessions', 0);
+    }
+
+    public function test_guest_can_play_demo_session_and_see_results(): void
+    {
+        $readyDictionary = ReadyDictionary::factory()->create([
+            'name' => 'Demo English',
+            'language' => 'English',
+        ]);
+        ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $readyDictionary->id,
+            'word' => 'Apple',
+            'translation' => 'apple',
+            'part_of_speech' => 'noun',
+        ]);
+
+        $this->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'ready_dictionary_ids' => [$readyDictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 1,
+        ]);
+
+        $gameSession = GameSession::query()->firstOrFail();
+
+        $this->get(route('remainder.sessions.show', $gameSession))
+            ->assertOk()
+            ->assertSee('Demo mode — results are not saved')
+            ->assertSee('Apple');
+
+        Livewire::test(Show::class, ['gameSession' => $gameSession])
+            ->assertSee('Demo mode — results are not saved')
+            ->set('answer', 'apple')
+            ->call('submitAnswer')
+            ->assertSet('showFeedback', true)
+            ->call('continueToNext')
+            ->assertSee('Remainder results')
+            ->assertSee('Correct 1 of 1.');
+
+        $gameSession->refresh();
+        $this->assertSame(GameSession::STATUS_FINISHED, $gameSession->status);
+        $this->assertSame(1, $gameSession->correct_answers);
+    }
+
+    public function test_demo_session_does_not_update_remainder_mistake_flags(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = $this->createDictionaryForUser($user, 'Personal deck', 'English');
+        $readyDictionary = ReadyDictionary::factory()->create([
+            'name' => 'Demo English',
+            'language' => 'English',
+        ]);
+        ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $readyDictionary->id,
+            'word' => 'Apple',
+            'translation' => 'apple',
+            'part_of_speech' => 'noun',
+        ]);
+
+        $this->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'ready_dictionary_ids' => [$readyDictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 1,
+        ]);
+
+        $gameSession = GameSession::query()->firstOrFail();
+        $snapshotWord = $gameSession->items()->firstOrFail()->word;
+        $dictionary->words()->attach($snapshotWord->id);
+
+        Livewire::test(Show::class, ['gameSession' => $gameSession])
+            ->set('answer', 'wrong answer')
+            ->call('submitAnswer');
+
+        $this->assertFalse($snapshotWord->refresh()->remainder_had_mistake);
+    }
+
     public function test_game_can_combine_personal_and_ready_dictionaries(): void
     {
         $user = User::factory()->create();

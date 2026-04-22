@@ -4,6 +4,7 @@ return [
     'settings' => [
         'title' => 'Remainder',
         'description' => 'is a game for reminding words.',
+        'demo_note' => 'Demo mode: you are practicing with ready-made dictionaries.',
         'setup_eyebrow' => 'Remainder setup',
         'setup_title' => 'Configure your next repetition session',
         'setup_subtitle' => 'Choose how you want to practice, which dictionaries to include, and how focused the round should be.',
@@ -33,6 +34,8 @@ return [
             'ready_available_aria' => 'Available ready dictionaries',
             'empty_title' => 'No dictionaries yet.',
             'empty_text' => 'Create a dictionary first, then come back here to configure a repetition session.',
+            'demo_empty_title' => 'No personal dictionaries yet',
+            'demo_empty_text' => 'In demo mode, personal dictionaries are unavailable. Choose ready dictionaries to start a practice round.',
             'ready_empty_title' => 'No ready dictionaries yet.',
             'ready_empty_text' => 'Ready dictionaries will appear here when they are added.',
             'select_all' => 'Select all dictionaries',
@@ -60,6 +63,7 @@ return [
             'manual' => 'Manual translation input',
         ],
         'progress' => 'Word :current of :total',
+        'demo_banner' => 'Demo mode — results are not saved',
         'feedback' => [
             'correct' => 'Correct',
             'incorrect' => 'Incorrect',
@@ -87,6 +91,7 @@ return [
     'messages' => [
         'start' => [
             'not_owner' => 'You can use only your own dictionaries in the game configuration.',
+            'demo_user_dictionaries' => 'Demo mode can use only ready dictionaries.',
             'ready_not_found' => 'The selected ready dictionary is not available.',
             'no_words' => 'No words matched the selected dictionaries and filters.',
             'partial_notice' => 'Only :count :word_label matched the current filters, so the game was created with :count.',

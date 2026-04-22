@@ -6,6 +6,7 @@
 
 @section('content')
     @php
+        $isDemoMode = auth()->guest();
         $partOfSpeechLabels = \App\Support\PartOfSpeechCatalog::labelsWithAll();
         $initialDictionaryIds = collect(old('dictionary_ids', []))
             ->map(fn ($id) => (int) $id)
@@ -38,6 +39,9 @@
                         <h1 class="remainder-title">{{ __('remainder.settings.title') }}</h1>
                         <p class="remainder-description">{{ __('remainder.settings.description') }}</p>
                     </div>
+                    @if ($isDemoMode)
+                        <p class="remainder-demo-note">{{ __('remainder.settings.demo_note') }}</p>
+                    @endif
                 </div>
             </section>
 
@@ -287,8 +291,12 @@
                                 </div>
                             @else
                                 <div class="remainder-empty-state">
-                                    <p class="remainder-empty-state__title">{{ __('remainder.settings.dictionaries.empty_title') }}</p>
-                                    <p class="remainder-empty-state__text">{{ __('remainder.settings.dictionaries.empty_text') }}</p>
+                                    <p class="remainder-empty-state__title">
+                                        {{ $isDemoMode ? __('remainder.settings.dictionaries.demo_empty_title') : __('remainder.settings.dictionaries.empty_title') }}
+                                    </p>
+                                    <p class="remainder-empty-state__text">
+                                        {{ $isDemoMode ? __('remainder.settings.dictionaries.demo_empty_text') : __('remainder.settings.dictionaries.empty_text') }}
+                                    </p>
                                 </div>
                             @endif
                         </div>

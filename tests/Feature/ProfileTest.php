@@ -25,10 +25,17 @@ class ProfileTest extends TestCase
             ->assertRedirect('/login');
     }
 
-    public function test_guest_is_redirected_from_remainder_page(): void
+    public function test_guest_can_open_remainder_page_as_demo_mode(): void
     {
         $this->get('/remainder')
-            ->assertRedirect('/login');
+            ->assertOk()
+            ->assertSee('Demo mode: you are practicing with ready-made dictionaries.')
+            ->assertSee('No personal dictionaries yet')
+            ->assertSee('Ready dictionaries')
+            ->assertSee('Sign up')
+            ->assertSee('Log in')
+            ->assertDontSee('My Dictionaries')
+            ->assertDontSee('Log out');
     }
 
     public function test_guest_can_open_ready_dictionaries_page_as_demo_entry(): void

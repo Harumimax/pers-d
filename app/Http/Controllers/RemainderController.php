@@ -49,8 +49,10 @@ class RemainderController extends Controller
         HeaderNavigationService $headerNavigationService,
     ): View
     {
-        abort_unless($request->user() !== null, 401);
-        abort_if($gameSession->user_id !== $request->user()->id, 403);
+        if (! $gameSession->isDemo()) {
+            abort_unless($request->user() !== null, 401);
+            abort_if($gameSession->user_id !== $request->user()->id, 403);
+        }
 
         return view('remainder-show', [
             'gameSession' => $gameSession,

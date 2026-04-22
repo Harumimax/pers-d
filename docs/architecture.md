@@ -18,13 +18,13 @@
   - `POST /interface-language` -> stores `ru|en` in session, also updates authenticated user's preferred locale when available, and redirects back
   - `/ready-dictionaries` -> `ReadyDictionariesController@index`, also used as the guest Prepared dictionaries demo entry page
   - `/ready-dictionaries/{readyDictionary}` -> `App\Livewire\ReadyDictionaries\Show`, readable by guests as part of demo mode
+  - `/remainder` -> `RemainderController@index`, available to guests as demo Remainder using ready dictionaries only
+  - `POST /remainder/sessions` -> `RemainderController@store`, creates either authenticated user sessions or guest demo sessions
+  - `GET /remainder/sessions/{gameSession}` -> `RemainderController@showSession`, allows owners to open user sessions and guests to open demo sessions
 - Authenticated routes:
   - `/dashboard` -> redirects to dictionaries index
   - `/profile` -> `ProfileController`
   - `/about` -> `AboutController`
-  - `/remainder` -> `RemainderController@index`
-  - `POST /remainder/sessions` -> `RemainderController@store`
-  - `GET /remainder/sessions/{gameSession}` -> `RemainderController@showSession`
   - `/dictionaries` -> `App\Livewire\Dictionaries\Index`
   - `/dictionaries/{dictionary}` -> `App\Livewire\Dictionaries\Show`
 
@@ -43,9 +43,9 @@
   - sends email through Laravel's mail layer
   - persists delivery status in `about_contact_messages`
 - `App\Http\Controllers\RemainderController`
-  - renders remainder settings page
-  - starts manual game sessions
-  - renders the game session page shell
+  - renders remainder settings page for authenticated users and guests
+  - starts user game sessions or guest demo sessions
+  - renders the game session page shell with owner/demo access checks
 - `App\Http\Controllers\ReadyDictionariesController`
   - renders the Prepared dictionaries catalog page for authenticated users and guests
   - serves as the first guest demo entry point
@@ -89,6 +89,7 @@
   - copying ready words into personal dictionaries remains available only to authenticated users
 - `App\Livewire\Remainder\Show`
   - drives one active game session on the remainder game page
+  - allows demo sessions while preserving owner checks for user sessions
   - renders either the current question, immediate feedback, or the final result summary
   - delegates answer checking and session transitions to `GameEngineService`
 
@@ -164,6 +165,7 @@
 - Remainder game services live under `app/Services/Remainder`
   - `PrepareGameService`
     - validates dictionary ownership at the domain layer
+    - treats a null user as demo mode and allows ready dictionaries only
     - collects words using the selected configuration
     - removes duplicates
     - creates the snapshot session and session items
@@ -175,6 +177,7 @@
     - checks manual answers and selected choice answers
     - updates progress counters and finished status
     - updates `words.remainder_had_mistake` for finished personal-dictionary session items
+    - skips `words.remainder_had_mistake` updates for demo sessions
     - produces final result summaries
 
 ## Domain Model
@@ -236,7 +239,7 @@
 - Model: `App\Models\GameSession`
 - Purpose: stores one immutable snapshot of a started game
 - Core fields:
-  - `user_id`
+  - `user_id` nullable for guest demo sessions
   - `mode`
   - `direction`
   - `total_words`
@@ -248,6 +251,8 @@
 - Relationships:
   - `belongsTo(User::class)`
   - `hasMany(GameSessionItem::class)->orderBy('order_index')`
+- Behavior:
+  - `isDemo()` returns true when `user_id` is null or `config_snapshot['is_demo']` is true
 
 ### GameSessionItem
 - Model: `App\Models\GameSessionItem`
@@ -368,10 +373,11 @@
 
 #### `game_sessions`
 - Created in `2026_04_10_000008_create_game_sessions_table.php`
+- Extended in `2026_04_22_000019_make_game_sessions_user_id_nullable.php`
 - Purpose: stores one started game snapshot
 - Fields:
   - `id`
-  - `user_id` -> FK to `users.id`
+  - `user_id` nullable -> FK to `users.id`
   - `mode`
   - `direction`
   - `total_words`
@@ -517,16 +523,20 @@
 
 ## Remainder Game Flow
 - Settings page (`/remainder`) uses Blade + Alpine for configuration UI
+- Guests can open `/remainder` in demo mode; the UI shows no personal dictionaries and makes ready dictionaries the available source
 - Start action posts configuration to `RemainderController@store`
 - `StartGameRequest` validates request shape
+- guest requests may include only `ready_dictionary_ids`; `dictionary_ids` are rejected
 - `PrepareGameService`:
-  - verifies dictionary ownership
+  - verifies dictionary ownership for authenticated users
+  - creates demo sessions with `user_id = null` and `config_snapshot['is_demo'] = true`
   - filters available words by selected personal dictionaries, selected ready dictionaries, and parts of speech
   - deduplicates personal words across many-to-many dictionary selection
   - randomizes order
   - creates `GameSession`
   - creates `GameSessionItem` snapshot rows, including `part_of_speech_snapshot`
-- Personal dictionary session items store the original `words.id`, so `GameEngineService` updates `words.remainder_had_mistake` for words attached to the current user's dictionaries when the session finishes
+- Personal dictionary session items store the original `words.id`, so `GameEngineService` updates `words.remainder_had_mistake` for words attached to the current user's dictionaries when a non-demo session finishes
+- Demo sessions never update `words.remainder_had_mistake`
 - Ready dictionary words are stored in separate `ready_dictionary_words`; when they are selected for a game, `PrepareGameService` copies them into `words` as session snapshot records so the existing `game_session_items.word_id` flow remains stable
 - Ready dictionary snapshot words are not attached to `user_dictionary_word`, so Remainder mistake flags should ignore them when applying finished-session updates
 - if mode is `choice`, `ChoiceOptionsBuilder` also precomputes `options_json` for every session item from the full filtered answer pool, while `words_count` still controls only the number of rounds
