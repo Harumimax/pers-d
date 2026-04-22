@@ -740,6 +740,28 @@ class RemainderGameTest extends TestCase
         $this->assertSame('APPLE', $item->user_answer);
     }
 
+    public function test_manual_answer_is_correct_when_it_matches_one_translation_option(): void
+    {
+        $user = User::factory()->create();
+        $gameSession = $this->startGameForWords($user, [
+            ['word' => 'can', 'translation' => 'мочь, уметь', 'part_of_speech' => 'verb'],
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['gameSession' => $gameSession])
+            ->set('answer', ' Мочь ')
+            ->call('submitAnswer')
+            ->assertSet('showFeedback', true);
+
+        $gameSession->refresh();
+        $item = $gameSession->items()->firstOrFail();
+
+        $this->assertSame(GameSession::STATUS_FINISHED, $gameSession->status);
+        $this->assertSame(1, $gameSession->correct_answers);
+        $this->assertTrue((bool) $item->is_correct);
+        $this->assertSame('Мочь', $item->user_answer);
+    }
+
     public function test_results_are_shown_only_after_continue_on_the_last_answer(): void
     {
         $user = User::factory()->create();

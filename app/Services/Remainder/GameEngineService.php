@@ -154,7 +154,7 @@ class GameEngineService
 
         return [
             $sanitizedAnswer,
-            $this->normalizeForComparison($sanitizedAnswer) === $this->normalizeForComparison($currentItem->correct_answer),
+            $this->isManualAnswerCorrect($sanitizedAnswer, $currentItem->correct_answer),
         ];
     }
 
@@ -168,6 +168,20 @@ class GameEngineService
     private function normalizeForComparison(string $value): string
     {
         return mb_strtolower($this->sanitizeAnswer($value));
+    }
+
+    private function isManualAnswerCorrect(string $answer, string $correctAnswer): bool
+    {
+        $normalizedAnswer = $this->normalizeForComparison($answer);
+
+        if ($normalizedAnswer === $this->normalizeForComparison($correctAnswer)) {
+            return true;
+        }
+
+        return collect(preg_split('/[,;]+/u', $correctAnswer) ?: [])
+            ->map(fn (string $answerOption): string => $this->normalizeForComparison($answerOption))
+            ->filter()
+            ->contains($normalizedAnswer);
     }
 
     private function syncRemainderMistakeFlags(GameSession $session): void
