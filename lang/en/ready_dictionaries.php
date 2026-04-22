@@ -1,12 +1,12 @@
 <?php
 
 return [
-    'title' => 'Ready dictionaries',
+    'title' => 'Prepared dictionaries',
     'subtitle' => 'Curated dictionaries for future practice',
-    'description' => 'This page will collect prepared dictionaries that are available to all signed-in users. In future updates, you will be able to use them in Remainder practice sessions or copy useful words into your own dictionaries.',
-    'list_aria' => 'Ready dictionaries list',
+    'description' => 'Browse prepared word sets without registration. Sign up when you want to copy useful words into your own dictionaries and continue practicing.',
+    'list_aria' => 'Prepared dictionaries list',
     'filters' => [
-        'aria' => 'Ready dictionaries filters',
+        'aria' => 'Prepared dictionaries filters',
         'language' => 'Language',
         'level' => 'Level',
         'part_of_speech' => 'Part of speech',
@@ -17,14 +17,14 @@ return [
         'reset' => 'Reset',
     ],
     'empty' => [
-        'title' => 'No ready dictionaries found',
-        'text' => 'Try changing the filters or come back later when more ready dictionaries are added.',
+        'title' => 'No prepared dictionaries found',
+        'text' => 'Try changing the filters or come back later when more prepared dictionaries are added.',
     ],
     'card' => [
-        'open_aria' => 'Open ready dictionary :name',
+        'open_aria' => 'Open prepared dictionary :name',
     ],
     'show' => [
-        'subtitle' => 'A ready dictionary in :language with :count words. Created :date.',
+        'subtitle' => 'A prepared dictionary in :language with :count words. Created :date.',
         'transfer' => [
             'aria' => 'Choose a personal dictionary for :word',
             'title' => 'Add to dictionary',

@@ -253,20 +253,6 @@ img {
     color: var(--text-color);
 }
 
-.hero-demo-note {
-    display: inline-flex;
-    align-items: center;
-    margin: 0 0 24px;
-    padding: 10px 14px;
-    border: 1px solid rgba(30, 58, 138, 0.18);
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.78);
-    color: var(--primary-color);
-    font-size: 0.94rem;
-    font-weight: 700;
-    line-height: 1.35;
-}
-
 .hero-actions {
     display: flex;
     align-items: center;

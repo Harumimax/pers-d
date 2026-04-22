@@ -16,7 +16,7 @@
 - Public route:
   - `/` -> `welcome` view
   - `POST /interface-language` -> stores `ru|en` in session, also updates authenticated user's preferred locale when available, and redirects back
-  - `/ready-dictionaries` -> `ReadyDictionariesController@index`, also used as the guest demo entry page
+  - `/ready-dictionaries` -> `ReadyDictionariesController@index`, also used as the guest Prepared dictionaries demo entry page
   - `/ready-dictionaries/{readyDictionary}` -> `App\Livewire\ReadyDictionaries\Show`, readable by guests as part of demo mode
 - Authenticated routes:
   - `/dashboard` -> redirects to dictionaries index
@@ -47,7 +47,7 @@
   - starts manual game sessions
   - renders the game session page shell
 - `App\Http\Controllers\ReadyDictionariesController`
-  - renders the Ready dictionaries catalog page for authenticated users and guests
+  - renders the Prepared dictionaries catalog page for authenticated users and guests
   - serves as the first guest demo entry point
   - delegates ready dictionary catalog queries and filter normalization to `ReadyDictionaryCatalogService`
 - Header dropdown data is assembled through `HeaderNavigationService` so shared layouts receive personal dictionaries and ready dictionaries without querying from Blade
@@ -148,13 +148,13 @@
     - computes overall answer accuracy across all game sessions
 - Ready dictionary read-model services live under `app/Services/ReadyDictionaries`
   - `ReadyDictionaryCatalogService`
-    - returns ready dictionaries for the authenticated page
+    - returns developer-managed prepared dictionaries for authenticated and guest catalog pages
     - supports backend filters for language, level, and part of speech
     - normalizes unsupported filters so query parameters do not break the page
 - Navigation read-model services live under `app/Services/Navigation`
   - `HeaderNavigationService`
     - returns the authenticated user's personal dictionaries for the `My Dictionaries` dropdown
-    - returns all ready dictionaries for the `Ready dictionaries` dropdown
+    - returns all ready dictionaries for the Prepared dictionaries dropdown
     - keeps shared layouts free from direct database queries
 - Catalogs under `app/Support`
   - `PartOfSpeechCatalog`
@@ -210,7 +210,7 @@
 
 ### ReadyDictionary
 - Model: `App\Models\ReadyDictionary`
-- Purpose: stores developer-managed dictionaries that are not owned by a user
+- Purpose: stores developer-managed prepared dictionaries that are not owned by a user and are safe to expose to guests as demo content
 - Fillable:
   - `name`
   - `language`
@@ -222,7 +222,7 @@
 
 ### ReadyDictionaryWord
 - Model: `App\Models\ReadyDictionaryWord`
-- Purpose: stores words that belong to developer-managed ready dictionaries
+- Purpose: stores words that belong to developer-managed prepared dictionaries
 - Fillable:
   - `ready_dictionary_id`
   - `word`

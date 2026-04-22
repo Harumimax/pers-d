@@ -50,12 +50,6 @@
                     {{ __('welcome.description_secondary') }}
                 </p>
 
-                @guest
-                    <p class="hero-demo-note">
-                        {{ __('welcome.demo_note') }}
-                    </p>
-                @endguest
-
                 <div class="hero-actions">
                     @auth
                         <a href="{{ url('/dashboard') }}" class="btn btn-primary btn-large">{{ __('welcome.actions.dictionaries') }}</a>

@@ -233,9 +233,9 @@ class ReadyDictionaryCatalogTest extends TestCase
         $this->actingAs($user)
             ->get('/ready-dictionaries?language=English&level=A1&part_of_speech=noun')
             ->assertOk()
-            ->assertSee('Ready dictionaries')
+            ->assertSee('Prepared dictionaries')
             ->assertSee('English nouns')
-            ->assertSee('Open ready dictionary English nouns')
+            ->assertSee('Open prepared dictionary English nouns')
             ->assertSee(route('ready-dictionaries.show', ReadyDictionary::where('name', 'English nouns')->first()), false)
             ->assertSee('English')
             ->assertSee('2 words')
@@ -287,7 +287,7 @@ class ReadyDictionaryCatalogTest extends TestCase
             ->get(route('ready-dictionaries.show', $dictionary))
             ->assertOk()
             ->assertSee('Readonly English')
-            ->assertSee('A ready dictionary in')
+            ->assertSee('A prepared dictionary in')
             ->assertSee('Word List')
             ->assertSee('apple')
             ->assertSee('яблоко')
@@ -310,6 +310,10 @@ class ReadyDictionaryCatalogTest extends TestCase
             'name' => 'Readonly English',
             'language' => 'English',
         ]);
+        $otherDictionary = ReadyDictionary::factory()->create([
+            'name' => 'Travel Prepared',
+            'language' => 'English',
+        ]);
 
         ReadyDictionaryWord::factory()->create([
             'ready_dictionary_id' => $dictionary->id,
@@ -322,15 +326,41 @@ class ReadyDictionaryCatalogTest extends TestCase
         $this->get(route('ready-dictionaries.show', $dictionary))
             ->assertOk()
             ->assertSee('Readonly English')
-            ->assertSee('Ready dictionaries')
+            ->assertSee('Prepared dictionaries')
             ->assertSee('Remainder')
             ->assertSee('Sign up')
             ->assertSee('Log in')
+            ->assertSee('Travel Prepared')
+            ->assertSee(route('ready-dictionaries.show', $otherDictionary), false)
             ->assertSee('apple')
             ->assertSee('Fruit.')
             ->assertSee('Sign up and create your first dictionary.')
+            ->assertSee(route('register'), false)
             ->assertDontSee('My Dictionaries')
             ->assertDontSee('Log out');
+    }
+
+    public function test_guest_cannot_copy_ready_dictionary_word_to_personal_dictionary(): void
+    {
+        $dictionary = ReadyDictionary::factory()->create([
+            'name' => 'Readonly English',
+            'language' => 'English',
+        ]);
+        $readyWord = ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $dictionary->id,
+            'word' => 'apple',
+            'translation' => 'apple',
+            'part_of_speech' => 'noun',
+        ]);
+
+        Livewire::test(\App\Livewire\ReadyDictionaries\Show::class, ['readyDictionary' => $dictionary])
+            ->call('transferWordToDictionary', $readyWord->id, 1)
+            ->assertUnauthorized();
+
+        $this->assertDatabaseMissing('words', [
+            'word' => 'apple',
+            'translation' => 'apple',
+        ]);
     }
 
     public function test_ready_dictionary_word_can_be_copied_to_users_dictionary(): void

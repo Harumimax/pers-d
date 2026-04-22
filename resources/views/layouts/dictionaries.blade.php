@@ -78,12 +78,27 @@
                     <button type="submit" class="btn btn-secondary">{{ __('common.links.logout') }}</button>
                 </form>
             @else
-                <a
-                    href="{{ route('ready-dictionaries.index') }}"
-                    class="dictionaries-header-nav__link {{ request()->routeIs('ready-dictionaries.*') ? 'dictionaries-header-nav__link--active' : '' }}"
-                >
-                    {{ __('ready_dictionaries.title') }}
-                </a>
+                <div class="dictionaries-header-nav__dropdown">
+                    <a
+                        href="{{ route('ready-dictionaries.index') }}"
+                        class="dictionaries-header-nav__link {{ request()->routeIs('ready-dictionaries.*') ? 'dictionaries-header-nav__link--active' : '' }}"
+                    >
+                        {{ __('common.links.ready_dictionaries') }}
+                    </a>
+
+                    @if (($headerReadyDictionaries ?? collect())->isNotEmpty())
+                        <div class="dictionaries-header-nav__menu" aria-label="{{ __('common.links.ready_dictionaries') }}">
+                            @foreach ($headerReadyDictionaries as $headerReadyDictionary)
+                                <a
+                                    href="{{ route('ready-dictionaries.show', $headerReadyDictionary) }}"
+                                    class="dictionaries-header-nav__menu-link"
+                                >
+                                    {{ $headerReadyDictionary->name }}
+                                </a>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
                 <a href="{{ route('remainder') }}" class="dictionaries-header-nav__link">
                     {{ __('common.links.remainder') }}
                 </a>

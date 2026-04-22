@@ -135,7 +135,9 @@
                                                             <p class="word-list-transfer-menu__empty">{{ __('ready_dictionaries.show.transfer.empty') }}</p>
                                                         @endif
                                                     @else
-                                                        <p class="word-list-transfer-menu__empty">{{ __('ready_dictionaries.show.transfer.guest_empty') }}</p>
+                                                        <a href="{{ route('register') }}" class="word-list-transfer-menu__auth-link" role="menuitem">
+                                                            {{ __('ready_dictionaries.show.transfer.guest_empty') }}
+                                                        </a>
                                                     @endauth
                                                 </div>
                                             </div>
