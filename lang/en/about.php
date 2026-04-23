@@ -22,7 +22,7 @@ return [
         'guest_title' => 'Create account to contact us from this page',
         'guest_text' => 'You can read about WordKeeper in demo mode. Create account when you want to send feedback, save your progress, and build your own dictionaries.',
         'status' => [
-            'success' => 'Your message has been sent successfully.',
+            'success' => 'Your message has been received and will be sent shortly.',
             'error' => 'We could not send your message right now. Please try again a little later.',
         ],
         'mail' => [

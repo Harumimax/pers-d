@@ -20,7 +20,7 @@
   - `/ready-dictionaries/{readyDictionary}` -> `App\Livewire\ReadyDictionaries\Show`, readable by guests as part of demo mode
   - `/remainder` -> `RemainderController@index`, available to guests as demo Remainder using ready dictionaries only
   - `POST /remainder/sessions` -> `RemainderController@store`, creates either authenticated user sessions or guest demo sessions
-  - `GET /remainder/sessions/{gameSession}` -> `RemainderController@showSession`, allows owners to open user sessions and guests to open demo sessions
+  - `GET /remainder/sessions/{gameSession}` -> `RemainderController@showSession`, allows owners to open user sessions and allows guest demo sessions only via signed URLs bound to the current browser session
   - `/about` -> `AboutController`, readable by guests with demo banner and guest header
 - Authenticated routes:
   - `/dashboard` -> redirects to dictionaries index
@@ -41,12 +41,13 @@
 - `App\Http\Controllers\AboutContactController`
   - handles authenticated About contact form submissions
   - validates input through `StoreAboutContactRequest`
-  - sends email through Laravel's mail layer
+  - enqueues email delivery through a queued job instead of sending synchronously in the request cycle
   - persists delivery status in `about_contact_messages`
 - `App\Http\Controllers\RemainderController`
   - renders remainder settings page for authenticated users and guests
   - starts user game sessions or guest demo sessions
   - renders the game session page shell with owner/demo access checks
+  - signs guest demo session URLs and binds them to the current session/browser context
 - `App\Http\Controllers\ReadyDictionariesController`
   - renders the Prepared dictionaries catalog page for authenticated users and guests
   - serves as the first guest demo entry point
@@ -55,6 +56,8 @@
 - Auth controllers are the standard Breeze-style controllers under `app/Http/Controllers/Auth`
 - Dictionaries are not handled by traditional controllers; they are handled by Livewire page components
 - Locale switching is currently handled by a small route closure plus web middleware, not by a dedicated controller
+- About contact submissions are protected by a dedicated `about-contact` rate limiter
+- Guest Remainder demo session creation is throttled inside `RemainderController` per current browser session
 
 ### Middleware
 - `App\Http\Middleware\SetLocale`
@@ -144,7 +147,9 @@
   - `StoreAboutContactRequest`
   - `App\Mail\AboutContactMessage`
   - `App\Models\AboutContactMessage`
-  - email is sent synchronously in the first implementation slice
+  - `App\Jobs\SendAboutContactMessageJob`
+  - the controller stores a pending message and pushes delivery to the queue
+  - delivery failures are persisted with both a safe normalized error code and the raw exception message for diagnostics
 - Profile read-model services live under `app/Services/Profile`
   - `RemainderStatisticsService`
     - aggregates finished game sessions for the authenticated user's profile page
@@ -294,6 +299,7 @@
   - `delivery_status`
   - `delivered_at`
   - `delivery_error`
+  - `delivery_error_message`
 
 ## Database Structure
 
@@ -431,6 +437,7 @@
   - `delivery_status`
   - `delivered_at` nullable
   - `delivery_error` nullable
+  - `delivery_error_message` nullable
   - `created_at`
   - `updated_at`
 
@@ -540,6 +547,7 @@
 - Start action posts configuration to `RemainderController@store`
 - `StartGameRequest` validates request shape
 - guest requests may include only `ready_dictionary_ids`; `dictionary_ids` are rejected
+- guest session creation is throttled per browser session to reduce demo abuse and unbounded snapshot creation
 - `PrepareGameService`:
   - verifies dictionary ownership for authenticated users
   - creates demo sessions with `user_id = null` and `config_snapshot['is_demo'] = true`
@@ -555,6 +563,7 @@
 - Ready dictionary snapshot words are not attached to `user_dictionary_word`, so Remainder mistake flags should ignore them when applying finished-session updates
 - if mode is `choice`, `ChoiceOptionsBuilder` also precomputes `options_json` for every session item from the full filtered answer pool, while `words_count` still controls only the number of rounds
 - Game page (`/remainder/sessions/{gameSession}`) renders a Blade shell with embedded `App\Livewire\Remainder\Show`
+- guest demo session pages are reachable only through temporary signed URLs that were generated during session creation and are also checked against the current session state
 - `GameEngineService` validates and checks each answer, updates counters, and finishes the session after the last item
 - choice-mode warnings about incomplete option sets are stored in `config_snapshot['warnings']` and shown on the game screen
 - Result screen is rendered by the same Livewire component when the session status becomes `finished`
@@ -565,6 +574,7 @@
 - About page global dictionary totals include both user dictionaries and ready dictionaries
 - About page global word totals include user dictionary-word pivot entries plus ready dictionary words, not unique `words` rows only
 - About contact form submissions are currently available only to authenticated users and are delivered to a fixed recipient email while also being stored in `about_contact_messages`
+- About contact form submissions are throttled per authenticated user and no longer wait for SMTP inside the HTTP response cycle
 - Search, sorting, part-of-speech filter, and pagination are all handled inside `App\Livewire\Dictionaries\Show`
 - Dictionary header dropdown data is passed from Livewire/controllers into the layout; the layout should not query dictionaries directly
 - External API access should continue to go through service abstractions, not be embedded into Livewire components

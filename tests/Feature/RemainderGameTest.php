@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\URL;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -109,14 +110,20 @@ class RemainderGameTest extends TestCase
         ]);
 
         $gameSession = GameSession::query()->firstOrFail();
+        $redirectLocation = $response->headers->get('Location');
 
-        $response->assertRedirect(route('remainder.sessions.show', $gameSession));
+        $response->assertRedirect($redirectLocation);
         $this->assertNull($gameSession->user_id);
         $this->assertTrue($gameSession->isDemo());
         $this->assertTrue($gameSession->config_snapshot['is_demo']);
         $this->assertSame([], $gameSession->config_snapshot['dictionary_ids']);
         $this->assertSame([$readyDictionary->id], $gameSession->config_snapshot['ready_dictionary_ids']);
         $this->assertSame(1, $gameSession->items()->count());
+        $this->assertNotNull($redirectLocation);
+        $this->assertStringContainsString('/remainder/sessions/'.$gameSession->id, $redirectLocation);
+
+        $signedRequest = \Illuminate\Http\Request::create($redirectLocation, 'GET');
+        $this->assertTrue(URL::hasValidSignature($signedRequest));
     }
 
     public function test_guest_cannot_start_demo_game_from_user_dictionary(): void
@@ -151,7 +158,7 @@ class RemainderGameTest extends TestCase
             'part_of_speech' => 'noun',
         ]);
 
-        $this->post(route('remainder.sessions.store'), [
+        $response = $this->post(route('remainder.sessions.store'), [
             'mode' => GameSession::MODE_MANUAL,
             'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
             'ready_dictionary_ids' => [$readyDictionary->id],
@@ -160,8 +167,9 @@ class RemainderGameTest extends TestCase
         ]);
 
         $gameSession = GameSession::query()->firstOrFail();
+        $sessionUrl = $response->headers->get('Location');
 
-        $this->get(route('remainder.sessions.show', $gameSession))
+        $this->get($sessionUrl)
             ->assertOk()
             ->assertSee('You are in demo mode')
             ->assertSee('Your progress is not saved')
@@ -183,6 +191,93 @@ class RemainderGameTest extends TestCase
         $gameSession->refresh();
         $this->assertSame(GameSession::STATUS_FINISHED, $gameSession->status);
         $this->assertSame(1, $gameSession->correct_answers);
+    }
+
+    public function test_guest_cannot_open_demo_session_without_signed_url(): void
+    {
+        $readyDictionary = ReadyDictionary::factory()->create([
+            'name' => 'Demo English',
+            'language' => 'English',
+        ]);
+        ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $readyDictionary->id,
+            'word' => 'Apple',
+            'translation' => 'apple',
+            'part_of_speech' => 'noun',
+        ]);
+
+        $this->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'ready_dictionary_ids' => [$readyDictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 1,
+        ]);
+
+        $gameSession = GameSession::query()->firstOrFail();
+
+        $this->get(route('remainder.sessions.show', $gameSession))
+            ->assertForbidden();
+    }
+
+    public function test_guest_cannot_open_demo_session_from_another_browser_session_context(): void
+    {
+        $readyDictionary = ReadyDictionary::factory()->create([
+            'name' => 'Demo English',
+            'language' => 'English',
+        ]);
+        ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $readyDictionary->id,
+            'word' => 'Apple',
+            'translation' => 'apple',
+            'part_of_speech' => 'noun',
+        ]);
+
+        $response = $this->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'ready_dictionary_ids' => [$readyDictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 1,
+        ]);
+
+        $sessionUrl = $response->headers->get('Location');
+        $this->flushSession();
+
+        $this->get($sessionUrl)
+            ->assertForbidden();
+    }
+
+    public function test_guest_demo_session_creation_is_throttled(): void
+    {
+        $readyDictionary = ReadyDictionary::factory()->create([
+            'name' => 'Demo English',
+            'language' => 'English',
+        ]);
+        ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $readyDictionary->id,
+            'word' => 'Apple',
+            'translation' => 'apple',
+            'part_of_speech' => 'noun',
+        ]);
+
+        foreach (range(1, 5) as $attempt) {
+            $this->post(route('remainder.sessions.store'), [
+                'mode' => GameSession::MODE_MANUAL,
+                'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+                'ready_dictionary_ids' => [$readyDictionary->id],
+                'parts_of_speech' => ['all'],
+                'words_count' => 1,
+            ])->assertRedirect();
+        }
+
+        $this->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'ready_dictionary_ids' => [$readyDictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 1,
+        ])->assertStatus(429);
     }
 
     public function test_demo_session_does_not_update_remainder_mistake_flags(): void

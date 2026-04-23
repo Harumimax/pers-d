@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Jobs\SendAboutContactMessageJob;
 use App\Mail\AboutContactMessage as AboutContactMail;
 use App\Models\AboutContactMessage;
 use App\Models\GameSession;
@@ -11,7 +12,9 @@ use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Queue;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -157,7 +160,7 @@ class ProfileTest extends TestCase
     public function test_authenticated_user_can_send_about_contact_form(): void
     {
         $user = User::factory()->create();
-        Mail::fake();
+        Queue::fake();
 
         $this->actingAs($user)
             ->post(route('about.contact.store'), [
@@ -172,20 +175,18 @@ class ProfileTest extends TestCase
             'contact_email' => 'user@example.com',
             'subject' => 'Local delivery works',
             'message' => 'This message should be emailed and stored.',
-            'delivery_status' => AboutContactMessage::STATUS_SENT,
+            'delivery_status' => AboutContactMessage::STATUS_PENDING,
         ]);
 
-        Mail::assertSent(AboutContactMail::class, function (AboutContactMail $mail): bool {
-            return $mail->hasTo((string) config('mail.about_contact_recipient'))
-                && $mail->contactMessage->contact_email === 'user@example.com'
-                && $mail->contactMessage->subject === 'Local delivery works';
+        Queue::assertPushed(SendAboutContactMessageJob::class, function (SendAboutContactMessageJob $job): bool {
+            return $job->locale === app()->getLocale();
         });
     }
 
     public function test_about_contact_form_validation_rejects_invalid_input(): void
     {
         $user = User::factory()->create();
-        Mail::fake();
+        Queue::fake();
 
         $this->actingAs($user)
             ->from(route('about'))
@@ -198,25 +199,17 @@ class ProfileTest extends TestCase
             ->assertSessionHasErrors(['contact_email', 'subject', 'message']);
 
         $this->assertDatabaseCount('about_contact_messages', 0);
-        Mail::assertNothingSent();
+        Queue::assertNothingPushed();
     }
 
-    public function test_about_contact_form_marks_message_as_failed_when_delivery_throws(): void
+    public function test_about_contact_form_marks_message_as_failed_when_dispatch_throws(): void
     {
         $user = User::factory()->create();
-        $recipient = (string) config('mail.about_contact_recipient');
-
-        Mail::shouldReceive('to')
-            ->once()
-            ->with($recipient)
-            ->andReturnSelf();
-        Mail::shouldReceive('locale')
-            ->once()
-            ->with(app()->getLocale())
-            ->andReturnSelf();
-        Mail::shouldReceive('send')
-            ->once()
-            ->andThrow(new RuntimeException('SMTP unavailable'));
+        $this->mock(Dispatcher::class, function ($mock): void {
+            $mock->shouldReceive('dispatch')
+                ->once()
+                ->andThrow(new RuntimeException('Queue unavailable'));
+        });
 
         $this->actingAs($user)
             ->from(route('about'))
@@ -233,7 +226,96 @@ class ProfileTest extends TestCase
             'subject' => 'Delivery issue',
             'message' => 'This message should end up with a failed status.',
             'delivery_status' => AboutContactMessage::STATUS_FAILED,
+            'delivery_error' => AboutContactMessage::ERROR_DISPATCH_FAILED,
+            'delivery_error_message' => 'Queue unavailable',
         ]);
+    }
+
+    public function test_about_contact_job_marks_message_as_sent_after_successful_delivery(): void
+    {
+        Mail::fake();
+
+        $contactMessage = AboutContactMessage::create([
+            'contact_email' => 'user@example.com',
+            'subject' => 'Queued delivery',
+            'message' => 'Queued delivery body.',
+            'delivery_status' => AboutContactMessage::STATUS_PENDING,
+        ]);
+
+        $job = new SendAboutContactMessageJob($contactMessage->id, 'en');
+        $job->handle();
+
+        Mail::assertSent(AboutContactMail::class, function (AboutContactMail $mail) use ($contactMessage): bool {
+            return $mail->hasTo((string) config('mail.about_contact_recipient'))
+                && $mail->contactMessage->is($contactMessage);
+        });
+
+        $this->assertDatabaseHas('about_contact_messages', [
+            'id' => $contactMessage->id,
+            'delivery_status' => AboutContactMessage::STATUS_SENT,
+            'delivery_error' => null,
+            'delivery_error_message' => null,
+        ]);
+    }
+
+    public function test_about_contact_job_marks_message_as_failed_with_safe_error_code_and_raw_message_when_mail_delivery_throws(): void
+    {
+        $recipient = (string) config('mail.about_contact_recipient');
+
+        Mail::shouldReceive('to')
+            ->once()
+            ->with($recipient)
+            ->andReturnSelf();
+        Mail::shouldReceive('locale')
+            ->once()
+            ->with('ru')
+            ->andReturnSelf();
+        Mail::shouldReceive('send')
+            ->once()
+            ->andThrow(new RuntimeException('SMTP unavailable'));
+
+        $contactMessage = AboutContactMessage::create([
+            'contact_email' => 'user@example.com',
+            'subject' => 'Delivery issue',
+            'message' => 'This message should end up with a failed status.',
+            'delivery_status' => AboutContactMessage::STATUS_PENDING,
+        ]);
+
+        $job = new SendAboutContactMessageJob($contactMessage->id, 'ru');
+        $job->handle();
+
+        $this->assertDatabaseHas('about_contact_messages', [
+            'id' => $contactMessage->id,
+            'delivery_status' => AboutContactMessage::STATUS_FAILED,
+            'delivery_error' => AboutContactMessage::ERROR_MAIL_TRANSPORT_FAILED,
+            'delivery_error_message' => 'SMTP unavailable',
+        ]);
+    }
+
+    public function test_about_contact_form_is_throttled_after_three_requests_per_minute(): void
+    {
+        Queue::fake();
+        $user = User::factory()->create();
+
+        foreach (range(1, 3) as $attempt) {
+            $this->actingAs($user)
+                ->post(route('about.contact.store'), [
+                    'contact_email' => 'user@example.com',
+                    'subject' => 'Attempt '.$attempt,
+                    'message' => 'Message '.$attempt,
+                ])
+                ->assertRedirect(route('about'));
+        }
+
+        $this->actingAs($user)
+            ->post(route('about.contact.store'), [
+                'contact_email' => 'user@example.com',
+                'subject' => 'Attempt 4',
+                'message' => 'Message 4',
+            ])
+            ->assertStatus(429);
+
+        $this->assertDatabaseCount('about_contact_messages', 3);
     }
 
     public function test_about_page_displays_global_statistics_for_all_users(): void

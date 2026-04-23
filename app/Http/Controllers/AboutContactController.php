@@ -3,12 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreAboutContactRequest;
-use App\Mail\AboutContactMessage as AboutContactMail;
+use App\Jobs\SendAboutContactMessageJob;
 use App\Models\AboutContactMessage;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 use Throwable;
 
 class AboutContactController extends Controller
@@ -23,23 +20,18 @@ class AboutContactController extends Controller
         ]);
 
         try {
-            Mail::to((string) config('mail.about_contact_recipient'))
-                ->locale(app()->getLocale())
-                ->send(new AboutContactMail($contactMessage));
-
-            $contactMessage->forceFill([
-                'delivery_status' => AboutContactMessage::STATUS_SENT,
-                'delivered_at' => Carbon::now(),
-                'delivery_error' => null,
-            ])->save();
+            SendAboutContactMessageJob::dispatch($contactMessage->id, app()->getLocale());
 
             return redirect()
                 ->route('about')
                 ->with('aboutContactStatus', __('about.contact.status.success'));
         } catch (Throwable $exception) {
+            report($exception);
+
             $contactMessage->forceFill([
                 'delivery_status' => AboutContactMessage::STATUS_FAILED,
-                'delivery_error' => Str::limit($exception->getMessage(), 1000),
+                'delivery_error' => AboutContactMessage::ERROR_DISPATCH_FAILED,
+                'delivery_error_message' => $exception->getMessage(),
             ])->save();
 
             return redirect()
