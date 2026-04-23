@@ -5,6 +5,22 @@
         </div>
     @endif
 
+    @if ($transferBannerMessage !== null)
+        <div
+            class="dictionary-show-transfer-alert dictionary-show-transfer-alert--{{ $transferBannerType }}"
+            role="{{ $transferBannerType === 'success' ? 'status' : 'alert' }}"
+        >
+            <span class="dictionary-show-transfer-alert__icon" aria-hidden="true">
+                @if ($transferBannerType === 'success')
+                    ✓
+                @else
+                    !
+                @endif
+            </span>
+            <span>{{ $transferBannerMessage }}</span>
+        </div>
+    @endif
+
     @if (! $showFeedback && $gameSession->status !== \App\Models\GameSession::STATUS_FINISHED && $gameSession->mode === \App\Models\GameSession::MODE_CHOICE && $sessionWarnings->isNotEmpty())
         @foreach ($sessionWarnings as $warning)
             <div class="remainder-game-banner remainder-game-banner--info">
@@ -63,12 +79,53 @@
                     <div class="remainder-game-errors__list">
                         @foreach ($resultSummary['incorrect_items'] as $item)
                             <article class="remainder-game-error-item">
-                                <p class="remainder-game-error-item__prompt">{{ __('remainder.game.feedback.prompt', ['value' => $item->prompt_text]) }}</p>
-                                <p class="remainder-game-error-item__answer">{{ __('remainder.game.feedback.your_answer', ['value' => $item->user_answer]) }}</p>
-                                <p class="remainder-game-error-item__answer">
-                                    {{ __('remainder.game.feedback.correct_answer') }}
-                                    <span class="remainder-game-reveal-answer">{{ $item->correct_answer }}</span>
-                                </p>
+                                <div class="remainder-game-error-item__content">
+                                    <p class="remainder-game-error-item__prompt">{{ __('remainder.game.feedback.prompt', ['value' => $item->prompt_text]) }}</p>
+                                    <p class="remainder-game-error-item__answer">{{ __('remainder.game.feedback.your_answer', ['value' => $item->user_answer]) }}</p>
+                                    <p class="remainder-game-error-item__answer">
+                                        {{ __('remainder.game.feedback.correct_answer') }}
+                                        <span class="remainder-game-reveal-answer">{{ $item->correct_answer }}</span>
+                                    </p>
+                                </div>
+
+                                @if (auth()->check() && ! $gameSession->isDemo() && $item->source_type_snapshot === 'ready')
+                                    <div class="remainder-game-error-item__actions">
+                                        <div class="word-list-transfer-picker">
+                                            <button
+                                                type="button"
+                                                class="word-list-transfer-btn"
+                                                aria-label="{{ __('remainder.game.result.transfer.aria', ['word' => $gameSession->direction === \App\Models\GameSession::DIRECTION_FOREIGN_TO_RU ? $item->prompt_text : $item->correct_answer]) }}"
+                                            >
+                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                    <path d="M5 12h13" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                                    <path d="m13 6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                    <path d="M4 6v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                                </svg>
+                                            </button>
+
+                                            <div class="word-list-transfer-menu" role="menu">
+                                                @if ($userDictionaries->isNotEmpty())
+                                                    <p class="word-list-transfer-menu__title">{{ __('remainder.game.result.transfer.title') }}</p>
+                                                    @foreach ($userDictionaries as $userDictionary)
+                                                        <button
+                                                            type="button"
+                                                            class="word-list-transfer-menu__item"
+                                                            role="menuitem"
+                                                            wire:key="remainder-result-item-{{ $item->id }}-transfer-dictionary-{{ $userDictionary->id }}"
+                                                            wire:click="transferIncorrectReadyWordToDictionary({{ $item->id }}, {{ $userDictionary->id }})"
+                                                            wire:loading.attr="disabled"
+                                                            wire:target="transferIncorrectReadyWordToDictionary({{ $item->id }}, {{ $userDictionary->id }})"
+                                                        >
+                                                            {{ $userDictionary->name }}
+                                                        </button>
+                                                    @endforeach
+                                                @else
+                                                    <p class="word-list-transfer-menu__empty">{{ __('remainder.game.result.transfer.empty') }}</p>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
                             </article>
                         @endforeach
                     </div>

@@ -6,12 +6,11 @@ use App\Models\ReadyDictionary;
 use App\Models\ReadyDictionaryWord;
 use App\Models\User;
 use App\Models\UserDictionary;
-use App\Models\Word;
+use App\Services\Dictionaries\CopyWordToUserDictionaryService;
 use App\Services\Navigation\HeaderNavigationService;
 use App\Support\PartOfSpeechCatalog;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Throwable;
@@ -128,16 +127,12 @@ class Show extends Component
         }
 
         try {
-            DB::transaction(function () use ($readyDictionaryWord, $userDictionary): void {
-                $word = Word::create([
-                    'word' => $readyDictionaryWord->word,
-                    'part_of_speech' => $readyDictionaryWord->part_of_speech,
-                    'translation' => $readyDictionaryWord->translation,
-                    'comment' => $readyDictionaryWord->comment,
-                ]);
-
-                $userDictionary->words()->attach($word->id);
-            });
+            app(CopyWordToUserDictionaryService::class)->copy($userDictionary, [
+                'word' => $readyDictionaryWord->word,
+                'part_of_speech' => $readyDictionaryWord->part_of_speech,
+                'translation' => $readyDictionaryWord->translation,
+                'comment' => $readyDictionaryWord->comment,
+            ]);
         } catch (Throwable) {
             $this->showTransferError();
 

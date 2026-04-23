@@ -93,6 +93,7 @@
   - allows demo sessions while preserving owner checks for user sessions
   - renders either the current question, immediate feedback, or the final result summary
   - delegates answer checking and session transitions to `GameEngineService`
+  - allows authenticated users to copy incorrect prepared-dictionary result words into personal dictionaries
 
 ### Views and Layouts
 - Shared dictionaries layout: `resources/views/layouts/dictionaries.blade.php`
@@ -162,6 +163,11 @@
     - returns the authenticated user's personal dictionaries for the `My Dictionaries` dropdown
     - returns all ready dictionaries for the Prepared dictionaries dropdown
     - keeps shared layouts free from direct database queries
+- Dictionary write helpers live under `app/Services/Dictionaries`
+  - `CopyWordToUserDictionaryService`
+    - creates a fresh `words` row from a prepared or session snapshot payload
+    - attaches the created word to the selected personal dictionary
+    - keeps transfer logic reusable between Prepared dictionaries and the Remainder result screen
 - Catalogs under `app/Support`
   - `PartOfSpeechCatalog`
     - stores the canonical part-of-speech values and UI labels
@@ -269,6 +275,7 @@
   - `prompt_text`
   - `part_of_speech_snapshot`
   - `correct_answer`
+  - `source_type_snapshot`
   - `options_json`
   - `user_answer`
   - `is_correct`
@@ -405,6 +412,7 @@
   - `prompt_text`
   - `part_of_speech_snapshot` nullable
   - `correct_answer`
+  - `source_type_snapshot` nullable string snapshot of the original item source (`user` or `ready`)
   - `options_json` nullable jsonb
   - `user_answer` nullable
   - `is_correct` nullable
@@ -543,12 +551,14 @@
 - Personal dictionary session items store the original `words.id`, so `GameEngineService` updates `words.remainder_had_mistake` for words attached to the current user's dictionaries when a non-demo session finishes
 - Demo sessions never update `words.remainder_had_mistake`
 - Ready dictionary words are stored in separate `ready_dictionary_words`; when they are selected for a game, `PrepareGameService` copies them into `words` as session snapshot records so the existing `game_session_items.word_id` flow remains stable
+- `PrepareGameService` also stores `game_session_items.source_type_snapshot`, so the result screen can still distinguish personal words from prepared-dictionary words after snapshot creation
 - Ready dictionary snapshot words are not attached to `user_dictionary_word`, so Remainder mistake flags should ignore them when applying finished-session updates
 - if mode is `choice`, `ChoiceOptionsBuilder` also precomputes `options_json` for every session item from the full filtered answer pool, while `words_count` still controls only the number of rounds
 - Game page (`/remainder/sessions/{gameSession}`) renders a Blade shell with embedded `App\Livewire\Remainder\Show`
 - `GameEngineService` validates and checks each answer, updates counters, and finishes the session after the last item
 - choice-mode warnings about incomplete option sets are stored in `config_snapshot['warnings']` and shown on the game screen
 - Result screen is rendered by the same Livewire component when the session status becomes `finished`
+- On the finished result screen, authenticated users can copy incorrect prepared-dictionary words into a selected personal dictionary; copied words are created as new `words` rows with `remainder_had_mistake = true`
 
 ## Important Implementation Notes
 - Dictionary page totals show the total number of words in the dictionary, independent of active filters

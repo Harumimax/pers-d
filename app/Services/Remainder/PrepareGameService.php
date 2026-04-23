@@ -178,6 +178,7 @@ class PrepareGameService
                         'prompt_text' => $item['prompt_text'],
                         'part_of_speech_snapshot' => $item['part_of_speech_snapshot'],
                         'correct_answer' => $item['correct_answer'],
+                        'source_type_snapshot' => $item['source'],
                         'options_json' => $item['options_json'] !== null
                             ? json_encode($item['options_json'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
                             : null,

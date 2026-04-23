@@ -4,11 +4,16 @@ namespace App\Livewire\Remainder;
 
 use App\Models\GameSession;
 use App\Models\GameSessionItem;
+use App\Models\User;
+use App\Models\UserDictionary;
+use App\Services\Dictionaries\CopyWordToUserDictionaryService;
+use App\Services\Navigation\HeaderNavigationService;
 use App\Services\Remainder\GameEngineService;
 use App\Support\PartOfSpeechCatalog;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
+use Throwable;
 
 class Show extends Component
 {
@@ -21,6 +26,8 @@ class Show extends Component
     public string $lastUserAnswer = '';
     public string $lastPromptText = '';
     public int $lastOrderIndex = 1;
+    public ?string $transferBannerType = null;
+    public ?string $transferBannerMessage = null;
 
     public function mount(GameSession $gameSession): void
     {
@@ -37,10 +44,13 @@ class Show extends Component
         $this->gameSession->refresh();
 
         $engine = app(GameEngineService::class);
+        $user = Auth::user();
+        $headerNavigation = app(HeaderNavigationService::class)->forUser($user);
         $currentItem = null;
         $currentPartOfSpeechLabel = null;
         $resultSummary = null;
         $progressLabel = null;
+        $userDictionaries = $headerNavigation['headerDictionaries'];
         $sessionWarnings = collect($this->gameSession->config_snapshot['warnings'] ?? [])
             ->filter(static fn ($warning): bool => is_string($warning) && trim($warning) !== '')
             ->values();
@@ -70,6 +80,7 @@ class Show extends Component
             'resultSummary' => $resultSummary,
             'gameNotice' => session('gameNotice'),
             'sessionWarnings' => $sessionWarnings,
+            'userDictionaries' => $userDictionaries,
         ]);
     }
 
@@ -115,8 +126,110 @@ class Show extends Component
         $this->selectedChoice = '';
     }
 
+    public function transferIncorrectReadyWordToDictionary(int $gameSessionItemId, int $userDictionaryId): void
+    {
+        $this->resetTransferBanner();
+
+        if ($this->gameSession->isDemo()) {
+            $this->showTransferError();
+
+            return;
+        }
+
+        $user = $this->currentUser();
+        $userDictionary = $user->dictionaries()
+            ->whereKey($userDictionaryId)
+            ->first();
+        $item = $this->gameSession->items()
+            ->whereKey($gameSessionItemId)
+            ->where('is_correct', false)
+            ->first();
+
+        if (
+            ! $userDictionary instanceof UserDictionary
+            || ! $item instanceof GameSessionItem
+            || $item->source_type_snapshot !== 'ready'
+        ) {
+            $this->showTransferError();
+
+            return;
+        }
+
+        try {
+            app(CopyWordToUserDictionaryService::class)->copy(
+                $userDictionary,
+                $this->transferPayloadForReadyIncorrectItem($item),
+            );
+        } catch (Throwable) {
+            $this->showTransferError();
+
+            return;
+        }
+
+        $this->transferBannerType = 'success';
+        $this->transferBannerMessage = __('remainder.game.result.transfer.success', [
+            'word' => $this->snapshotWordValue($item),
+            'dictionary' => $userDictionary->name,
+        ]);
+    }
+
     private function partOfSpeechLabel(?string $partOfSpeech): ?string
     {
         return PartOfSpeechCatalog::label($partOfSpeech);
+    }
+
+    private function currentUser(): User
+    {
+        $user = Auth::user();
+
+        abort_unless($user instanceof User, 401);
+
+        return $user;
+    }
+
+    /**
+     * @return array{
+     *     word:string,
+     *     translation:string,
+     *     part_of_speech:?string,
+     *     comment:null,
+     *     remainder_had_mistake:bool
+     * }
+     */
+    private function transferPayloadForReadyIncorrectItem(GameSessionItem $item): array
+    {
+        return [
+            'word' => $this->snapshotWordValue($item),
+            'translation' => $this->snapshotTranslationValue($item),
+            'part_of_speech' => $item->part_of_speech_snapshot,
+            'comment' => null,
+            'remainder_had_mistake' => true,
+        ];
+    }
+
+    private function snapshotWordValue(GameSessionItem $item): string
+    {
+        return $this->gameSession->direction === GameSession::DIRECTION_FOREIGN_TO_RU
+            ? $item->prompt_text
+            : $item->correct_answer;
+    }
+
+    private function snapshotTranslationValue(GameSessionItem $item): string
+    {
+        return $this->gameSession->direction === GameSession::DIRECTION_FOREIGN_TO_RU
+            ? $item->correct_answer
+            : $item->prompt_text;
+    }
+
+    private function resetTransferBanner(): void
+    {
+        $this->transferBannerType = null;
+        $this->transferBannerMessage = null;
+    }
+
+    private function showTransferError(): void
+    {
+        $this->transferBannerType = 'error';
+        $this->transferBannerMessage = __('remainder.game.result.transfer.error');
     }
 }

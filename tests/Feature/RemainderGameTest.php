@@ -80,6 +80,7 @@ class RemainderGameTest extends TestCase
         $this->assertSame(2, $gameSession->items()->count());
         $this->assertSame([$readyDictionary->id], $gameSession->config_snapshot['ready_dictionary_ids']);
         $this->assertSame([], $gameSession->config_snapshot['dictionary_ids']);
+        $this->assertSame(['ready', 'ready'], $items->pluck('source_type_snapshot')->all());
         $this->assertEqualsCanonicalizing(['accurate', 'adapt'], $items->pluck('word.word')->all());
         $this->assertDatabaseMissing('user_dictionary_word', [
             'word_id' => $items->first()->word_id,
@@ -995,6 +996,111 @@ class RemainderGameTest extends TestCase
             ->call('submitAnswer');
 
         $this->assertTrue($snapshotWord->refresh()->remainder_had_mistake);
+    }
+
+    public function test_finished_results_show_transfer_action_for_incorrect_ready_dictionary_words(): void
+    {
+        $user = User::factory()->create();
+        $targetDictionary = $this->createDictionaryForUser($user, 'My targets', 'English');
+
+        $readyDictionary = ReadyDictionary::factory()->create([
+            'name' => 'Ready English',
+            'language' => 'English',
+        ]);
+        ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $readyDictionary->id,
+            'word' => 'accurate',
+            'translation' => 'точный',
+            'part_of_speech' => 'adjective',
+        ]);
+
+        $this->actingAs($user)->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'ready_dictionary_ids' => [$readyDictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 1,
+        ]);
+
+        $gameSession = GameSession::query()->latest('id')->firstOrFail();
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['gameSession' => $gameSession])
+            ->set('answer', 'wrong answer')
+            ->call('submitAnswer')
+            ->call('continueToNext')
+            ->assertSee('Add to dictionary')
+            ->assertSee($targetDictionary->name);
+    }
+
+    public function test_finished_results_hide_transfer_action_for_incorrect_personal_dictionary_words(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = $this->createDictionaryForUser($user, 'Training deck', 'English');
+        $this->attachWord($dictionary, 'accurate', 'точный', 'adjective');
+
+        $this->actingAs($user)->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'dictionary_ids' => [$dictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 1,
+        ]);
+
+        $gameSession = GameSession::query()->latest('id')->firstOrFail();
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['gameSession' => $gameSession])
+            ->set('answer', 'wrong answer')
+            ->call('submitAnswer')
+            ->call('continueToNext')
+            ->assertDontSee('Add to dictionary');
+    }
+
+    public function test_incorrect_ready_result_word_can_be_copied_to_personal_dictionary_and_marked_as_mistake(): void
+    {
+        $user = User::factory()->create();
+        $targetDictionary = $this->createDictionaryForUser($user, 'My targets', 'English');
+
+        $readyDictionary = ReadyDictionary::factory()->create([
+            'name' => 'Ready English',
+            'language' => 'English',
+        ]);
+        ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $readyDictionary->id,
+            'word' => 'accurate',
+            'translation' => 'точный',
+            'part_of_speech' => 'adjective',
+            'comment' => 'ready comment',
+        ]);
+
+        $this->actingAs($user)->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_RU_TO_FOREIGN,
+            'ready_dictionary_ids' => [$readyDictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 1,
+        ]);
+
+        $gameSession = GameSession::query()->latest('id')->firstOrFail();
+        $item = $gameSession->items()->firstOrFail();
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['gameSession' => $gameSession])
+            ->set('answer', 'wrong answer')
+            ->call('submitAnswer')
+            ->call('continueToNext')
+            ->call('transferIncorrectReadyWordToDictionary', $item->id, $targetDictionary->id)
+            ->assertSee('marked for extra practice');
+
+        $copiedWord = $targetDictionary->fresh()->words()->latest('words.id')->first();
+
+        $this->assertNotNull($copiedWord);
+        $this->assertSame('accurate', $copiedWord->word);
+        $this->assertSame('точный', $copiedWord->translation);
+        $this->assertSame('adjective', $copiedWord->part_of_speech);
+        $this->assertNull($copiedWord->comment);
+        $this->assertTrue($copiedWord->remainder_had_mistake);
     }
 
     public function test_user_cannot_open_another_users_game_session(): void

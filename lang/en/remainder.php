@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 return [
     'settings' => [
@@ -79,6 +79,13 @@ return [
             'incorrect_answers' => 'Incorrect answers',
             'back_to_settings' => 'Back to settings',
             'all_correct' => 'Great work. All answers in this session were correct.',
+            'transfer' => [
+                'aria' => 'Choose a personal dictionary for :word',
+                'title' => 'Add to dictionary',
+                'empty' => 'Create your own dictionary to add a word to it.',
+                'success' => '":word" has been added to ":dictionary" and marked for extra practice.',
+                'error' => 'We could not add this word to the selected dictionary. Please try again.',
+            ],
         ],
         'prompt' => [
             'translate_this' => 'Translate this',
@@ -113,3 +120,4 @@ return [
         ],
     ],
 ];
+

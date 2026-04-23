@@ -14,6 +14,7 @@ class GameSessionItem extends Model
         'prompt_text',
         'part_of_speech_snapshot',
         'correct_answer',
+        'source_type_snapshot',
         'options_json',
         'user_answer',
         'is_correct',
