@@ -75,6 +75,32 @@ class ReadyDictionaryCatalogTest extends TestCase
         ]);
     }
 
+    public function test_seeded_common_english_adjectives_dictionary_exists_with_words(): void
+    {
+        $dictionary = ReadyDictionary::query()
+            ->where('name', 'The most commonly used English adjectives')
+            ->where('language', 'English')
+            ->firstOrFail();
+
+        $this->assertNull($dictionary->level);
+        $this->assertSame('adjective', $dictionary->part_of_speech);
+        $this->assertSame(180, $dictionary->words()->count());
+
+        $this->assertDatabaseHas('ready_dictionary_words', [
+            'ready_dictionary_id' => $dictionary->id,
+            'word' => 'able',
+            'translation' => 'способный',
+            'part_of_speech' => 'adjective',
+        ]);
+
+        $this->assertDatabaseHas('ready_dictionary_words', [
+            'ready_dictionary_id' => $dictionary->id,
+            'word' => 'young',
+            'translation' => 'молодой',
+            'part_of_speech' => 'adjective',
+        ]);
+    }
+
     public function test_ready_dictionary_can_be_created_without_user_and_has_words(): void
     {
         $dictionary = ReadyDictionary::factory()->create([
@@ -138,7 +164,7 @@ class ReadyDictionaryCatalogTest extends TestCase
 
         $catalog = app(ReadyDictionaryCatalogService::class)->catalog();
 
-        $this->assertCount(4, $catalog['dictionaries']);
+        $this->assertCount(5, $catalog['dictionaries']);
         $this->assertSame(['English', 'Spanish'], $catalog['filterOptions']['languages']);
         $this->assertSame('A0 Beginner', $catalog['filterOptions']['levels']['A0']);
         $this->assertSame('C2 Proficiency', $catalog['filterOptions']['levels']['C2']);
@@ -209,7 +235,7 @@ class ReadyDictionaryCatalogTest extends TestCase
             'part_of_speech' => 'invalid',
         ]);
 
-        $this->assertCount(3, $catalog['dictionaries']);
+        $this->assertCount(4, $catalog['dictionaries']);
         $this->assertSame([
             'language' => null,
             'level' => null,
