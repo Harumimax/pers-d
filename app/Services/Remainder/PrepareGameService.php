@@ -76,10 +76,8 @@ class PrepareGameService
         }
 
         $requestedWordsCount = (int) $config['words_count'];
-        $selectedWords = $availableWords
-            ->shuffle()
-            ->take(min($requestedWordsCount, $availableWords->count()))
-            ->values();
+        $targetWordsCount = min($requestedWordsCount, $availableWords->count());
+        $selectedWords = $this->selectWordsForSession($availableWords, $targetWordsCount);
 
         $notice = null;
         if ($selectedWords->count() < $requestedWordsCount) {
@@ -255,6 +253,7 @@ class PrepareGameService
                     'translation' => $word->translation,
                     'part_of_speech' => $word->part_of_speech,
                     'comment' => $word->comment,
+                    'remainder_had_mistake' => $word->remainder_had_mistake,
                 ]);
         }
 
@@ -276,11 +275,61 @@ class PrepareGameService
                     'translation' => $word->translation,
                     'part_of_speech' => $word->part_of_speech,
                     'comment' => $word->comment,
+                    'remainder_had_mistake' => false,
                 ]);
         }
 
         return $userWords
             ->concat($readyWords)
+            ->values();
+    }
+
+    /**
+     * @param Collection<int, array{source:string,word_id:int|null,word:string,translation:string,part_of_speech:?string,comment:?string,remainder_had_mistake:bool}> $availableWords
+     * @return Collection<int, array{source:string,word_id:int|null,word:string,translation:string,part_of_speech:?string,comment:?string,remainder_had_mistake:bool}>
+     */
+    private function selectWordsForSession(Collection $availableWords, int $targetWordsCount): Collection
+    {
+        if ($targetWordsCount === 0) {
+            return collect();
+        }
+
+        $mistakeWords = $availableWords
+            ->filter(static fn (array $word): bool => $word['remainder_had_mistake'] === true)
+            ->shuffle()
+            ->values();
+
+        $cleanWords = $availableWords
+            ->filter(static fn (array $word): bool => $word['remainder_had_mistake'] === false)
+            ->shuffle()
+            ->values();
+
+        $mistakeTargetCount = min(
+            $mistakeWords->count(),
+            (int) floor($targetWordsCount * 0.5),
+        );
+
+        $selectedMistakeWords = $mistakeWords
+            ->take($mistakeTargetCount)
+            ->values();
+
+        $remainingCount = $targetWordsCount - $selectedMistakeWords->count();
+
+        $selectedCleanWords = $cleanWords
+            ->take($remainingCount)
+            ->values();
+
+        $remainingCount -= $selectedCleanWords->count();
+
+        $additionalMistakeWords = $mistakeWords
+            ->slice($selectedMistakeWords->count())
+            ->take($remainingCount)
+            ->values();
+
+        return $selectedMistakeWords
+            ->concat($selectedCleanWords)
+            ->concat($additionalMistakeWords)
+            ->shuffle()
             ->values();
     }
 }

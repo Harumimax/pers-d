@@ -332,6 +332,102 @@ class RemainderGameTest extends TestCase
         $this->assertCount($wordIds->unique()->count(), $wordIds);
     }
 
+    public function test_remainder_session_prioritizes_up_to_fifty_percent_words_with_previous_mistakes(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = $this->createDictionaryForUser($user, 'Priority deck', 'English');
+
+        $mistakeWord = $this->attachWord($dictionary, 'mistake-word', 'ошибка', 'noun', true);
+
+        foreach (range(1, 9) as $index) {
+            $this->attachWord($dictionary, "clean-word-$index", "чистое-$index", 'noun');
+        }
+
+        $this->actingAs($user)->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'dictionary_ids' => [$dictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 10,
+        ]);
+
+        $selectedWordIds = GameSession::query()->latest('id')->firstOrFail()
+            ->items()
+            ->pluck('word_id')
+            ->all();
+
+        $this->assertContains($mistakeWord->id, $selectedWordIds);
+        $this->assertSame(
+            1,
+            Word::query()->whereIn('id', $selectedWordIds)->where('remainder_had_mistake', true)->count(),
+        );
+    }
+
+    public function test_remainder_session_uses_all_available_mistake_words_when_they_are_fewer_than_fifty_percent(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = $this->createDictionaryForUser($user, 'Priority deck', 'English');
+
+        $firstMistakeWord = $this->attachWord($dictionary, 'mistake-one', 'ошибка-1', 'noun', true);
+        $secondMistakeWord = $this->attachWord($dictionary, 'mistake-two', 'ошибка-2', 'noun', true);
+
+        foreach (range(1, 8) as $index) {
+            $this->attachWord($dictionary, "clean-word-$index", "чистое-$index", 'noun');
+        }
+
+        $this->actingAs($user)->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'dictionary_ids' => [$dictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 10,
+        ]);
+
+        $selectedWordIds = GameSession::query()->latest('id')->firstOrFail()
+            ->items()
+            ->pluck('word_id')
+            ->all();
+
+        $this->assertContains($firstMistakeWord->id, $selectedWordIds);
+        $this->assertContains($secondMistakeWord->id, $selectedWordIds);
+        $this->assertSame(
+            2,
+            Word::query()->whereIn('id', $selectedWordIds)->where('remainder_had_mistake', true)->count(),
+        );
+    }
+
+    public function test_remainder_session_is_topped_up_with_additional_mistake_words_when_clean_words_are_not_enough(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = $this->createDictionaryForUser($user, 'Priority deck', 'English');
+
+        foreach (range(1, 8) as $index) {
+            $this->attachWord($dictionary, "mistake-word-$index", "ошибка-$index", 'noun', true);
+        }
+
+        $cleanWord = $this->attachWord($dictionary, 'clean-word', 'чистое', 'noun');
+
+        $this->actingAs($user)->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'dictionary_ids' => [$dictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 6,
+        ]);
+
+        $selectedWordIds = GameSession::query()->latest('id')->firstOrFail()
+            ->items()
+            ->pluck('word_id')
+            ->all();
+
+        $this->assertCount(6, $selectedWordIds);
+        $this->assertContains($cleanWord->id, $selectedWordIds);
+        $this->assertGreaterThanOrEqual(
+            5,
+            Word::query()->whereIn('id', $selectedWordIds)->where('remainder_had_mistake', true)->count(),
+        );
+    }
+
     public function test_all_part_of_speech_filter_includes_words_without_part_of_speech(): void
     {
         $user = User::factory()->create();
