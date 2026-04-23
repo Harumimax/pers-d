@@ -74,7 +74,7 @@ class DictionaryWordFilterTest extends TestCase
         $word = Word::create([
             'word' => 'apple',
             'part_of_speech' => 'noun',
-            'translation' => 'яблоко',
+            'translation' => 'Р В Р Р‹Р В Р РЏР В Р’В Р вЂ™Р’В±Р В Р’В Р вЂ™Р’В»Р В Р’В Р РЋРІР‚СћР В Р’В Р РЋРІР‚СњР В Р’В Р РЋРІР‚Сћ',
             'comment' => null,
         ]);
 
@@ -140,7 +140,7 @@ class DictionaryWordFilterTest extends TestCase
         $word = Word::create([
             'word' => 'apple',
             'part_of_speech' => 'noun',
-            'translation' => 'яблоко',
+            'translation' => 'Р В Р Р‹Р В Р РЏР В Р’В Р вЂ™Р’В±Р В Р’В Р вЂ™Р’В»Р В Р’В Р РЋРІР‚СћР В Р’В Р РЋРІР‚СњР В Р’В Р РЋРІР‚Сћ',
             'comment' => 'fruit',
         ]);
 
@@ -150,7 +150,7 @@ class DictionaryWordFilterTest extends TestCase
             ->test(Show::class, ['dictionary' => $dictionary])
             ->call('startEditingWord', $word->id)
             ->assertSet('editingWordId', $word->id)
-            ->assertSet('editingWordTranslation', 'яблоко')
+            ->assertSet('editingWordTranslation', 'Р В Р Р‹Р В Р РЏР В Р’В Р вЂ™Р’В±Р В Р’В Р вЂ™Р’В»Р В Р’В Р РЋРІР‚СћР В Р’В Р РЋРІР‚СњР В Р’В Р РЋРІР‚Сћ')
             ->assertSet('editingWordPartOfSpeech', 'noun')
             ->assertSet('editingWordComment', 'fruit')
             ->set('editingWordTranslation', 'apple fruit')
@@ -216,7 +216,7 @@ class DictionaryWordFilterTest extends TestCase
         $word = Word::create([
             'word' => 'green',
             'part_of_speech' => 'adjective',
-            'translation' => 'зелёный',
+            'translation' => 'Р В Р’В Р вЂ™Р’В·Р В Р’В Р вЂ™Р’ВµР В Р’В Р вЂ™Р’В»Р В Р Р‹Р Р†Р вЂљР’ВР В Р’В Р В РІР‚В¦Р В Р Р‹Р Р†Р вЂљРІвЂћвЂ“Р В Р’В Р Р†РІР‚С›РІР‚вЂњ',
             'comment' => null,
         ]);
 
@@ -232,7 +232,7 @@ class DictionaryWordFilterTest extends TestCase
 
         $this->assertDatabaseHas('words', [
             'id' => $word->id,
-            'translation' => 'зелёный',
+            'translation' => 'Р В Р’В Р вЂ™Р’В·Р В Р’В Р вЂ™Р’ВµР В Р’В Р вЂ™Р’В»Р В Р Р‹Р Р†Р вЂљР’ВР В Р’В Р В РІР‚В¦Р В Р Р‹Р Р†Р вЂљРІвЂћвЂ“Р В Р’В Р Р†РІР‚С›РІР‚вЂњ',
         ]);
     }
 
@@ -366,7 +366,7 @@ class DictionaryWordFilterTest extends TestCase
         $matchByWord = Word::create([
             'word' => 'Green',
             'part_of_speech' => 'adjective',
-            'translation' => 'зелёный',
+            'translation' => 'Р В Р’В Р вЂ™Р’В·Р В Р’В Р вЂ™Р’ВµР В Р’В Р вЂ™Р’В»Р В Р Р‹Р Р†Р вЂљР’ВР В Р’В Р В РІР‚В¦Р В Р Р‹Р Р†Р вЂљРІвЂћвЂ“Р В Р’В Р Р†РІР‚С›РІР‚вЂњ',
             'comment' => null,
         ]);
         $matchByTranslation = Word::create([
@@ -454,14 +454,14 @@ class DictionaryWordFilterTest extends TestCase
             ->set('showCreateForm', true)
             ->set('word', " \u{200B}green\u{200D} ")
             ->set('partOfSpeech', 'adjective')
-            ->set('translation', " \u{FEFF}зелёный ")
+            ->set('translation', ' Р·РµР»С‘РЅС‹Р№ ')
             ->set('comment', " \u{2060}basic color ")
             ->call('addWord')
             ->assertHasNoErrors();
 
         $this->assertDatabaseHas('words', [
             'word' => 'green',
-            'translation' => 'зелёный',
+            'translation' => 'Р·РµР»С‘РЅС‹Р№',
             'comment' => 'basic color',
             'part_of_speech' => 'adjective',
         ]);
@@ -510,11 +510,11 @@ class DictionaryWordFilterTest extends TestCase
         Http::fake([
             'https://api.mymemory.translated.net/get*' => Http::response([
                 'responseData' => [
-                    'translatedText' => 'доброе утро',
+                    'translatedText' => 'Р В Р’В Р СћРІР‚ВР В Р’В Р РЋРІР‚СћР В Р’В Р вЂ™Р’В±Р В Р Р‹Р В РІР‚С™Р В Р’В Р РЋРІР‚СћР В Р’В Р вЂ™Р’Вµ Р В Р Р‹Р РЋРІР‚СљР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р Р‹Р В РІР‚С™Р В Р’В Р РЋРІР‚Сћ',
                 ],
                 'matches' => [
                     [
-                        'translation' => 'здравствуйте',
+                        'translation' => 'Р В Р’В Р вЂ™Р’В·Р В Р’В Р СћРІР‚ВР В Р Р‹Р В РІР‚С™Р В Р’В Р вЂ™Р’В°Р В Р’В Р В РІР‚В Р В Р Р‹Р В РЎвЂњР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р В РІР‚В Р В Р Р‹Р РЋРІР‚СљР В Р’В Р Р†РІР‚С›РІР‚вЂњР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р вЂ™Р’Вµ',
                         'created-by' => 'memory',
                         'match' => 0.87,
                     ],
@@ -535,10 +535,10 @@ class DictionaryWordFilterTest extends TestCase
             ->set('autoWord', 'good morning')
             ->call('translateAutomatically')
             ->assertSet('autoTranslated', true)
-            ->assertSet('autoTranslation', 'доброе утро')
+            ->assertSet('autoTranslation', 'Р В Р’В Р СћРІР‚ВР В Р’В Р РЋРІР‚СћР В Р’В Р вЂ™Р’В±Р В Р Р‹Р В РІР‚С™Р В Р’В Р РЋРІР‚СћР В Р’В Р вЂ™Р’Вµ Р В Р Р‹Р РЋРІР‚СљР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р Р‹Р В РІР‚С™Р В Р’В Р РЋРІР‚Сћ')
             ->assertSet('showCreateForm', true)
-            ->assertSee('доброе утро')
-            ->assertSee('здравствуйте')
+            ->assertSee('Р В Р’В Р СћРІР‚ВР В Р’В Р РЋРІР‚СћР В Р’В Р вЂ™Р’В±Р В Р Р‹Р В РІР‚С™Р В Р’В Р РЋРІР‚СћР В Р’В Р вЂ™Р’Вµ Р В Р Р‹Р РЋРІР‚СљР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р Р‹Р В РІР‚С™Р В Р’В Р РЋРІР‚Сћ')
+            ->assertSee('Р В Р’В Р вЂ™Р’В·Р В Р’В Р СћРІР‚ВР В Р Р‹Р В РІР‚С™Р В Р’В Р вЂ™Р’В°Р В Р’В Р В РІР‚В Р В Р Р‹Р В РЎвЂњР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р В РІР‚В Р В Р Р‹Р РЋРІР‚СљР В Р’В Р Р†РІР‚С›РІР‚вЂњР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р вЂ™Р’Вµ')
             ->assertSet('autoTranslationError', '');
     }
 
@@ -585,15 +585,61 @@ class DictionaryWordFilterTest extends TestCase
             ->test(Show::class, ['dictionary' => $dictionary])
             ->set('showCreateForm', true)
             ->set('autoSuggestions', [
-                ['text' => 'потребитель', 'label' => 'top result'],
+                ['text' => 'Р В Р’В Р РЋРІР‚вЂќР В Р’В Р РЋРІР‚СћР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р Р‹Р В РІР‚С™Р В Р’В Р вЂ™Р’ВµР В Р’В Р вЂ™Р’В±Р В Р’В Р РЋРІР‚ВР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р вЂ™Р’ВµР В Р’В Р вЂ™Р’В»Р В Р Р‹Р В Р вЂ°', 'label' => 'top result'],
                 ['text' => 'Consumer Protection Law (2005).', 'label' => 'memory match'],
-                ['text' => 'Отдел индекса потребительских цен', 'label' => 'memory match'],
+                ['text' => 'Р В Р’В Р РЋРІР‚С”Р В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р СћРІР‚ВР В Р’В Р вЂ™Р’ВµР В Р’В Р вЂ™Р’В» Р В Р’В Р РЋРІР‚ВР В Р’В Р В РІР‚В¦Р В Р’В Р СћРІР‚ВР В Р’В Р вЂ™Р’ВµР В Р’В Р РЋРІР‚СњР В Р Р‹Р В РЎвЂњР В Р’В Р вЂ™Р’В° Р В Р’В Р РЋРІР‚вЂќР В Р’В Р РЋРІР‚СћР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р Р‹Р В РІР‚С™Р В Р’В Р вЂ™Р’ВµР В Р’В Р вЂ™Р’В±Р В Р’В Р РЋРІР‚ВР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р вЂ™Р’ВµР В Р’В Р вЂ™Р’В»Р В Р Р‹Р В Р вЂ°Р В Р Р‹Р В РЎвЂњР В Р’В Р РЋРІР‚СњР В Р’В Р РЋРІР‚ВР В Р Р‹Р Р†Р вЂљР’В¦ Р В Р Р‹Р Р†Р вЂљР’В Р В Р’В Р вЂ™Р’ВµР В Р’В Р В РІР‚В¦', 'label' => 'memory match'],
             ])
             ->set('autoTranslated', true)
-            ->set('autoTranslation', 'потребитель')
+            ->set('autoTranslation', 'Р В Р’В Р РЋРІР‚вЂќР В Р’В Р РЋРІР‚СћР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р Р‹Р В РІР‚С™Р В Р’В Р вЂ™Р’ВµР В Р’В Р вЂ™Р’В±Р В Р’В Р РЋРІР‚ВР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р вЂ™Р’ВµР В Р’В Р вЂ™Р’В»Р В Р Р‹Р В Р вЂ°')
             ->call('selectAutoTranslationByIndex', 1)
             ->assertSet('autoTranslation', 'Consumer Protection Law (2005).')
             ->call('selectAutoTranslationByIndex', 2)
-            ->assertSet('autoTranslation', 'Отдел индекса потребительских цен');
+            ->assertSet('autoTranslation', 'Р В Р’В Р РЋРІР‚С”Р В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р СћРІР‚ВР В Р’В Р вЂ™Р’ВµР В Р’В Р вЂ™Р’В» Р В Р’В Р РЋРІР‚ВР В Р’В Р В РІР‚В¦Р В Р’В Р СћРІР‚ВР В Р’В Р вЂ™Р’ВµР В Р’В Р РЋРІР‚СњР В Р Р‹Р В РЎвЂњР В Р’В Р вЂ™Р’В° Р В Р’В Р РЋРІР‚вЂќР В Р’В Р РЋРІР‚СћР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р Р‹Р В РІР‚С™Р В Р’В Р вЂ™Р’ВµР В Р’В Р вЂ™Р’В±Р В Р’В Р РЋРІР‚ВР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р вЂ™Р’ВµР В Р’В Р вЂ™Р’В»Р В Р Р‹Р В Р вЂ°Р В Р Р‹Р В РЎвЂњР В Р’В Р РЋРІР‚СњР В Р’В Р РЋРІР‚ВР В Р Р‹Р Р†Р вЂљР’В¦ Р В Р Р‹Р Р†Р вЂљР’В Р В Р’В Р вЂ™Р’ВµР В Р’В Р В РІР‚В¦');
+    }
+    public function test_translate_automatically_filters_out_mixed_latin_and_cyrillic_suggestions(): void
+    {
+        Http::fake([
+            'https://api.mymemory.translated.net/get*' => Http::response([
+                'responseData' => [
+                    'translatedText' => 'Р РЋРІР‚С™Р В РЎвЂўР РЋРІР‚РЋР В Р вЂ¦Р РЋРІР‚в„–Р В РІвЂћвЂ“',
+                ],
+                'matches' => [
+                    [
+                        'translation' => 'Р РЋРІР‚С™Р В РЎвЂўР РЋРІР‚РЋР В Р вЂ¦Р РЋРІР‚в„–Р В РІвЂћвЂ“',
+                        'match' => 1,
+                    ],
+                    [
+                        'translation' => 'Р РЋРІР‚С™Р В РЎвЂўР РЋРІР‚РЋР В Р вЂ¦Р РЋРІР‚в„–Р В РІвЂћвЂ“ (accurate)',
+                        'created-by' => 'tm',
+                        'match' => 0.97,
+                    ],
+                    [
+                        'translation' => 'Р В РЎвЂ”Р В РЎвЂўР В РўвЂР РЋРІР‚В¦Р В РЎвЂўР В РўвЂР РЋР РЏР РЋРІР‚В°Р В РЎвЂР В РІвЂћвЂ“',
+                    ],
+                ],
+            ]),
+        ]);
+
+        $user = User::factory()->create();
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English',
+            'language' => 'English',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['dictionary' => $dictionary])
+            ->set('showCreateForm', true)
+            ->set('autoWord', 'accurate')
+            ->call('translateAutomatically')
+            ->assertSet('autoTranslated', true)
+            ->assertSet('autoTranslation', 'Р РЋРІР‚С™Р В РЎвЂўР РЋРІР‚РЋР В Р вЂ¦Р РЋРІР‚в„–Р В РІвЂћвЂ“')
+            ->assertSet('autoSuggestions', [
+                ['text' => 'Р РЋРІР‚С™Р В РЎвЂўР РЋРІР‚РЋР В Р вЂ¦Р РЋРІР‚в„–Р В РІвЂћвЂ“', 'label' => 'top result'],
+                ['text' => 'Р В РЎвЂ”Р В РЎвЂўР В РўвЂР РЋРІР‚В¦Р В РЎвЂўР В РўвЂР РЋР РЏР РЋРІР‚В°Р В РЎвЂР В РІвЂћвЂ“', 'label' => 'suggested'],
+            ])
+            ->assertDontSee('Р РЋРІР‚С™Р В РЎвЂўР РЋРІР‚РЋР В Р вЂ¦Р РЋРІР‚в„–Р В РІвЂћвЂ“ (accurate)');
     }
 }
+
+

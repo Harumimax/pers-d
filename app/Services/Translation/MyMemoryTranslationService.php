@@ -100,10 +100,11 @@ class MyMemoryTranslationService implements TranslationServiceInterface
             return false;
         }
 
-        if (! preg_match('/[А-Яа-яЁё]/u', $translation)) {
+        if (! preg_match('/\\p{Cyrillic}/u', $translation)) {
             return false;
         }
 
         return ! preg_match('/[A-Za-z]/', $translation);
     }
 }
+

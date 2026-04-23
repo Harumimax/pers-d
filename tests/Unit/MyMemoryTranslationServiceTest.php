@@ -16,20 +16,20 @@ class MyMemoryTranslationServiceTest extends TestCase
         Http::fake([
             'https://api.mymemory.translated.net/get*' => Http::response([
                 'responseData' => [
-                    'translatedText' => 'доброе утро',
+                    'translatedText' => 'РґРѕР±СЂРѕРµ СѓС‚СЂРѕ',
                 ],
                 'matches' => [
                     [
-                        'translation' => 'доброе утро',
+                        'translation' => 'РґРѕР±СЂРѕРµ СѓС‚СЂРѕ',
                         'match' => 1,
                     ],
                     [
-                        'translation' => 'здравствуйте',
+                        'translation' => 'Р·РґСЂР°РІСЃС‚РІСѓР№С‚Рµ',
                         'created-by' => 'tm',
                         'match' => 0.82,
                     ],
                     [
-                        'translation' => 'утреннее приветствие',
+                        'translation' => 'СѓС‚СЂРµРЅРЅРµРµ РїСЂРёРІРµС‚СЃС‚РІРёРµ',
                     ],
                 ],
             ]),
@@ -39,9 +39,9 @@ class MyMemoryTranslationServiceTest extends TestCase
         $result = $service->translate('good morning', 'en', 'ru');
 
         $this->assertSame([
-            ['text' => 'доброе утро', 'label' => 'top result'],
-            ['text' => 'здравствуйте', 'label' => 'memory match'],
-            ['text' => 'утреннее приветствие', 'label' => 'suggested'],
+            ['text' => 'РґРѕР±СЂРѕРµ СѓС‚СЂРѕ', 'label' => 'top result'],
+            ['text' => 'Р·РґСЂР°РІСЃС‚РІСѓР№С‚Рµ', 'label' => 'memory match'],
+            ['text' => 'СѓС‚СЂРµРЅРЅРµРµ РїСЂРёРІРµС‚СЃС‚РІРёРµ', 'label' => 'suggested'],
         ], $result->toArray());
     }
 
@@ -54,7 +54,7 @@ class MyMemoryTranslationServiceTest extends TestCase
                 ],
                 'matches' => [
                     [
-                        'translation' => 'потребитель',
+                        'translation' => 'РїРѕС‚СЂРµР±РёС‚РµР»СЊ',
                         'match' => 1,
                     ],
                     [
@@ -68,7 +68,7 @@ class MyMemoryTranslationServiceTest extends TestCase
                         'match' => 0.95,
                     ],
                     [
-                        'translation' => 'Отдел индекса потребительских цен',
+                        'translation' => 'РћС‚РґРµР» РёРЅРґРµРєСЃР° РїРѕС‚СЂРµР±РёС‚РµР»СЊСЃРєРёС… С†РµРЅ',
                         'created-by' => 'tm',
                         'match' => 0.87,
                     ],
@@ -80,8 +80,41 @@ class MyMemoryTranslationServiceTest extends TestCase
         $result = $service->translate('consumer', 'en', 'ru');
 
         $this->assertSame([
-            ['text' => 'потребитель', 'label' => 'best match'],
-            ['text' => 'Отдел индекса потребительских цен', 'label' => 'memory match'],
+            ['text' => 'РїРѕС‚СЂРµР±РёС‚РµР»СЊ', 'label' => 'best match'],
+            ['text' => 'РћС‚РґРµР» РёРЅРґРµРєСЃР° РїРѕС‚СЂРµР±РёС‚РµР»СЊСЃРєРёС… С†РµРЅ', 'label' => 'memory match'],
+        ], $result->toArray());
+    }
+    public function test_service_filters_out_mixed_latin_and_cyrillic_suggestions(): void
+    {
+        Http::fake([
+            'https://api.mymemory.translated.net/get*' => Http::response([
+                'responseData' => [
+                    'translatedText' => 'точный',
+                ],
+                'matches' => [
+                    [
+                        'translation' => 'точный',
+                        'match' => 1,
+                    ],
+                    [
+                        'translation' => 'точный (accurate)',
+                        'created-by' => 'tm',
+                        'match' => 0.95,
+                    ],
+                    [
+                        'translation' => 'подходящий',
+                    ],
+                ],
+            ]),
+        ]);
+
+        $service = $this->app->make(MyMemoryTranslationService::class);
+        $result = $service->translate('accurate', 'en', 'ru');
+
+        $this->assertSame([
+            ['text' => 'точный', 'label' => 'top result'],
+            ['text' => 'подходящий', 'label' => 'suggested'],
         ], $result->toArray());
     }
 }
+
