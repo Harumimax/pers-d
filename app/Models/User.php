@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Notifications\Auth\ResetPasswordViaNotiSend;
+use Throwable;
 use Illuminate\Auth\Notifications\VerifyEmail as VerifyEmailNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -46,10 +47,29 @@ class User extends Authenticatable
 
     public function sendPasswordResetNotification($token): void
     {
-        $this->notify(
-            (new ResetPasswordViaNotiSend($token))
-                ->locale($this->preferredLocaleOrDefault())
-        );
+        $locale = $this->preferredLocaleOrDefault();
+
+        $delivery = PasswordResetMailDelivery::query()->create([
+            'user_id' => $this->getKey(),
+            'email' => (string) $this->getEmailForPasswordReset(),
+            'locale' => $locale,
+            'delivery_status' => PasswordResetMailDelivery::STATUS_PENDING,
+        ]);
+
+        try {
+            $this->notify(
+                (new ResetPasswordViaNotiSend($token, $delivery->id))
+                    ->locale($locale)
+            );
+        } catch (Throwable $exception) {
+            report($exception);
+
+            $delivery->forceFill([
+                'delivery_status' => PasswordResetMailDelivery::STATUS_FAILED,
+                'delivery_error' => PasswordResetMailDelivery::ERROR_DISPATCH_FAILED,
+                'delivery_error_message' => $exception->getMessage(),
+            ])->save();
+        }
     }
 
     public function sendEmailVerificationNotification(): void

@@ -161,6 +161,11 @@
   - `App\Services\NotiSend\NotiSendEmailApiClient`
   - the password broker and reset token flow remain standard Laravel
   - only the delivery channel is replaced, so the email is queued and sent by the worker through NotiSend `POST /v1/email/messages`
+- Reset-password mail observability is stored in `password_reset_mail_deliveries`:
+  - `User::sendPasswordResetNotification()` creates a `pending` row before queue dispatch
+  - `NotiSendMailChannel` marks the row as `sent` or `failed` after API delivery
+  - dispatch failures are normalized to `dispatch_failed`
+  - provider/API failures store both a normalized `delivery_error` code and the raw `delivery_error_message`
 - Profile read-model services live under `app/Services/Profile`
   - `RemainderStatisticsService`
     - aggregates finished game sessions for the authenticated user's profile page

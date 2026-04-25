@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\PasswordResetMailDelivery;
 use App\Notifications\Auth\ResetPasswordViaNotiSend;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -9,6 +10,7 @@ use Illuminate\Notifications\SendQueuedNotifications;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
+use RuntimeException;
 use Tests\TestCase;
 
 class PasswordResetTest extends TestCase
@@ -84,6 +86,25 @@ class PasswordResetTest extends TestCase
             return $job->notification instanceof ResetPasswordViaNotiSend
                 && $job->channels === ['App\\Notifications\\Channels\\NotiSendMailChannel'];
         });
+    }
+
+    public function test_reset_password_delivery_record_is_created_as_pending_when_link_is_requested(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create([
+            'preferred_locale' => 'ru',
+        ]);
+
+        $this->post('/forgot-password', ['email' => $user->email])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('password_reset_mail_deliveries', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'locale' => 'ru',
+            'delivery_status' => PasswordResetMailDelivery::STATUS_PENDING,
+        ]);
     }
 
     public function test_reset_password_screen_can_be_rendered(): void
@@ -183,6 +204,101 @@ class PasswordResetTest extends TestCase
                 && str_contains((string) $request['text'], '/reset-password/test-reset-token?email=')
                 && str_contains((string) $request['html'], '/reset-password/test-reset-token?email=');
         });
+    }
+
+    public function test_reset_password_delivery_record_is_marked_sent_after_successful_notisend_send(): void
+    {
+        config([
+            'services.notisend.api_token' => 'test-token',
+            'services.notisend.base_url' => 'https://api.notisend.ru/v1',
+            'services.notisend.reserve_base_url' => 'https://api-reserve.msndr.net/v1',
+            'services.notisend.from_email' => 'sender@example.com',
+            'services.notisend.from_name' => 'WordKeeper',
+        ]);
+
+        Http::fake([
+            'https://api.notisend.ru/v1/email/messages' => Http::response([
+                'id' => 42,
+                'status' => 'queued',
+            ], 201),
+        ]);
+
+        $user = User::factory()->create();
+
+        $delivery = PasswordResetMailDelivery::query()->create([
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'locale' => 'en',
+            'delivery_status' => PasswordResetMailDelivery::STATUS_PENDING,
+        ]);
+
+        $notification = new ResetPasswordViaNotiSend('test-reset-token', $delivery->id);
+        $notification->locale('en');
+
+        app('Illuminate\\Notifications\\ChannelManager')->sendNow($user, $notification);
+
+        $delivery->refresh();
+
+        $this->assertSame(PasswordResetMailDelivery::STATUS_SENT, $delivery->delivery_status);
+        $this->assertNotNull($delivery->delivered_at);
+        $this->assertNull($delivery->delivery_error);
+        $this->assertNull($delivery->delivery_error_message);
+    }
+
+    public function test_reset_password_delivery_record_is_marked_failed_when_api_returns_error(): void
+    {
+        config([
+            'services.notisend.api_token' => 'test-token',
+            'services.notisend.base_url' => 'https://api.notisend.ru/v1',
+            'services.notisend.reserve_base_url' => 'https://api-reserve.msndr.net/v1',
+            'services.notisend.from_email' => 'sender@example.com',
+            'services.notisend.from_name' => 'WordKeeper',
+        ]);
+
+        Http::fake([
+            'https://api.notisend.ru/v1/email/messages' => Http::response([
+                'message' => 'Unauthorized',
+            ], 401),
+        ]);
+
+        $user = User::factory()->create();
+
+        $delivery = PasswordResetMailDelivery::query()->create([
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'locale' => 'en',
+            'delivery_status' => PasswordResetMailDelivery::STATUS_PENDING,
+        ]);
+
+        $notification = new ResetPasswordViaNotiSend('test-reset-token', $delivery->id);
+        $notification->locale('en');
+
+        app('Illuminate\\Notifications\\ChannelManager')->sendNow($user, $notification);
+
+        $delivery->refresh();
+
+        $this->assertSame(PasswordResetMailDelivery::STATUS_FAILED, $delivery->delivery_status);
+        $this->assertSame(PasswordResetMailDelivery::ERROR_API_AUTH_FAILED, $delivery->delivery_error);
+        $this->assertSame('Unauthorized', $delivery->delivery_error_message);
+    }
+
+    public function test_reset_password_delivery_record_is_marked_failed_when_notification_dispatch_throws(): void
+    {
+        Queue::partialMock()
+            ->shouldReceive('connection')
+            ->andThrow(new RuntimeException('Queue unavailable'));
+
+        $user = User::factory()->create();
+
+        $this->post('/forgot-password', ['email' => $user->email])
+            ->assertRedirect();
+
+        $delivery = PasswordResetMailDelivery::query()->latest('id')->first();
+
+        $this->assertInstanceOf(PasswordResetMailDelivery::class, $delivery);
+        $this->assertSame(PasswordResetMailDelivery::STATUS_FAILED, $delivery->delivery_status);
+        $this->assertSame(PasswordResetMailDelivery::ERROR_DISPATCH_FAILED, $delivery->delivery_error);
+        $this->assertSame('Queue unavailable', $delivery->delivery_error_message);
     }
 
     public function test_invalid_email_for_password_reset_returns_localized_error(): void
