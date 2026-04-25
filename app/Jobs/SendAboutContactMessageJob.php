@@ -2,13 +2,13 @@
 
 namespace App\Jobs;
 
-use App\Mail\AboutContactMessage as AboutContactMail;
 use App\Models\AboutContactMessage;
+use App\Services\AboutContact\AboutContactDeliveryException;
+use App\Services\AboutContact\AboutContactDeliveryServiceInterface;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Mail;
 use Throwable;
 
 class SendAboutContactMessageJob implements ShouldQueue
@@ -22,7 +22,7 @@ class SendAboutContactMessageJob implements ShouldQueue
     ) {
     }
 
-    public function handle(): void
+    public function handle(AboutContactDeliveryServiceInterface $deliveryService): void
     {
         $contactMessage = AboutContactMessage::query()->find($this->contactMessageId);
 
@@ -31,15 +31,19 @@ class SendAboutContactMessageJob implements ShouldQueue
         }
 
         try {
-            Mail::to((string) config('mail.about_contact_recipient'))
-                ->locale($this->locale)
-                ->send(new AboutContactMail($contactMessage));
+            $deliveryService->send($contactMessage, $this->locale);
 
             $contactMessage->forceFill([
                 'delivery_status' => AboutContactMessage::STATUS_SENT,
                 'delivered_at' => Carbon::now(),
                 'delivery_error' => null,
                 'delivery_error_message' => null,
+            ])->save();
+        } catch (AboutContactDeliveryException $exception) {
+            $contactMessage->forceFill([
+                'delivery_status' => AboutContactMessage::STATUS_FAILED,
+                'delivery_error' => $exception->deliveryErrorCode,
+                'delivery_error_message' => $exception->getMessage(),
             ])->save();
         } catch (Throwable $exception) {
             report($exception);

@@ -143,12 +143,16 @@
   - `TranslationResult`
   - `TranslationSuggestion`
 - Interface text localization uses standard Laravel lang files plus application locale set by middleware
-- About contact delivery currently uses standard Laravel mail infrastructure:
+- About contact delivery currently uses a dedicated delivery abstraction over NotiSend Email API:
   - `StoreAboutContactRequest`
-  - `App\Mail\AboutContactMessage`
   - `App\Models\AboutContactMessage`
   - `App\Jobs\SendAboutContactMessageJob`
+  - `App\Services\AboutContact\AboutContactDeliveryServiceInterface`
+  - `App\Services\AboutContact\NotiSendAboutContactDeliveryService`
+  - `App\Mail\AboutContactMessage`
   - the controller stores a pending message and pushes delivery to the queue
+  - the queued job sends the contact message to NotiSend `POST /v1/email/messages`
+  - delivery uses the primary NotiSend API URL and can fall back to the reserve API URL
   - delivery failures are persisted with both a safe normalized error code and the raw exception message for diagnostics
 - Profile read-model services live under `app/Services/Profile`
   - `RemainderStatisticsService`

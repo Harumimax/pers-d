@@ -267,11 +267,19 @@
                                     <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
                                 </tr>
                                 <tr>
+                                    <td>{{ __('about.status.items.ready_dictionary_copy') }}</td>
+                                    <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
+                                </tr>
+                                <tr>
                                     <td>{{ __('about.status.items.manual_remainder') }}</td>
                                     <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
                                 </tr>
                                 <tr>
                                     <td>{{ __('about.status.items.choice_remainder') }}</td>
+                                    <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td>{{ __('about.status.items.demo_mode') }}</td>
                                     <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
                                 </tr>
                                 <tr>
@@ -288,6 +296,18 @@
                                 </tr>
                                 <tr>
                                     <td>{{ __('about.status.items.real_contact_delivery') }}</td>
+                                    <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td>{{ __('about.status.items.result_transfer') }}</td>
+                                    <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td>{{ __('about.status.items.general_statistics') }}</td>
+                                    <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td>{{ __('about.status.items.legal_pages') }}</td>
                                     <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
                                 </tr>
                                 <tr>

@@ -41,4 +41,13 @@ return [
         'mt' => env('MYMEMORY_MT', true),
     ],
 
+    'notisend' => [
+        'base_url' => env('NOTISEND_API_URL', 'https://api.notisend.ru/v1'),
+        'reserve_base_url' => env('NOTISEND_API_RESERVE_URL', 'https://api-reserve.msndr.net/v1'),
+        'api_token' => env('NOTISEND_API_TOKEN'),
+        'timeout' => env('NOTISEND_TIMEOUT', 20),
+        'from_email' => env('NOTISEND_FROM_EMAIL', env('MAIL_FROM_ADDRESS')),
+        'from_name' => env('NOTISEND_FROM_NAME', env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel'))),
+    ],
+
 ];

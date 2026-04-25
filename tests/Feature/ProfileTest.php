@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Jobs\SendAboutContactMessageJob;
-use App\Mail\AboutContactMessage as AboutContactMail;
 use App\Models\AboutContactMessage;
 use App\Models\GameSession;
 use App\Models\ReadyDictionary;
@@ -13,7 +12,7 @@ use App\Models\UserDictionary;
 use App\Models\Word;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Contracts\Bus\Dispatcher;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use RuntimeException;
 use Tests\TestCase;
@@ -233,7 +232,21 @@ class ProfileTest extends TestCase
 
     public function test_about_contact_job_marks_message_as_sent_after_successful_delivery(): void
     {
-        Mail::fake();
+        config([
+            'services.notisend.api_token' => 'test-token',
+            'services.notisend.base_url' => 'https://api.notisend.ru/v1',
+            'services.notisend.reserve_base_url' => 'https://api-reserve.msndr.net/v1',
+            'services.notisend.from_email' => 'sender@example.com',
+            'services.notisend.from_name' => 'WordKeeper',
+            'mail.about_contact_recipient' => 'recipient@example.com',
+        ]);
+
+        Http::fake([
+            'https://api.notisend.ru/v1/email/messages' => Http::response([
+                'id' => 15,
+                'status' => 'queued',
+            ], 201),
+        ]);
 
         $contactMessage = AboutContactMessage::create([
             'contact_email' => 'user@example.com',
@@ -243,11 +256,18 @@ class ProfileTest extends TestCase
         ]);
 
         $job = new SendAboutContactMessageJob($contactMessage->id, 'en');
-        $job->handle();
+        app()->call([$job, 'handle']);
 
-        Mail::assertSent(AboutContactMail::class, function (AboutContactMail $mail) use ($contactMessage): bool {
-            return $mail->hasTo((string) config('mail.about_contact_recipient'))
-                && $mail->contactMessage->is($contactMessage);
+        Http::assertSent(function (\Illuminate\Http\Client\Request $request) use ($contactMessage): bool {
+            return $request->url() === 'https://api.notisend.ru/v1/email/messages'
+                && $request->hasHeader('Authorization', 'Bearer test-token')
+                && $request['from_email'] === 'sender@example.com'
+                && $request['from_name'] === 'WordKeeper'
+                && $request['to'] === 'recipient@example.com'
+                && $request['subject'] === '[WordKeeper] About contact form: Queued delivery'
+                && $request['text'] === "Contact email: user@example.com\nSubject: Queued delivery\nMessage:\nQueued delivery body."
+                && str_contains((string) $request['html'], $contactMessage->message)
+                && ($request['smtp_headers']['Reply-To'] ?? null) === $contactMessage->contact_email;
         });
 
         $this->assertDatabaseHas('about_contact_messages', [
@@ -258,21 +278,24 @@ class ProfileTest extends TestCase
         ]);
     }
 
-    public function test_about_contact_job_marks_message_as_failed_with_safe_error_code_and_raw_message_when_mail_delivery_throws(): void
+    public function test_about_contact_job_marks_message_as_failed_with_provider_error_code_and_raw_message_when_api_returns_error(): void
     {
-        $recipient = (string) config('mail.about_contact_recipient');
+        config([
+            'services.notisend.api_token' => 'test-token',
+            'services.notisend.base_url' => 'https://api.notisend.ru/v1',
+            'services.notisend.reserve_base_url' => 'https://api-reserve.msndr.net/v1',
+            'services.notisend.from_email' => 'sender@example.com',
+            'services.notisend.from_name' => 'WordKeeper',
+            'mail.about_contact_recipient' => 'recipient@example.com',
+        ]);
 
-        Mail::shouldReceive('to')
-            ->once()
-            ->with($recipient)
-            ->andReturnSelf();
-        Mail::shouldReceive('locale')
-            ->once()
-            ->with('ru')
-            ->andReturnSelf();
-        Mail::shouldReceive('send')
-            ->once()
-            ->andThrow(new RuntimeException('SMTP unavailable'));
+        Http::fake([
+            'https://api.notisend.ru/v1/email/messages' => Http::response([
+                'errors' => [
+                    ['code' => 401, 'detail' => 'Invalid api token'],
+                ],
+            ], 401),
+        ]);
 
         $contactMessage = AboutContactMessage::create([
             'contact_email' => 'user@example.com',
@@ -282,13 +305,52 @@ class ProfileTest extends TestCase
         ]);
 
         $job = new SendAboutContactMessageJob($contactMessage->id, 'ru');
-        $job->handle();
+        app()->call([$job, 'handle']);
 
         $this->assertDatabaseHas('about_contact_messages', [
             'id' => $contactMessage->id,
             'delivery_status' => AboutContactMessage::STATUS_FAILED,
-            'delivery_error' => AboutContactMessage::ERROR_MAIL_TRANSPORT_FAILED,
-            'delivery_error_message' => 'SMTP unavailable',
+            'delivery_error' => AboutContactMessage::ERROR_API_AUTH_FAILED,
+            'delivery_error_message' => 'Invalid api token',
+        ]);
+    }
+
+    public function test_about_contact_job_uses_notisend_reserve_url_when_primary_connection_fails(): void
+    {
+        config([
+            'services.notisend.api_token' => 'test-token',
+            'services.notisend.base_url' => 'https://api.notisend.ru/v1',
+            'services.notisend.reserve_base_url' => 'https://api-reserve.msndr.net/v1',
+            'services.notisend.from_email' => 'sender@example.com',
+            'services.notisend.from_name' => 'WordKeeper',
+            'mail.about_contact_recipient' => 'recipient@example.com',
+        ]);
+
+        Http::fake([
+            'https://api.notisend.ru/v1/email/messages' => Http::failedConnection(),
+            'https://api-reserve.msndr.net/v1/email/messages' => Http::response([
+                'id' => 16,
+                'status' => 'queued',
+            ], 201),
+        ]);
+
+        $contactMessage = AboutContactMessage::create([
+            'contact_email' => 'user@example.com',
+            'subject' => 'Fallback delivery',
+            'message' => 'Reserve URL should be used.',
+            'delivery_status' => AboutContactMessage::STATUS_PENDING,
+        ]);
+
+        $job = new SendAboutContactMessageJob($contactMessage->id, 'en');
+        app()->call([$job, 'handle']);
+
+        Http::assertSentCount(2);
+
+        $this->assertDatabaseHas('about_contact_messages', [
+            'id' => $contactMessage->id,
+            'delivery_status' => AboutContactMessage::STATUS_SENT,
+            'delivery_error' => null,
+            'delivery_error_message' => null,
         ]);
     }
 

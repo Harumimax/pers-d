@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\AboutContact\AboutContactDeliveryServiceInterface;
+use App\Services\AboutContact\NotiSendAboutContactDeliveryService;
 use App\Services\Translation\MyMemoryTranslationService;
 use App\Services\Translation\TranslationServiceInterface;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -16,6 +18,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(AboutContactDeliveryServiceInterface::class, NotiSendAboutContactDeliveryService::class);
         $this->app->bind(TranslationServiceInterface::class, MyMemoryTranslationService::class);
     }
 

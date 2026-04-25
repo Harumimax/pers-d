@@ -31,15 +31,18 @@ The product is intentionally lightweight, practical, and built around personal u
 | Browse ready dictionaries managed by the project | `done` |
 | Open a ready dictionary and browse its words read-only | `done` |
 | Filter ready dictionaries by language, level, and part of speech | `done` |
-| Seed the first ready dictionary, `100 English words`, through a data migration | `done` |
+| Copy words from prepared dictionaries into personal dictionaries | `done` |
+| Seed prepared dictionaries through data migrations | `done` |
 | Play Remainder sessions with manual translation input | `done` |
 | Play Remainder sessions in multiple choice mode | `done` |
+| Use guest demo mode for Prepared dictionaries and Remainder without an account | `done` |
 | Store part of speech inside the game session snapshot | `done` |
 | Show personal Remainder statistics on the profile page | `done` |
 | Switch the interface between Russian and English | `done` |
 | Remember a preferred interface language for authenticated users | `done` |
 | Localize auth, welcome, and product flows in Russian and English | `done` |
-| Send About page contact form messages by email and store delivery status | `done` |
+| Send About page contact form messages through the NotiSend API and store delivery status | `done` |
+| Copy incorrect prepared-dictionary result words into a personal dictionary after a finished session | `done` |
 | Show aggregate site statistics on the About page | `done` |
 | Publish privacy and cookie policy sections on the About page | `done` |
 | Add Yandex Metrika through environment-based configuration | `done` |
@@ -48,7 +51,6 @@ The product is intentionally lightweight, practical, and built around personal u
 | Connect site functionality to the Telegram bot | `planning` |
 | Create a mode for sending words to the Telegram bot | `planning` |
 | Switch to another local translation provider | `planning` |
-| Add a flow for copying words from ready dictionaries into personal dictionaries | `planning` |
 | Make the game interface more varied with alternate progress images and memes | `planning` |
 
 ## Product feel
@@ -103,9 +105,14 @@ Authenticated users can:
 - filter ready dictionaries by language, level, and part of speech
 - open a ready dictionary page
 - view ready dictionary words in a read-only table
+- copy a ready word into one of their personal dictionaries
 - search, filter, sort, and paginate ready dictionary words
 
-The first seeded ready dictionary is `100 English words`.
+Current seeded prepared dictionaries include:
+
+- `100 English words`
+- `The most commonly used English verbs`
+- `The most commonly used English adjectives`
 
 ### Profile and About
 Authenticated users can:
@@ -120,6 +127,8 @@ Authenticated users can:
 - send a message through the About page contact form
 - read privacy and cookie policy sections
 
+The About contact form is queued and delivered through the NotiSend Email API.
+
 ### Remainder
 Authenticated users can:
 
@@ -127,7 +136,14 @@ Authenticated users can:
 - play in `manual translation input` mode
 - play in `multiple choice` mode
 - finish a session and see a result summary with incorrect answers
+- copy incorrect prepared-dictionary result words into a personal dictionary
 - keep session questions stable through snapshot-based game items
+
+Guests can also:
+
+- browse Prepared dictionaries in demo mode
+- start demo Remainder sessions from prepared dictionaries
+- open only the demo sessions created in their current browser session through signed URLs
 
 ## Quick start
 
@@ -159,13 +175,15 @@ php artisan test
 ## Project notes
 
 - authentication is required for the main product flows
+- guest demo mode is available for Prepared dictionaries and Remainder
 - dictionary and word management are the core of the current product
 - game sessions are snapshot-based and do not depend on live dictionary data during play
+- About contact form delivery uses the NotiSend Email API through queued jobs
 - architecture decisions are documented in [`docs/architecture.md`](docs/architecture.md)
 
 ## Roadmap direction
 
-The current product already covers the main dictionary workflow, ready dictionary browsing, a working Remainder game flow, mail-backed feedback delivery, and a bilingual interface with remembered user language preference. The next major steps are copying words from ready dictionaries into personal dictionaries and later Telegram-based workflows with deeper learning scenarios.
+The current product already covers the main dictionary workflow, prepared dictionary browsing, a working Remainder game flow, guest demo mode, API-backed feedback delivery, and a bilingual interface with remembered user language preference. The next major steps are expanding prepared content and later Telegram-based workflows with deeper learning scenarios.
 
 ---
 
