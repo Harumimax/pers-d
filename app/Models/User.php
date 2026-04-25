@@ -3,7 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
+use App\Notifications\Auth\ResetPasswordViaNotiSend;
 use Illuminate\Auth\Notifications\VerifyEmail as VerifyEmailNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -47,7 +47,7 @@ class User extends Authenticatable
     public function sendPasswordResetNotification($token): void
     {
         $this->notify(
-            (new ResetPasswordNotification($token))
+            (new ResetPasswordViaNotiSend($token))
                 ->locale($this->preferredLocaleOrDefault())
         );
     }

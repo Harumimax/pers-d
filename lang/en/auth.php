@@ -32,6 +32,13 @@ return [
         'password_confirmation' => 'Confirm Password',
         'submit' => 'Reset Password',
     ],
+    'reset_password_mail' => [
+        'subject' => 'Reset your password',
+        'intro' => 'You are receiving this email because we received a password reset request for your account.',
+        'action_label' => 'Reset Password',
+        'expire' => 'This password reset link will expire in :count minutes.',
+        'outro' => 'If you did not request a password reset, no further action is required.',
+    ],
     'verify_email' => [
         'description' => 'Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.',
         'resent' => 'A new verification link has been sent to the email address you provided during registration.',

@@ -154,6 +154,13 @@
   - the queued job sends the contact message to NotiSend `POST /v1/email/messages`
   - delivery uses the primary NotiSend API URL and can fall back to the reserve API URL
   - delivery failures are persisted with both a safe normalized error code and the raw exception message for diagnostics
+- Password reset delivery uses a queued custom notification over the same NotiSend Email API:
+  - `App\Notifications\Auth\ResetPasswordViaNotiSend`
+  - `App\Notifications\Channels\NotiSendMailChannel`
+  - `App\Notifications\Messages\NotiSendMessage`
+  - `App\Services\NotiSend\NotiSendEmailApiClient`
+  - the password broker and reset token flow remain standard Laravel
+  - only the delivery channel is replaced, so the email is queued and sent by the worker through NotiSend `POST /v1/email/messages`
 - Profile read-model services live under `app/Services/Profile`
   - `RemainderStatisticsService`
     - aggregates finished game sessions for the authenticated user's profile page

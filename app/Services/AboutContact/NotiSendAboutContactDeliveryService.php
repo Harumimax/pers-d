@@ -4,55 +4,29 @@ namespace App\Services\AboutContact;
 
 use App\Mail\AboutContactMessage as AboutContactMail;
 use App\Models\AboutContactMessage;
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Http\Client\Response;
+use App\Services\NotiSend\NotiSendEmailApiClient;
+use App\Services\NotiSend\NotiSendRequestException;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Http;
 
 class NotiSendAboutContactDeliveryService implements AboutContactDeliveryServiceInterface
 {
+    public function __construct(
+        private readonly NotiSendEmailApiClient $client,
+    ) {
+    }
+
     public function send(AboutContactMessage $contactMessage, string $locale): void
     {
         $payload = $this->payload($contactMessage, $locale);
-        $primaryBaseUrl = (string) config('services.notisend.base_url');
-        $reserveBaseUrl = (string) config('services.notisend.reserve_base_url');
 
         try {
-            $response = $this->request($primaryBaseUrl)->post('/email/messages', $payload);
-        } catch (ConnectionException $exception) {
-            if ($reserveBaseUrl === '' || $reserveBaseUrl === $primaryBaseUrl) {
-                throw new AboutContactDeliveryException(
-                    AboutContactMessage::ERROR_API_TRANSPORT_FAILED,
-                    $exception->getMessage(),
-                );
-            }
-
-            try {
-                $response = $this->request($reserveBaseUrl)->post('/email/messages', $payload);
-            } catch (ConnectionException $reserveException) {
-                throw new AboutContactDeliveryException(
-                    AboutContactMessage::ERROR_API_TRANSPORT_FAILED,
-                    $reserveException->getMessage(),
-                );
-            }
-        }
-
-        if (! $response->successful()) {
+            $this->client->send($payload);
+        } catch (NotiSendRequestException $exception) {
             throw new AboutContactDeliveryException(
-                $this->errorCodeForStatus($response->status()),
-                $this->errorMessageFromResponse($response),
+                $this->errorCodeForStatus($exception->status),
+                $exception->getMessage(),
             );
         }
-    }
-
-    private function request(string $baseUrl): PendingRequest
-    {
-        return Http::baseUrl(rtrim($baseUrl, '/'))
-            ->acceptJson()
-            ->asJson()
-            ->withToken((string) config('services.notisend.api_token'))
-            ->timeout((int) config('services.notisend.timeout', 20));
     }
 
     /**
@@ -101,7 +75,7 @@ class NotiSendAboutContactDeliveryService implements AboutContactDeliveryService
         }
     }
 
-    private function errorCodeForStatus(int $status): string
+    private function errorCodeForStatus(?int $status): string
     {
         return match ($status) {
             401 => AboutContactMessage::ERROR_API_AUTH_FAILED,
@@ -111,30 +85,5 @@ class NotiSendAboutContactDeliveryService implements AboutContactDeliveryService
             503 => AboutContactMessage::ERROR_API_SERVICE_UNAVAILABLE,
             default => AboutContactMessage::ERROR_API_REQUEST_FAILED,
         };
-    }
-
-    private function errorMessageFromResponse(Response $response): string
-    {
-        $payload = $response->json();
-
-        if (is_array($payload)) {
-            $firstError = $payload['errors'][0]['detail'] ?? null;
-
-            if (is_string($firstError) && trim($firstError) !== '') {
-                return $firstError;
-            }
-
-            $message = $payload['message'] ?? null;
-
-            if (is_string($message) && trim($message) !== '') {
-                return $message;
-            }
-        }
-
-        $body = trim($response->body());
-
-        return $body !== ''
-            ? $body
-            : 'NotiSend API request failed with HTTP status '.$response->status().'.';
     }
 }
