@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 return [
     'title_line_1' => 'Персональный',
