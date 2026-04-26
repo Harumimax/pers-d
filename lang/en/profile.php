@@ -39,6 +39,7 @@ return [
         'name' => 'Name',
         'email' => 'Email',
         'preferred_locale' => 'Preferred language',
+        'tg_login' => 'Telegram login',
         'locale_options' => [
             'ru' => 'Russian',
             'en' => 'English',

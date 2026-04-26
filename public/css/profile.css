@@ -296,6 +296,25 @@
     box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12);
 }
 
+.profile-input-prefix-wrap {
+    position: relative;
+}
+
+.profile-input-prefix {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted-color);
+    font-size: 1.02rem;
+    font-weight: 700;
+    pointer-events: none;
+}
+
+.profile-input--with-prefix {
+    padding-left: 40px;
+}
+
 .profile-error {
     margin-top: 2px;
     font-size: 0.88rem;

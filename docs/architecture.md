@@ -36,6 +36,7 @@
   - delegates remainder statistics aggregation to `RemainderStatisticsService`
   - updates profile
   - deletes account
+  - persists user's preferred locale and optional Telegram login
 - `App\Http\Controllers\AboutController`
   - renders the About page for authenticated users and guests
   - delegates aggregate site-wide About statistics to `GlobalStatisticsService`
@@ -125,6 +126,7 @@
   - `lang/ru/common.php`
   - `lang/en/about.php`
   - `lang/ru/about.php`
+  - profile and validation translations also define the optional Telegram login field
 - Remainder game UI:
   - `resources/views/livewire/remainder/show.blade.php`
 - Key styling:
@@ -334,6 +336,7 @@
   - `name`
   - `email`
   - `preferred_locale` nullable
+  - `tg_login` nullable, stored without `@`
   - `password`
   - `email_verified_at`
 

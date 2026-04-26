@@ -11,6 +11,7 @@ return [
     'confirmed' => 'The :attribute confirmation does not match.',
     'lowercase' => 'The :attribute must be lowercase.',
     'not_regex' => 'The :attribute contains invalid characters.',
+    'telegram_login' => 'The :attribute may contain only Latin letters, numbers, and underscores.',
     'same' => 'The :attribute and :other must match.',
     'max' => [
         'string' => 'The :attribute may not be greater than :max characters.',
@@ -27,6 +28,7 @@ return [
         'name' => 'name',
         'email' => 'email',
         'preferred_locale' => 'preferred language',
+        'tg_login' => 'Telegram login',
         'language' => 'language',
         'word' => 'word',
         'translation' => 'translation',

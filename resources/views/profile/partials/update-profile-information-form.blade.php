@@ -79,6 +79,24 @@
             <x-input-error class="profile-error" :messages="$errors->get('preferred_locale')" />
         </div>
 
+        <div class="profile-field">
+            <label for="tg_login" class="profile-label">{{ __('profile.personal_information.tg_login') }}</label>
+            <div class="profile-input-prefix-wrap">
+                <span class="profile-input-prefix" aria-hidden="true">@</span>
+                <input
+                    id="tg_login"
+                    name="tg_login"
+                    type="text"
+                    class="profile-input profile-input--with-prefix"
+                    value="{{ old('tg_login', $user->tg_login) }}"
+                    inputmode="text"
+                    autocomplete="off"
+                    spellcheck="false"
+                >
+            </div>
+            <x-input-error class="profile-error" :messages="$errors->get('tg_login')" />
+        </div>
+
         <div class="profile-actions">
             <button type="submit" class="btn btn-primary profile-submit-btn">{{ __('profile.personal_information.save') }}</button>
 

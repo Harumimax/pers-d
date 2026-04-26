@@ -773,6 +773,7 @@ class ProfileTest extends TestCase
                 'name' => 'Test User',
                 'email' => 'test@example.com',
                 'preferred_locale' => 'en',
+                'tg_login' => '@word_keeper',
             ]);
 
         $response
@@ -784,6 +785,7 @@ class ProfileTest extends TestCase
         $this->assertSame('Test User', $user->name);
         $this->assertSame('test@example.com', $user->email);
         $this->assertSame('en', $user->preferred_locale);
+        $this->assertSame('word_keeper', $user->tg_login);
         $this->assertNull($user->email_verified_at);
     }
 
@@ -799,6 +801,7 @@ class ProfileTest extends TestCase
                 'name' => 'Test User',
                 'email' => 'test@example.com',
                 'preferred_locale' => 'de',
+                'tg_login' => '@word_keeper',
             ])
             ->assertRedirect('/profile')
             ->assertSessionHasErrors('preferred_locale');
@@ -819,6 +822,7 @@ class ProfileTest extends TestCase
                 'name' => " \u{200B}Test User\u{200D} ",
                 'email' => " \u{FEFF}Test@Example.com ",
                 'preferred_locale' => 'ru',
+                'tg_login' => " \u{200B}@Test_User\u{200D} ",
             ]);
 
         $response
@@ -830,6 +834,7 @@ class ProfileTest extends TestCase
         $this->assertSame('Test User', $user->name);
         $this->assertSame('test@example.com', $user->email);
         $this->assertSame('ru', $user->preferred_locale);
+        $this->assertSame('Test_User', $user->tg_login);
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
@@ -842,6 +847,7 @@ class ProfileTest extends TestCase
                 'name' => 'Test User',
                 'email' => $user->email,
                 'preferred_locale' => 'en',
+                'tg_login' => '@word_keeper',
             ]);
 
         $response
@@ -852,6 +858,27 @@ class ProfileTest extends TestCase
 
         $this->assertNotNull($user->email_verified_at);
         $this->assertSame('en', $user->preferred_locale);
+        $this->assertSame('word_keeper', $user->tg_login);
+    }
+
+    public function test_profile_information_rejects_invalid_telegram_login_characters(): void
+    {
+        $user = User::factory()->create([
+            'tg_login' => 'valid_name',
+        ]);
+
+        $this->actingAs($user)
+            ->from('/profile')
+            ->patch('/profile', [
+                'name' => 'Test User',
+                'email' => $user->email,
+                'preferred_locale' => 'en',
+                'tg_login' => '@логин',
+            ])
+            ->assertRedirect('/profile')
+            ->assertSessionHasErrors('tg_login');
+
+        $this->assertSame('valid_name', $user->fresh()->tg_login);
     }
 
     public function test_preferred_locale_is_applied_after_login(): void
