@@ -82,16 +82,20 @@
     margin: 0;
 }
 
-.dictionaries-header-nav .btn {
+.dictionaries-header-nav__logout {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.dictionaries-header-nav__auth-btn {
     min-width: 104px;
     height: 48px;
     padding: 0 20px;
     font-size: 0.95rem;
     border-radius: 12px;
-}
-
-.dictionaries-header-nav__auth-btn {
-    min-width: 104px;
 }
 
 .dictionaries-main {
@@ -547,17 +551,17 @@
         gap: 20px;
     }
 
-    .dictionaries-header-nav .btn {
-        min-width: 96px;
-        height: 52px;
-        padding: 0 18px;
-    }
-
     .dictionaries-header-nav__menu {
         left: 50%;
         transform: translateX(-50%);
         min-width: 220px;
         max-width: min(280px, calc(100vw - 32px));
+    }
+
+    .dictionaries-header-nav__auth-btn {
+        min-width: 96px;
+        height: 52px;
+        padding: 0 18px;
     }
 
     .dictionaries-main {

@@ -73,6 +73,33 @@ img {
     gap: 14px;
 }
 
+.header-actions__form {
+    margin: 0;
+}
+
+.header-actions__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--muted-color);
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1;
+    transition: color 0.2s ease;
+    cursor: pointer;
+}
+
+.header-actions__link:hover {
+    color: var(--text-color);
+}
+
+.header-actions__logout {
+    font-family: inherit;
+}
+
 .language-switcher {
     display: inline-flex;
     align-items: center;

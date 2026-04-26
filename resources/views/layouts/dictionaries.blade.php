@@ -75,7 +75,7 @@
 
                 <form method="POST" action="{{ route('logout') }}" class="dictionaries-header-nav__form">
                     @csrf
-                    <button type="submit" class="btn btn-secondary">{{ __('common.links.logout') }}</button>
+                    <button type="submit" class="dictionaries-header-nav__link dictionaries-header-nav__logout">{{ __('common.links.logout') }}</button>
                 </form>
             @else
                 <div class="dictionaries-header-nav__dropdown">
@@ -105,7 +105,7 @@
                 <a href="{{ route('register') }}" class="btn btn-primary dictionaries-header-nav__auth-btn">
                     {{ __('common.links.signup') }}
                 </a>
-                <a href="{{ route('login') }}" class="dictionaries-header-nav__link">
+                <a href="{{ route('login') }}" class="btn btn-secondary dictionaries-header-nav__auth-btn">
                     {{ __('common.links.login') }}
                 </a>
             @endauth

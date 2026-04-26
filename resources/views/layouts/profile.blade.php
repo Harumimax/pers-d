@@ -77,7 +77,7 @@
 
                 <form method="POST" action="{{ route('logout') }}" class="profile-header-nav__form">
                     @csrf
-                    <button type="submit" class="btn btn-secondary">{{ __('common.links.logout') }}</button>
+                    <button type="submit" class="profile-header-nav__link profile-header-nav__logout">{{ __('common.links.logout') }}</button>
                 </form>
             @else
                 <div class="profile-header-nav__dropdown">
@@ -107,8 +107,8 @@
                 >
                     {{ __('common.links.remainder') }}
                 </a>
-                <a href="{{ route('register') }}" class="btn btn-primary">{{ __('common.links.signup') }}</a>
-                <a href="{{ route('login') }}" class="profile-header-nav__link">{{ __('common.links.login') }}</a>
+                <a href="{{ route('register') }}" class="btn btn-primary profile-header-nav__auth-btn">{{ __('common.links.signup') }}</a>
+                <a href="{{ route('login') }}" class="btn btn-secondary profile-header-nav__auth-btn">{{ __('common.links.login') }}</a>
             @endauth
             <x-language-switcher />
         </x-site-header>
