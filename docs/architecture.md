@@ -80,6 +80,7 @@
   - synchronizes the resolved locale back into session
   - calls `app()->setLocale(...)` for each web request
 - Telegram webhook access is protected by an explicit secret in the webhook URL, not by session or token-based web auth
+- `telegram/webhook/*` is explicitly excluded from Laravel CSRF validation because Telegram cannot send a browser CSRF token
 
 ### Livewire Components
 - `App\Livewire\Dictionaries\Index`
