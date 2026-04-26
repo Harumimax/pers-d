@@ -16,6 +16,24 @@
     gap: 34px;
 }
 
+.dictionaries-header-nav__item {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.dictionaries-header-nav__item + .dictionaries-header-nav__item::before {
+    content: "";
+    position: absolute;
+    left: -17px;
+    top: 50%;
+    width: 4px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(51, 65, 85, 0.58);
+    transform: translate(-50%, -50%);
+}
+
 .dictionaries-header-nav__link {
     font-size: 1rem;
     font-weight: 500;
@@ -25,6 +43,7 @@
 
 .dictionaries-header-nav__link:hover {
     color: var(--text-color);
+    text-shadow: 0 0 4px rgba(30, 58, 138, 0.26);
 }
 
 .dictionaries-header-nav__link--active {

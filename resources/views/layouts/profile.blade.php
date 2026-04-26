@@ -23,7 +23,7 @@
     <body class="profile-shell">
         <x-site-header nav-class="profile-header-nav" :label="__('common.navigation.profile')">
             @auth
-                <div class="profile-header-nav__dropdown">
+                <div class="profile-header-nav__item profile-header-nav__dropdown">
                     <a href="{{ route('dictionaries.index') }}" class="profile-header-nav__link">
                         {{ __('common.links.dictionaries') }}
                     </a>
@@ -43,11 +43,11 @@
                 </div>
                 <a
                     href="{{ route('remainder') }}"
-                    class="profile-header-nav__link {{ $activeNav === 'remainder' ? 'profile-header-nav__link--active' : '' }}"
+                    class="profile-header-nav__item profile-header-nav__link {{ $activeNav === 'remainder' ? 'profile-header-nav__link--active' : '' }}"
                 >
                     {{ __('common.links.remainder') }}
                 </a>
-                <div class="profile-header-nav__dropdown">
+                <div class="profile-header-nav__item profile-header-nav__dropdown">
                     <a
                         href="{{ route('ready-dictionaries.index') }}"
                         class="profile-header-nav__link {{ $activeNav === 'ready-dictionaries' ? 'profile-header-nav__link--active' : '' }}"
@@ -70,12 +70,12 @@
                 </div>
                 <a
                     href="{{ route('profile.edit') }}"
-                    class="profile-header-nav__link {{ $activeNav === 'profile' ? 'profile-header-nav__link--active' : '' }}"
+                    class="profile-header-nav__item profile-header-nav__link {{ $activeNav === 'profile' ? 'profile-header-nav__link--active' : '' }}"
                 >
                     {{ __('common.links.profile') }}
                 </a>
 
-                <form method="POST" action="{{ route('logout') }}" class="profile-header-nav__form">
+                <form method="POST" action="{{ route('logout') }}" class="profile-header-nav__item profile-header-nav__form">
                     @csrf
                     <button type="submit" class="profile-header-nav__link profile-header-nav__logout">{{ __('common.links.logout') }}</button>
                 </form>
