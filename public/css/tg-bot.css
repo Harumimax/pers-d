@@ -1,44 +1,75 @@
+.profile-shell {
+    --dictionaries-text-scale: 0.80;
+}
+
 .tg-bot-main {
     padding: 56px 0 72px;
 }
 
-.tg-bot-container {
-    width: 100%;
-    max-width: 1040px;
-    margin: 0 auto;
-    padding: 0 32px;
+.tg-bot-intro {
+    margin-bottom: 28px;
 }
 
-.tg-bot-hero {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.tg-bot-title {
-    margin: 0;
-    font-size: 3rem;
-    line-height: 1.06;
+.tg-bot-page-title {
+    display: block;
+    margin: 0 0 14px;
+    font-size: calc(3.4rem * var(--dictionaries-text-scale));
+    line-height: 1.05;
     letter-spacing: -0.02em;
     color: var(--text-color);
 }
 
+.tg-bot-card {
+    display: block;
+}
+
+.tg-bot-card__description {
+    line-height: 1.65;
+}
+
+.tg-bot-link {
+    color: var(--primary-color);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.tg-bot-link:hover {
+    color: var(--primary-hover);
+    text-decoration: underline;
+}
+
+.tg-bot-feature-list {
+    margin: 14px 0 0;
+    padding-left: 22px;
+    color: var(--text-color);
+    font-size: calc(1.1rem * var(--dictionaries-text-scale));
+    line-height: 1.7;
+}
+
+.tg-bot-feature-list li + li {
+    margin-top: 10px;
+}
+
 @media (max-width: 992px) {
-    .tg-bot-container {
-        padding: 0 24px;
+    .tg-bot-main {
+        padding: 44px 0 64px;
     }
 
-    .tg-bot-title {
-        font-size: 2.3rem;
+    .tg-bot-page-title {
+        font-size: calc(2.55rem * var(--dictionaries-text-scale));
     }
 }
 
 @media (max-width: 640px) {
     .tg-bot-main {
-        padding: 38px 0 56px;
+        padding: 34px 0 54px;
     }
 
-    .tg-bot-title {
-        font-size: 2rem;
+    .tg-bot-page-title {
+        font-size: calc(2rem * var(--dictionaries-text-scale));
+    }
+
+    .tg-bot-feature-list {
+        font-size: calc(1rem * var(--dictionaries-text-scale));
     }
 }
