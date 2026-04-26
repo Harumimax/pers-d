@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'preferred_locale', 'tg_login', 'password'])]
+#[Fillable(['name', 'email', 'preferred_locale', 'tg_login', 'tg_chat_id', 'tg_linked_at', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -89,6 +89,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'tg_linked_at' => 'datetime',
             'password' => 'hashed',
         ];
     }

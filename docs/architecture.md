@@ -16,6 +16,7 @@
 - Public route:
   - `/` -> `welcome` view
   - `POST /interface-language` -> stores `ru|en` in session, also updates authenticated user's preferred locale when available, and redirects back
+  - `POST /telegram/webhook/{secret}` -> `TelegramWebhookController`, accepts Telegram bot updates through a secretized webhook URL
   - `/ready-dictionaries` -> `ReadyDictionariesController@index`, also used as the guest Prepared dictionaries demo entry page
   - `/ready-dictionaries/{readyDictionary}` -> `App\Livewire\ReadyDictionaries\Show`, readable by guests as part of demo mode
   - `/remainder` -> `RemainderController@index`, available to guests as demo Remainder using ready dictionaries only
@@ -57,6 +58,11 @@
 - `App\Http\Controllers\TgBotController`
   - renders the authenticated `TG bot` placeholder page
   - reuses shared authenticated header/footer navigation through `HeaderNavigationService`
+- `App\Http\Controllers\TelegramWebhookController`
+  - accepts Telegram webhook requests on a public endpoint
+  - validates the URL secret against `config('services.telegram.webhook_secret')`
+  - delegates update processing to `TelegramUpdateHandler`
+  - always returns `200`, even if update handling raised an internal exception
 - Header dropdown data is assembled through `HeaderNavigationService` so shared layouts receive personal dictionaries and ready dictionaries without querying from Blade
 - Auth controllers are the standard Breeze-style controllers under `app/Http/Controllers/Auth`
 - Dictionaries are not handled by traditional controllers; they are handled by Livewire page components
@@ -73,6 +79,7 @@
   - validates the resolved locale against configured supported locales
   - synchronizes the resolved locale back into session
   - calls `app()->setLocale(...)` for each web request
+- Telegram webhook access is protected by an explicit secret in the webhook URL, not by session or token-based web auth
 
 ### Livewire Components
 - `App\Livewire\Dictionaries\Index`
@@ -173,6 +180,17 @@
   - `NotiSendMailChannel` marks the row as `sent` or `failed` after API delivery
   - dispatch failures are normalized to `dispatch_failed`
   - provider/API failures store both a normalized `delivery_error` code and the raw `delivery_error_message`
+- Telegram bot integration lives under `app/Services/Telegram`
+  - `TelegramBotService`
+    - wraps Telegram Bot HTTP API calls
+    - currently sends text messages and sets the webhook URL
+  - `TelegramUpdateHandler`
+    - handles `/start`, `/login`, Telegram-side logout, and email/password linking against existing site users
+    - updates `users.tg_chat_id`, `users.tg_login`, and `users.tg_linked_at` on successful link
+    - never persists or logs the submitted password
+  - `TelegramAuthStateStore`
+    - stores the temporary login dialog state in cache for 10 minutes
+    - keeps the first Telegram auth slice simple without a full state machine subsystem
 - Profile read-model services live under `app/Services/Profile`
   - `RemainderStatisticsService`
     - aggregates finished game sessions for the authenticated user's profile page
@@ -226,6 +244,9 @@
 - Model: `App\Models\User`
 - Important fields:
   - `preferred_locale` nullable
+  - `tg_login` nullable, stored without `@`
+  - `tg_chat_id` nullable string, unique
+  - `tg_linked_at` nullable timestamp
 - Relationships:
   - `hasMany(UserDictionary::class)` via `dictionaries()`
   - `hasMany(GameSession::class)` via `gameSessions()`
@@ -337,6 +358,8 @@
   - `email`
   - `preferred_locale` nullable
   - `tg_login` nullable, stored without `@`
+  - `tg_chat_id` nullable string, unique
+  - `tg_linked_at` nullable timestamp
   - `password`
   - `email_verified_at`
 
