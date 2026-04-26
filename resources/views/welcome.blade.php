@@ -18,6 +18,7 @@
                     <a href="{{ url('/dashboard') }}" class="header-actions__item header-actions__link">{{ __('common.links.dictionaries') }}</a>
                     <a href="{{ route('remainder') }}" class="header-actions__item header-actions__link">{{ __('common.links.remainder') }}</a>
                     <a href="{{ route('ready-dictionaries.index') }}" class="header-actions__item header-actions__link">{{ __('common.links.ready_dictionaries') }}</a>
+                    <a href="{{ route('tg-bot') }}" class="header-actions__item header-actions__link">{{ __('common.links.tg_bot') }}</a>
                     <form method="POST" action="{{ route('logout') }}" class="header-actions__item header-actions__form">
                         @csrf
                         <button type="submit" class="header-actions__link header-actions__logout">{{ __('common.links.logout') }}</button>

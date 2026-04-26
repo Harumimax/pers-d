@@ -69,6 +69,12 @@
                         </div>
                     @endif
                 </div>
+                <a
+                    href="{{ route('tg-bot') }}"
+                    class="dictionaries-header-nav__item dictionaries-header-nav__link {{ request()->routeIs('tg-bot') ? 'dictionaries-header-nav__link--active' : '' }}"
+                >
+                    {{ __('common.links.tg_bot') }}
+                </a>
                 <a href="{{ route('profile.edit') }}" class="dictionaries-header-nav__item dictionaries-header-nav__link">
                     {{ __('common.links.profile') }}
                 </a>

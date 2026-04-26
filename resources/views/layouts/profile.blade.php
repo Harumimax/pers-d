@@ -69,6 +69,12 @@
                     @endif
                 </div>
                 <a
+                    href="{{ route('tg-bot') }}"
+                    class="profile-header-nav__item profile-header-nav__link {{ $activeNav === 'tg-bot' ? 'profile-header-nav__link--active' : '' }}"
+                >
+                    {{ __('common.links.tg_bot') }}
+                </a>
+                <a
                     href="{{ route('profile.edit') }}"
                     class="profile-header-nav__item profile-header-nav__link {{ $activeNav === 'profile' ? 'profile-header-nav__link--active' : '' }}"
                 >

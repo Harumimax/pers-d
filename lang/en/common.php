@@ -10,6 +10,7 @@ return [
         'ready_dictionaries' => 'Prepared dictionaries',
         'remainder' => 'Remainder',
         'dictionaries' => 'My Dictionaries',
+        'tg_bot' => 'TG bot',
         'profile' => 'Profile',
         'demo' => 'Demo',
         'login' => 'Log in',

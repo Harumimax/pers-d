@@ -25,6 +25,7 @@
 - Authenticated routes:
   - `/dashboard` -> redirects to dictionaries index
   - `/profile` -> `ProfileController`
+  - `/tg-bot` -> `TgBotController`
   - `POST /about/contact` -> `AboutContactController@store`
   - `/dictionaries` -> `App\Livewire\Dictionaries\Index`
   - `/dictionaries/{dictionary}` -> `App\Livewire\Dictionaries\Show`
@@ -52,6 +53,9 @@
   - renders the Prepared dictionaries catalog page for authenticated users and guests
   - serves as the first guest demo entry point
   - delegates ready dictionary catalog queries and filter normalization to `ReadyDictionaryCatalogService`
+- `App\Http\Controllers\TgBotController`
+  - renders the authenticated `TG bot` placeholder page
+  - reuses shared authenticated header/footer navigation through `HeaderNavigationService`
 - Header dropdown data is assembled through `HeaderNavigationService` so shared layouts receive personal dictionaries and ready dictionaries without querying from Blade
 - Auth controllers are the standard Breeze-style controllers under `app/Http/Controllers/Auth`
 - Dictionaries are not handled by traditional controllers; they are handled by Livewire page components
@@ -108,6 +112,7 @@
   - `resources/views/about.blade.php`
   - `resources/views/remainder.blade.php`
   - `resources/views/remainder-show.blade.php`
+  - `resources/views/tg-bot.blade.php`
 - Reusable shared components:
   - `resources/views/components/language-switcher.blade.php`
   - `resources/views/components/site-footer.blade.php`
@@ -183,6 +188,7 @@
   - `HeaderNavigationService`
     - returns the authenticated user's personal dictionaries for the `My Dictionaries` dropdown
     - returns all ready dictionaries for the Prepared dictionaries dropdown
+    - feeds the shared authenticated navigation used by Profile, Dictionaries, Remainder, Ready dictionaries, and TG bot
     - keeps shared layouts free from direct database queries
 - Dictionary write helpers live under `app/Services/Dictionaries`
   - `CopyWordToUserDictionaryService`

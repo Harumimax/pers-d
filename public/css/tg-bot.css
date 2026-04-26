@@ -1,0 +1,44 @@
+.tg-bot-main {
+    padding: 56px 0 72px;
+}
+
+.tg-bot-container {
+    width: 100%;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 0 32px;
+}
+
+.tg-bot-hero {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tg-bot-title {
+    margin: 0;
+    font-size: 3rem;
+    line-height: 1.06;
+    letter-spacing: -0.02em;
+    color: var(--text-color);
+}
+
+@media (max-width: 992px) {
+    .tg-bot-container {
+        padding: 0 24px;
+    }
+
+    .tg-bot-title {
+        font-size: 2.3rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .tg-bot-main {
+        padding: 38px 0 56px;
+    }
+
+    .tg-bot-title {
+        font-size: 2rem;
+    }
+}
