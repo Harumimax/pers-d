@@ -179,6 +179,9 @@ class TelegramScheduledSessionsTest extends TestCase
             return str_ends_with($request->url(), '/sendMessage')
                 && str_contains((string) $request['text'], 'Вопрос 1 из 2')
                 && str_contains((string) $request['text'], 'apple')
+                && str_contains((string) $request['text'], '1. яблоко')
+                && str_contains((string) $request['text'], '6. море')
+                && data_get($request->data(), 'reply_markup.inline_keyboard.0.0.text') === '1'
                 && data_get($request->data(), 'reply_markup.inline_keyboard.0.0.callback_data') === "telegram_answer:{$run->id}:{$item->id}:0";
         });
     }

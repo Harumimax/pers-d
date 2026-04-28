@@ -46,6 +46,19 @@ class TelegramGameQuestionSender
             $lines[] = "Часть речи: {$partOfSpeechLabel}";
         }
 
+        $options = collect($item->options_json ?? [])
+            ->map(static fn ($option): string => (string) $option)
+            ->values();
+
+        if ($options->isNotEmpty()) {
+            $lines[] = '';
+            $lines[] = 'Варианты ответа:';
+
+            foreach ($options as $index => $option) {
+                $lines[] = ($index + 1).'. '.$option;
+            }
+        }
+
         return implode("\n", $lines);
     }
 
@@ -60,10 +73,10 @@ class TelegramGameQuestionSender
 
         return $options
             ->map(fn (string $option, int $index): array => [
-                'text' => $option,
+                'text' => (string) ($index + 1),
                 'callback_data' => $this->callbackData->makeAnswer($run->id, $item->id, $index),
             ])
-            ->chunk(2)
+            ->chunk(3)
             ->map(static fn ($chunk): array => $chunk->values()->all())
             ->values()
             ->all();

@@ -50,6 +50,10 @@ class TelegramGameRuntimeTest extends TestCase
         Http::assertSent(function (\Illuminate\Http\Client\Request $request) use ($run, $secondItem): bool {
             return str_ends_with($request->url(), '/sendMessage')
                 && str_contains((string) $request['text'], 'Вопрос 2 из 2')
+                && str_contains((string) $request['text'], 'Варианты ответа:')
+                && str_contains((string) $request['text'], '1. книга')
+                && str_contains((string) $request['text'], '6. большой город')
+                && data_get($request->data(), 'reply_markup.inline_keyboard.0.0.text') === '1'
                 && data_get($request->data(), 'reply_markup.inline_keyboard.0.0.callback_data') === "telegram_answer:{$run->id}:{$secondItem->id}:0";
         });
     }
@@ -143,6 +147,7 @@ class TelegramGameRuntimeTest extends TestCase
             'position' => 1,
             'send_time' => '09:15:00',
             'translation_direction' => 'foreign_to_ru',
+            'words_count' => 10,
         ]);
 
         $run = TelegramGameRun::query()->create([
@@ -165,7 +170,7 @@ class TelegramGameRuntimeTest extends TestCase
             'part_of_speech_snapshot' => 'noun',
             'correct_answer' => 'яблоко',
             'source_type_snapshot' => 'user_dictionary',
-            'options_json' => ['яблоко', 'река', 'трава', 'море', 'окно', 'город'],
+            'options_json' => ['яблоко', 'река', 'трава в поле', 'синее море', 'открытое окно', 'большой город'],
         ]);
 
         $secondItem = $run->items()->create([
@@ -175,7 +180,7 @@ class TelegramGameRuntimeTest extends TestCase
             'part_of_speech_snapshot' => 'noun',
             'correct_answer' => 'книга',
             'source_type_snapshot' => 'user_dictionary',
-            'options_json' => ['книга', 'река', 'трава', 'море', 'окно', 'город'],
+            'options_json' => ['книга', 'река', 'трава в поле', 'синее море', 'открытое окно', 'большой город'],
         ]);
 
         return [$run->fresh(['user', 'items']), $firstItem, $secondItem];
