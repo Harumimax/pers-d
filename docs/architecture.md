@@ -224,10 +224,12 @@
 - Profile read-model services live under `app/Services/Profile`
   - `RemainderStatisticsService`
     - aggregates finished game sessions for the authenticated user's profile page
+    - also aggregates finished Telegram game runs from `telegram_game_runs`
     - computes preferred mode, preferred direction, totals, and answer accuracy
 - About read-model services live under `app/Services/About`
   - `GlobalStatisticsService`
     - aggregates site-wide counts for dictionaries, word entries, and game sessions
+    - also aggregates finished Telegram game runs into the global sessions count and answer accuracy
     - computes overall answer accuracy across all game sessions
 - Ready dictionary read-model services live under `app/Services/ReadyDictionaries`
   - `ReadyDictionaryCatalogService`
@@ -868,6 +870,8 @@
     - the run stores `correct_answers` and `incorrect_answers`
     - personal words synchronize `words.remainder_had_mistake`
     - Telegram receives a final summary with the incorrect answers list
+- `/profile` statistics now include finished Telegram runs together with finished web `game_sessions`
+- `/about` global statistics now include finished Telegram runs in the total sessions counter and answer accuracy
 
 ## Important Implementation Notes
 - Dictionary page totals show the total number of words in the dictionary, independent of active filters

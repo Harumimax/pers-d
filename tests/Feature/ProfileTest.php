@@ -7,6 +7,9 @@ use App\Models\AboutContactMessage;
 use App\Models\GameSession;
 use App\Models\ReadyDictionary;
 use App\Models\ReadyDictionaryWord;
+use App\Models\TelegramGameRun;
+use App\Models\TelegramRandomWordSession;
+use App\Models\TelegramSetting;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
@@ -452,6 +455,36 @@ class ProfileTest extends TestCase
             'config_snapshot' => ['mode' => GameSession::MODE_CHOICE],
         ]);
 
+        $telegramSetting = TelegramSetting::create([
+            'user_id' => $user->id,
+            'timezone' => 'UTC',
+            'random_words_enabled' => true,
+        ]);
+
+        $telegramSession = TelegramRandomWordSession::create([
+            'telegram_setting_id' => $telegramSetting->id,
+            'position' => 1,
+            'send_time' => '09:15:00',
+            'translation_direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'words_count' => 6,
+        ]);
+
+        TelegramGameRun::create([
+            'user_id' => $user->id,
+            'telegram_setting_id' => $telegramSetting->id,
+            'telegram_random_word_session_id' => $telegramSession->id,
+            'mode' => GameSession::MODE_CHOICE,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'total_words' => 6,
+            'correct_answers' => 4,
+            'incorrect_answers' => 2,
+            'status' => TelegramGameRun::STATUS_FINISHED,
+            'scheduled_for' => '2026-04-05 09:15:00+00',
+            'started_at' => '2026-04-05 09:15:00',
+            'finished_at' => '2026-04-05 09:22:00',
+            'config_snapshot' => [],
+        ]);
+
         $this->actingAs($user)
             ->get('/about')
             ->assertOk()
@@ -461,7 +494,7 @@ class ProfileTest extends TestCase
             ->assertSee('Overall correct answers percentage across all games')
             ->assertSee('4')
             ->assertSee('7')
-            ->assertSee('2')
+            ->assertSee('3')
             ->assertSee('66.7%');
     }
 
@@ -747,19 +780,65 @@ class ProfileTest extends TestCase
             'config_snapshot' => ['mode' => GameSession::MODE_CHOICE],
         ]);
 
+        $telegramSetting = TelegramSetting::create([
+            'user_id' => $user->id,
+            'timezone' => 'UTC',
+            'random_words_enabled' => true,
+        ]);
+
+        $telegramSession = TelegramRandomWordSession::create([
+            'telegram_setting_id' => $telegramSetting->id,
+            'position' => 1,
+            'send_time' => '09:15:00',
+            'translation_direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'words_count' => 10,
+        ]);
+
+        TelegramGameRun::create([
+            'user_id' => $user->id,
+            'telegram_setting_id' => $telegramSetting->id,
+            'telegram_random_word_session_id' => $telegramSession->id,
+            'mode' => GameSession::MODE_CHOICE,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'total_words' => 10,
+            'correct_answers' => 7,
+            'incorrect_answers' => 3,
+            'status' => TelegramGameRun::STATUS_FINISHED,
+            'scheduled_for' => '2026-04-08 09:15:00+00',
+            'started_at' => '2026-04-08 09:15:00',
+            'finished_at' => '2026-04-08 09:24:00',
+            'config_snapshot' => [],
+        ]);
+
+        TelegramGameRun::create([
+            'user_id' => $user->id,
+            'telegram_setting_id' => $telegramSetting->id,
+            'telegram_random_word_session_id' => $telegramSession->id,
+            'mode' => GameSession::MODE_CHOICE,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'total_words' => 10,
+            'correct_answers' => 0,
+            'incorrect_answers' => 0,
+            'status' => TelegramGameRun::STATUS_AWAITING_START,
+            'scheduled_for' => '2026-04-09 09:15:00+00',
+            'started_at' => null,
+            'finished_at' => null,
+            'config_snapshot' => [],
+        ]);
+
         $this->actingAs($user)
             ->get('/profile')
             ->assertOk()
             ->assertSee('Remainder Statistic')
             ->assertSee('Completed sessions')
-            ->assertSee('3')
+            ->assertSee('4')
             ->assertSee('01 Apr 2026')
-            ->assertSee('06 Apr 2026')
-            ->assertSee('Manual translation input')
+            ->assertSee('08 Apr 2026')
+            ->assertSee('Both equally')
             ->assertSee('Foreign language to Russian')
-            ->assertSee('30')
-            ->assertSee('21')
-            ->assertSee('9')
+            ->assertSee('40')
+            ->assertSee('28')
+            ->assertSee('12')
             ->assertSee('70%');
     }
 

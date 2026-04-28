@@ -5,6 +5,7 @@ namespace App\Services\About;
 use App\Models\GameSession;
 use App\Models\ReadyDictionary;
 use App\Models\ReadyDictionaryWord;
+use App\Models\TelegramGameRun;
 use App\Models\UserDictionary;
 use Illuminate\Support\Facades\DB;
 
@@ -19,7 +20,10 @@ class GlobalStatisticsService
             + ReadyDictionary::query()->count();
         $wordEntriesCount = (int) DB::table('user_dictionary_word')->count()
             + ReadyDictionaryWord::query()->count();
-        $sessionsCount = GameSession::query()->count();
+        $sessionsCount = GameSession::query()->count()
+            + TelegramGameRun::query()
+                ->where('status', TelegramGameRun::STATUS_FINISHED)
+                ->count();
 
         $answersSummary = GameSession::query()
             ->where('total_words', '>', 0)
@@ -27,8 +31,17 @@ class GlobalStatisticsService
             ->selectRaw('COALESCE(SUM(correct_answers), 0) as correct_answers')
             ->first();
 
-        $totalWords = (int) ($answersSummary?->total_words ?? 0);
-        $correctAnswers = (int) ($answersSummary?->correct_answers ?? 0);
+        $telegramAnswersSummary = TelegramGameRun::query()
+            ->where('status', TelegramGameRun::STATUS_FINISHED)
+            ->where('total_words', '>', 0)
+            ->selectRaw('COALESCE(SUM(total_words), 0) as total_words')
+            ->selectRaw('COALESCE(SUM(correct_answers), 0) as correct_answers')
+            ->first();
+
+        $totalWords = (int) ($answersSummary?->total_words ?? 0)
+            + (int) ($telegramAnswersSummary?->total_words ?? 0);
+        $correctAnswers = (int) ($answersSummary?->correct_answers ?? 0)
+            + (int) ($telegramAnswersSummary?->correct_answers ?? 0);
         $accuracyPercentage = $totalWords > 0
             ? round(($correctAnswers / $totalWords) * 100, 1)
             : null;
