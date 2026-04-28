@@ -39,7 +39,7 @@ class TelegramScheduledSessionsTest extends TestCase
             ], 200),
         ]);
 
-        [$user, $session] = $this->createConnectedTelegramSession('UTC', '09:15:00');
+        [$user, $session] = $this->createConnectedTelegramSession('UTC', '09:15:00', 6);
 
         $this->artisan('telegram:dispatch-scheduled-sessions')
             ->expectsOutput('Создано Telegram-сессий: 1. Пропущено дублей: 0.')
@@ -57,7 +57,7 @@ class TelegramScheduledSessionsTest extends TestCase
         $this->assertSame(444, $run->intro_message_id);
         $this->assertNotNull($run->intro_message_sent_at);
         $this->assertSame(['all'], $run->config_snapshot['parts_of_speech']);
-        $this->assertSame(10, $run->config_snapshot['requested_words_count']);
+        $this->assertSame(6, $run->config_snapshot['requested_words_count']);
 
         Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
             return str_ends_with($request->url(), '/sendMessage')
@@ -78,7 +78,7 @@ class TelegramScheduledSessionsTest extends TestCase
             ], 200),
         ]);
 
-        $this->createConnectedTelegramSession('UTC', '09:15:00');
+        $this->createConnectedTelegramSession('UTC', '09:15:00', 6);
 
         $this->artisan('telegram:dispatch-scheduled-sessions')->assertSuccessful();
         $this->artisan('telegram:dispatch-scheduled-sessions')->assertSuccessful();
@@ -106,6 +106,7 @@ class TelegramScheduledSessionsTest extends TestCase
             'position' => 1,
             'send_time' => '09:15:00',
             'translation_direction' => 'foreign_to_ru',
+            'words_count' => 10,
         ]);
         $run = TelegramGameRun::query()->create([
             'user_id' => $user->id,
@@ -139,7 +140,7 @@ class TelegramScheduledSessionsTest extends TestCase
             'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => ['message_id' => 555]], 200),
         ]);
 
-        [$user, $session] = $this->createConnectedTelegramSession('UTC', '09:15:00');
+        [$user, $session] = $this->createConnectedTelegramSession('UTC', '09:15:00', 6);
 
         $run = TelegramGameRun::query()->create([
             'user_id' => $user->id,
@@ -202,6 +203,7 @@ class TelegramScheduledSessionsTest extends TestCase
             'position' => 1,
             'send_time' => '09:15:00',
             'translation_direction' => 'foreign_to_ru',
+            'words_count' => 10,
         ]);
         $run = TelegramGameRun::query()->create([
             'user_id' => $user->id,
@@ -228,7 +230,7 @@ class TelegramScheduledSessionsTest extends TestCase
     /**
      * @return array{0:User,1:TelegramRandomWordSession}
      */
-    private function createConnectedTelegramSession(string $timezone, string $sendTime): array
+    private function createConnectedTelegramSession(string $timezone, string $sendTime, int $wordsCount = 10): array
     {
         $user = User::factory()->create([
             'tg_chat_id' => '1001',
@@ -283,6 +285,7 @@ class TelegramScheduledSessionsTest extends TestCase
             'position' => 1,
             'send_time' => $sendTime,
             'translation_direction' => 'foreign_to_ru',
+            'words_count' => $wordsCount,
         ]);
         $session->userDictionaries()->attach($dictionary->id);
         $session->readyDictionaries()->attach($readyDictionary->id);

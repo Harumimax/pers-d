@@ -18,7 +18,7 @@ class TelegramGameConfigFactory
             dictionaryIds: $session->userDictionaries->pluck('id')->map(static fn ($id): int => (int) $id)->sort()->values()->all(),
             readyDictionaryIds: $session->readyDictionaries->pluck('id')->map(static fn ($id): int => (int) $id)->sort()->values()->all(),
             partsOfSpeech: $this->partsOfSpeech($session),
-            requestedWordsCount: self::DEFAULT_WORDS_COUNT,
+            requestedWordsCount: $this->wordsCount($session),
         );
     }
 
@@ -36,5 +36,16 @@ class TelegramGameConfigFactory
             ->all();
 
         return $partsOfSpeech !== [] ? $partsOfSpeech : ['all'];
+    }
+
+    private function wordsCount(TelegramRandomWordSession $session): int
+    {
+        $wordsCount = (int) ($session->words_count ?? self::DEFAULT_WORDS_COUNT);
+
+        if ($wordsCount < 2 || $wordsCount > 20) {
+            return self::DEFAULT_WORDS_COUNT;
+        }
+
+        return $wordsCount;
     }
 }

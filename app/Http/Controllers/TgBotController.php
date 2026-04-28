@@ -91,6 +91,7 @@ class TgBotController extends Controller
             ->map(fn ($session): array => [
                 'send_time' => substr((string) $session->send_time, 0, 5),
                 'translation_direction' => $session->translation_direction,
+                'words_count' => max(2, min(20, (int) ($session->words_count ?? 10))),
                 'part_of_speech' => $this->formatPartOfSpeechSelection($session->partsOfSpeech),
                 'user_dictionary_ids' => $session->userDictionaries->pluck('id')->map(fn ($id) => (int) $id)->values()->all(),
                 'ready_dictionary_ids' => $session->readyDictionaries->pluck('id')->map(fn ($id) => (int) $id)->values()->all(),
@@ -110,6 +111,7 @@ class TgBotController extends Controller
         return [
             'send_time' => '09:00',
             'translation_direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'words_count' => 10,
             'part_of_speech' => [PartOfSpeechCatalog::ALL],
             'user_dictionary_ids' => [],
             'ready_dictionary_ids' => [],

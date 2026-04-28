@@ -14,6 +14,7 @@ class TelegramRandomWordSession extends Model
         'position',
         'send_time',
         'translation_direction',
+        'words_count',
     ];
 
     public function telegramSetting(): BelongsTo

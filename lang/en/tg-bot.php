@@ -36,9 +36,11 @@ return [
             'first_title' => '1st session',
             'additional_title_prefix' => 'Session',
             'session_hint' => 'The bot will use these settings when this session is implemented in Telegram delivery.',
+            'words_count_hint' => 'Choose from 2 to 20 words for this session.',
             'fields' => [
                 'send_time' => 'Send time',
                 'translation_direction' => 'Translation direction',
+                'words_count' => 'Words per session',
                 'part_of_speech' => 'Parts of speech',
                 'user_dictionaries' => 'My dictionaries',
                 'ready_dictionaries' => 'Prepared dictionaries',

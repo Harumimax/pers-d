@@ -49,6 +49,7 @@ class TgBotSettingsTest extends TestCase
             ->assertSee('UTC+')
             ->assertSee('Send random words to Telegram')
             ->assertSee('Sessions per day')
+            ->assertSee('Words per session')
             ->assertSee('Select all dictionaries');
     }
 
@@ -77,6 +78,7 @@ class TgBotSettingsTest extends TestCase
                     [
                         'send_time' => '09:15',
                         'translation_direction' => 'foreign_to_ru',
+                        'words_count' => 12,
                         'part_of_speech' => ['all'],
                         'user_dictionary_ids' => [$userDictionary->id],
                         'ready_dictionary_ids' => [$readyDictionary->id],
@@ -84,6 +86,7 @@ class TgBotSettingsTest extends TestCase
                     [
                         'send_time' => '18:45',
                         'translation_direction' => 'ru_to_foreign',
+                        'words_count' => 7,
                         'part_of_speech' => ['verb', 'adjective'],
                         'user_dictionary_ids' => [$userDictionary->id],
                         'ready_dictionary_ids' => [],
@@ -113,6 +116,7 @@ class TgBotSettingsTest extends TestCase
         $this->assertSame(1, $firstSession->position);
         $this->assertSame('09:15', $firstSession->send_time);
         $this->assertSame('foreign_to_ru', $firstSession->translation_direction);
+        $this->assertSame(12, $firstSession->words_count);
         $this->assertCount(0, $firstSession->partsOfSpeech);
         $this->assertSame([$userDictionary->id], $firstSession->userDictionaries->pluck('id')->all());
         $this->assertSame([$readyDictionary->id], $firstSession->readyDictionaries->pluck('id')->all());
@@ -120,6 +124,7 @@ class TgBotSettingsTest extends TestCase
         $this->assertSame(2, $secondSession->position);
         $this->assertSame('18:45', $secondSession->send_time);
         $this->assertSame('ru_to_foreign', $secondSession->translation_direction);
+        $this->assertSame(7, $secondSession->words_count);
         $this->assertEqualsCanonicalizing(['verb', 'adjective'], $secondSession->partsOfSpeech->pluck('part_of_speech')->all());
     }
 
@@ -139,6 +144,7 @@ class TgBotSettingsTest extends TestCase
             'position' => 1,
             'send_time' => '07:30:00',
             'translation_direction' => 'ru_to_foreign',
+            'words_count' => 14,
         ]);
 
         $this->actingAs($user)
@@ -146,6 +152,7 @@ class TgBotSettingsTest extends TestCase
             ->assertOk()
             ->assertSee('Europe/Berlin')
             ->assertSee('07:30')
+            ->assertSee('\u0022words_count\u0022:14', false)
             ->assertSee('Russian to foreign language');
     }
 
@@ -165,6 +172,7 @@ class TgBotSettingsTest extends TestCase
             ->map(fn (int $index): array => [
                 'send_time' => sprintf('%02d:00', $index + 7),
                 'translation_direction' => 'foreign_to_ru',
+                'words_count' => 10,
                 'part_of_speech' => ['all'],
                 'user_dictionary_ids' => [$dictionary->id],
                 'ready_dictionary_ids' => [],
@@ -204,6 +212,7 @@ class TgBotSettingsTest extends TestCase
                     [
                         'send_time' => '10:00',
                         'translation_direction' => 'foreign_to_ru',
+                        'words_count' => 10,
                         'part_of_speech' => ['all'],
                         'user_dictionary_ids' => [$otherDictionary->id],
                         'ready_dictionary_ids' => [],
@@ -212,6 +221,38 @@ class TgBotSettingsTest extends TestCase
             ])
             ->assertRedirect(route('tg-bot'))
             ->assertSessionHasErrors('sessions.0.user_dictionary_ids.0');
+    }
+
+    public function test_connected_user_cannot_save_words_count_outside_allowed_range(): void
+    {
+        $user = User::factory()->create([
+            'tg_chat_id' => '123456789',
+        ]);
+
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English Core',
+            'language' => 'English',
+        ]);
+
+        $this->actingAs($user)
+            ->from(route('tg-bot'))
+            ->put(route('tg-bot.update'), [
+                'timezone' => 'Europe/Moscow',
+                'random_words_enabled' => '1',
+                'sessions' => [
+                    [
+                        'send_time' => '10:00',
+                        'translation_direction' => 'foreign_to_ru',
+                        'words_count' => 21,
+                        'part_of_speech' => ['all'],
+                        'user_dictionary_ids' => [$dictionary->id],
+                        'ready_dictionary_ids' => [],
+                    ],
+                ],
+            ])
+            ->assertRedirect(route('tg-bot'))
+            ->assertSessionHasErrors('sessions.0.words_count');
     }
 
     public function test_profile_page_shows_telegram_authorization_state_and_hint(): void

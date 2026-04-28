@@ -17,6 +17,7 @@
                     return [
                         'send_time' => (string) ($normalized['send_time'] ?? '09:00'),
                         'translation_direction' => (string) ($normalized['translation_direction'] ?? \App\Models\GameSession::DIRECTION_FOREIGN_TO_RU),
+                        'words_count' => max(2, min(20, (int) ($normalized['words_count'] ?? 10))),
                         'part_of_speech' => collect($normalized['part_of_speech'] ?? [\App\Support\PartOfSpeechCatalog::ALL])
                             ->map(fn ($value) => (string) $value)
                             ->filter()
@@ -141,6 +142,7 @@
                                             return {
                                                 send_time: '09:00',
                                                 translation_direction: 'foreign_to_ru',
+                                                words_count: 10,
                                                 part_of_speech: [this.partOfSpeechAllValue],
                                                 user_dictionary_ids: [],
                                                 ready_dictionary_ids: [],
@@ -304,6 +306,20 @@
                                                                     <option value="{{ $value }}">{{ $label }}</option>
                                                                 @endforeach
                                                             </select>
+                                                        </div>
+
+                                                        <div class="tg-bot-form__field">
+                                                            <label class="tg-bot-form__label" :for="`session-words-count-${index}`">{{ __('tg-bot.form.sessions.fields.words_count') }}</label>
+                                                            <input
+                                                                :id="`session-words-count-${index}`"
+                                                                :name="`sessions[${index}][words_count]`"
+                                                                type="number"
+                                                                min="2"
+                                                                max="20"
+                                                                class="tg-bot-form__control"
+                                                                x-model.number="session.words_count"
+                                                            >
+                                                            <p class="tg-bot-form__hint">{{ __('tg-bot.form.sessions.words_count_hint') }}</p>
                                                         </div>
                                                     </div>
 

@@ -324,6 +324,7 @@
   - `position`
   - `send_time`
   - `translation_direction`
+  - `words_count`
 - Relationships:
   - `belongsTo(TelegramSetting::class)`
   - `belongsToMany(UserDictionary::class)` via `telegram_random_word_session_user_dictionary`
@@ -395,6 +396,7 @@
 - `telegram_random_word_sessions`
   - child rows for `telegram_settings`
   - stores up to 5 configured daily sessions per user
+  - each row stores its own `send_time`, `translation_direction`, and `words_count`
 - `telegram_random_word_session_part_of_speech`
   - stores selected parts of speech per configured Telegram session
 - `telegram_random_word_session_user_dictionary`
@@ -815,6 +817,7 @@
 
 ## Telegram Scheduled Session Flow
 - Telegram random-word settings are configured on `/tg-bot` and stored in `telegram_settings` plus child `telegram_random_word_sessions`
+- Each configured Telegram daily session stores its own `words_count` in the allowed `2..20` range, and `TelegramGameConfigFactory` passes that value into the shared `GameSessionConfigData`
 - `routes/console.php` schedules `telegram:dispatch-scheduled-sessions` every minute with `withoutOverlapping()`
 - `TelegramScheduledSessionLocator` finds active due Telegram sessions by comparing each configured timezone + `send_time` against the current UTC minute
 - `CreateTelegramGameRunService` maps each due Telegram session into the shared `GameSessionConfigData`, reuses the Remainder core to select words and precompute choice options, and stores the result in:
@@ -896,4 +899,5 @@
 - `resources/views/remainder.blade.php`
 - `resources/views/remainder-show.blade.php`
 - `resources/views/livewire/remainder/show.blade.php`
+
 

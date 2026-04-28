@@ -25,6 +25,7 @@ class UpdateTelegramSettingsRequest extends FormRequest
                 return [
                     'send_time' => trim((string) ($normalized['send_time'] ?? '')),
                     'translation_direction' => trim((string) ($normalized['translation_direction'] ?? '')),
+                    'words_count' => (int) ($normalized['words_count'] ?? 10),
                     'part_of_speech' => collect($normalized['part_of_speech'] ?? [])
                         ->map(fn ($value) => trim((string) $value))
                         ->filter()
@@ -71,6 +72,7 @@ class UpdateTelegramSettingsRequest extends FormRequest
                     GameSession::DIRECTION_RU_TO_FOREIGN,
                 ]),
             ],
+            'sessions.*.words_count' => ['required', 'integer', 'min:2', 'max:20'],
             'sessions.*.part_of_speech' => ['nullable', 'array'],
             'sessions.*.part_of_speech.*' => [
                 'string',
@@ -120,6 +122,7 @@ class UpdateTelegramSettingsRequest extends FormRequest
             'sessions' => __('tg-bot.form.sessions.title'),
             'sessions.*.send_time' => __('tg-bot.form.sessions.fields.send_time'),
             'sessions.*.translation_direction' => __('tg-bot.form.sessions.fields.translation_direction'),
+            'sessions.*.words_count' => __('tg-bot.form.sessions.fields.words_count'),
             'sessions.*.part_of_speech' => __('tg-bot.form.sessions.fields.part_of_speech'),
             'sessions.*.user_dictionary_ids' => __('tg-bot.form.sessions.fields.user_dictionaries'),
             'sessions.*.ready_dictionary_ids' => __('tg-bot.form.sessions.fields.ready_dictionaries'),
