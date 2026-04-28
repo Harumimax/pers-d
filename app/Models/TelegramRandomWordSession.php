@@ -41,4 +41,9 @@ class TelegramRandomWordSession extends Model
     {
         return $this->hasMany(TelegramRandomWordSessionPartOfSpeech::class);
     }
+
+    public function gameRuns(): HasMany
+    {
+        return $this->hasMany(TelegramGameRun::class);
+    }
 }

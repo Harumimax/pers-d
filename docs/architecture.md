@@ -13,6 +13,7 @@
 
 ### Routing
 - `routes/web.php` is the main web entrypoint
+- `routes/console.php` contains scheduled console tasks
 - Public route:
   - `/` -> `welcome` view
   - `POST /interface-language` -> stores `ru|en` in session, also updates authenticated user's preferred locale when available, and redirects back
@@ -65,7 +66,7 @@
 - `App\Http\Controllers\TelegramWebhookController`
   - accepts Telegram webhook requests on a public endpoint
   - validates the URL secret against `config('services.telegram.webhook_secret')`
-  - delegates update processing to `TelegramUpdateHandler`
+  - delegates both message updates and callback query updates to `TelegramUpdateHandler`
   - always returns `200`, even if update handling raised an internal exception
 - Header dropdown data is assembled through `HeaderNavigationService` so shared layouts receive personal dictionaries and ready dictionaries without querying from Blade
 - Auth controllers are the standard Breeze-style controllers under `app/Http/Controllers/Auth`
@@ -188,14 +189,29 @@
 - Telegram bot integration lives under `app/Services/Telegram`
   - `TelegramBotService`
     - wraps Telegram Bot HTTP API calls
-    - currently sends text messages and sets the webhook URL
+    - sends text messages, answers callback queries, clears inline keyboards, and sets the webhook URL
   - `TelegramUpdateHandler`
     - handles `/start`, `/login`, Telegram-side logout, and email/password linking against existing site users
+    - handles callback queries for scheduled Telegram runs (`Начать` / `Отмена`)
     - updates `users.tg_chat_id`, `users.tg_login`, and `users.tg_linked_at` on successful link
     - never persists or logs the submitted password
   - `TelegramAuthStateStore`
     - stores the temporary login dialog state in cache for 10 minutes
     - keeps the first Telegram auth slice simple without a full state machine subsystem
+  - `TelegramGameConfigFactory`
+    - maps one configured Telegram random-word session into the shared `GameSessionConfigData`
+    - currently uses a temporary default of `10` requested words until per-session word count is added to `/tg-bot`
+  - `TelegramScheduledSessionLocator`
+    - finds active due Telegram sessions by comparing `telegram_settings.timezone` + `send_time` against the current UTC minute
+    - only considers bot-connected users (`users.tg_chat_id is not null`)
+  - `CreateTelegramGameRunService`
+    - prepares Telegram run items through the shared Remainder core
+    - stores runtime state in Telegram-specific tables instead of reusing web `game_sessions`
+  - `TelegramGameRunNotifier`
+    - sends the intro message with inline buttons `Начать` / `Отмена`
+    - moves the run to `awaiting_start` and stores the Telegram intro message id
+  - `TelegramGameRunCallbackData`
+    - centralizes callback payload generation and parsing for Telegram scheduled runs
   - `SaveTelegramSettingsService`
     - creates or updates one `telegram_settings` row per user
     - recreates the configured daily Telegram random-word sessions in a transaction
@@ -281,6 +297,7 @@
 - Relationships:
   - `hasMany(UserDictionary::class)` via `dictionaries()`
   - `hasMany(GameSession::class)` via `gameSessions()`
+  - `hasMany(TelegramGameRun::class)` via `telegramGameRuns()`
   - `hasOne(TelegramSetting::class)` via `telegramSetting()`
 
 ### TelegramSetting
@@ -295,6 +312,7 @@
 - Relationships:
   - `belongsTo(User::class)`
   - `hasMany(TelegramRandomWordSession::class)` via `randomWordSessions()`
+  - `hasMany(TelegramGameRun::class)` via `gameRuns()`
 
 ### TelegramRandomWordSession
 - Model: `App\Models\TelegramRandomWordSession`
@@ -311,12 +329,57 @@
   - `belongsToMany(UserDictionary::class)` via `telegram_random_word_session_user_dictionary`
   - `belongsToMany(ReadyDictionary::class)` via `telegram_random_word_session_ready_dictionary`
   - `hasMany(TelegramRandomWordSessionPartOfSpeech::class)` via `partsOfSpeech()`
+  - `hasMany(TelegramGameRun::class)` via `gameRuns()`
 
 ### TelegramRandomWordSessionPartOfSpeech
 - Model: `App\Models\TelegramRandomWordSessionPartOfSpeech`
 - Purpose:
   - stores selected parts of speech for one configured Telegram daily session
   - an empty set means the session should later use all parts of speech
+
+### TelegramGameRun
+- Model: `App\Models\TelegramGameRun`
+- Purpose:
+  - stores one real scheduled Telegram launch created from an active Telegram random-word configuration
+  - acts as the runtime aggregate for `awaiting_start`, `in_progress`, and `cancelled`
+- Important fields:
+  - `user_id`
+  - `telegram_setting_id`
+  - `telegram_random_word_session_id`
+  - `mode`
+  - `direction`
+  - `total_words`
+  - `status`
+  - `scheduled_for`
+  - `intro_message_sent_at`
+  - `intro_message_id`
+  - `started_at`
+  - `finished_at`
+  - `cancelled_at`
+  - `config_snapshot`
+- Relationships:
+  - `belongsTo(User::class)`
+  - `belongsTo(TelegramSetting::class)`
+  - `belongsTo(TelegramRandomWordSession::class)`
+  - `hasMany(TelegramGameRunItem::class)->orderBy('order_index')`
+
+### TelegramGameRunItem
+- Model: `App\Models\TelegramGameRunItem`
+- Purpose:
+  - stores one immutable prompt/answer snapshot step for a Telegram scheduled run
+  - uses the same core preparation semantics as web `game_session_items`, but in Telegram-specific storage
+- Important fields:
+  - `telegram_game_run_id`
+  - `word_id`
+  - `order_index`
+  - `prompt_text`
+  - `part_of_speech_snapshot`
+  - `correct_answer`
+  - `source_type_snapshot`
+  - `options_json`
+  - `user_answer`
+  - `is_correct`
+  - `answered_at`
 
 ### UserDictionary
 - Model: `App\Models\UserDictionary`
@@ -338,9 +401,11 @@
   - stores selected personal dictionaries per configured Telegram session
 - `telegram_random_word_session_ready_dictionary`
   - stores selected prepared dictionaries per configured Telegram session
-- Relationships:
-  - `belongsTo(User::class)` via `user()`
-  - `belongsToMany(Word::class)` via `words()`
+- `telegram_game_runs`
+  - stores real scheduled Telegram launches created by the dispatcher command
+  - unique by `telegram_random_word_session_id + scheduled_for` to prevent duplicate launches for one time slot
+- `telegram_game_run_items`
+  - stores immutable snapshot items prepared for each Telegram run
 
 ### Word
 - Model: `App\Models\Word`
@@ -555,6 +620,49 @@
   - `created_at`
   - `updated_at`
 
+#### `telegram_game_runs`
+- Created in `2026_04_28_000027_create_telegram_game_runs_tables.php`
+- Purpose: stores one scheduled Telegram launch created from a user's active Telegram random-word configuration
+- Fields:
+  - `id`
+  - `user_id` -> FK to `users.id`
+  - `telegram_setting_id` -> FK to `telegram_settings.id`
+  - `telegram_random_word_session_id` -> FK to `telegram_random_word_sessions.id`
+  - `mode`
+  - `direction`
+  - `total_words`
+  - `status`
+  - `scheduled_for`
+  - `intro_message_sent_at` nullable
+  - `intro_message_id` nullable
+  - `started_at` nullable
+  - `finished_at` nullable
+  - `cancelled_at` nullable
+  - `config_snapshot` jsonb
+  - `created_at`
+  - `updated_at`
+- Constraints:
+  - unique composite key on `telegram_random_word_session_id + scheduled_for`
+
+#### `telegram_game_run_items`
+- Created in `2026_04_28_000027_create_telegram_game_runs_tables.php`
+- Purpose: stores the concrete immutable steps for one Telegram scheduled run
+- Fields:
+  - `id`
+  - `telegram_game_run_id` -> FK to `telegram_game_runs.id`
+  - `word_id` nullable -> FK to `words.id`
+  - `order_index`
+  - `prompt_text`
+  - `part_of_speech_snapshot` nullable
+  - `correct_answer`
+  - `source_type_snapshot` nullable
+  - `options_json` nullable jsonb
+  - `user_answer` nullable
+  - `is_correct` nullable
+  - `answered_at` nullable
+  - `created_at`
+  - `updated_at`
+
 #### `about_contact_messages`
 - Created in `2026_04_17_000014_create_about_contact_messages_table.php`
 - Purpose: stores About page contact form submissions and email delivery state
@@ -635,6 +743,13 @@
 - Current session statuses:
   - `active`
   - `finished`
+- Current Telegram scheduled run statuses:
+  - `scheduled`
+  - `awaiting_start`
+  - `in_progress`
+  - `cancelled`
+  - `finished`
+  - `failed`
 
 ## Automatic Translation Flow
 
@@ -698,6 +813,30 @@
 - Result screen is rendered by the same Livewire component when the session status becomes `finished`
 - On the finished result screen, authenticated users can copy incorrect prepared-dictionary words into a selected personal dictionary; copied words are created as new `words` rows with `remainder_had_mistake = true`
 
+## Telegram Scheduled Session Flow
+- Telegram random-word settings are configured on `/tg-bot` and stored in `telegram_settings` plus child `telegram_random_word_sessions`
+- `routes/console.php` schedules `telegram:dispatch-scheduled-sessions` every minute with `withoutOverlapping()`
+- `TelegramScheduledSessionLocator` finds active due Telegram sessions by comparing each configured timezone + `send_time` against the current UTC minute
+- `CreateTelegramGameRunService` maps each due Telegram session into the shared `GameSessionConfigData`, reuses the Remainder core to select words and precompute choice options, and stores the result in:
+  - `telegram_game_runs`
+  - `telegram_game_run_items`
+- `TelegramGameRunNotifier` sends the intro Telegram message:
+  - `Пришло время повторить слова. Запланировано к повторению N слов.`
+  - inline buttons:
+    - `Начать`
+    - `Отмена`
+- The Telegram webhook receives callback queries from those buttons
+- `TelegramUpdateHandler` parses callback payloads through `TelegramGameRunCallbackData`
+- On `Отмена`:
+  - the run moves from `awaiting_start` to `cancelled`
+  - `cancelled_at` is stored
+  - inline buttons are removed from the intro message
+- On `Начать`:
+  - the run moves from `awaiting_start` to `in_progress`
+  - `started_at` is stored
+  - inline buttons are removed from the intro message
+  - the full question/answer gameplay is intentionally deferred to the next implementation stage
+
 ## Important Implementation Notes
 - Dictionary page totals show the total number of words in the dictionary, independent of active filters
 - About page global dictionary totals include both user dictionaries and ready dictionaries
@@ -713,7 +852,9 @@
 
 ## Key Files To Read First
 - `routes/web.php`
+- `routes/console.php`
 - `app/Http/Controllers/RemainderController.php`
+- `app/Http/Controllers/TelegramWebhookController.php`
 - `app/Livewire/Remainder/Show.php`
 - `app/Services/Remainder/PrepareGameService.php`
 - `app/Services/Remainder/Core/GameSessionConfigData.php`
@@ -725,8 +866,17 @@
 - `app/Services/Remainder/Core/GameResultSummaryService.php`
 - `app/Services/Remainder/ChoiceOptionsBuilder.php`
 - `app/Services/Remainder/GameEngineService.php`
+- `app/Services/Telegram/TelegramScheduledSessionLocator.php`
+- `app/Services/Telegram/TelegramGameConfigFactory.php`
+- `app/Services/Telegram/CreateTelegramGameRunService.php`
+- `app/Services/Telegram/TelegramGameRunNotifier.php`
+- `app/Services/Telegram/TelegramGameRunCallbackData.php`
+- `app/Services/Telegram/TelegramUpdateHandler.php`
+- `app/Console/Commands/DispatchScheduledTelegramSessionsCommand.php`
 - `app/Models/GameSession.php`
 - `app/Models/GameSessionItem.php`
+- `app/Models/TelegramGameRun.php`
+- `app/Models/TelegramGameRunItem.php`
 - `resources/views/remainder.blade.php`
 - `resources/views/remainder-show.blade.php`
 - `resources/views/livewire/remainder/show.blade.php`

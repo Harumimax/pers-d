@@ -28,4 +28,9 @@ class TelegramSetting extends Model
         return $this->hasMany(TelegramRandomWordSession::class)
             ->orderBy('position');
     }
+
+    public function gameRuns(): HasMany
+    {
+        return $this->hasMany(TelegramGameRun::class);
+    }
 }

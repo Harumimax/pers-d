@@ -22,6 +22,30 @@ class TelegramBotService
         ]);
     }
 
+    public function answerCallbackQuery(string $callbackQueryId, ?string $text = null): array
+    {
+        $payload = [
+            'callback_query_id' => $callbackQueryId,
+        ];
+
+        if ($text !== null && $text !== '') {
+            $payload['text'] = $text;
+        }
+
+        return $this->post('answerCallbackQuery', $payload);
+    }
+
+    public function clearInlineKeyboard(string $chatId, int $messageId): array
+    {
+        return $this->post('editMessageReplyMarkup', [
+            'chat_id' => $chatId,
+            'message_id' => $messageId,
+            'reply_markup' => [
+                'inline_keyboard' => [],
+            ],
+        ]);
+    }
+
     private function post(string $method, array $payload): array
     {
         $response = Http::asJson()
