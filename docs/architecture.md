@@ -1,4 +1,4 @@
-# Project Architecture
+﻿# Project Architecture
 
 ## Summary
 - Stack: Laravel 13 + Blade + Livewire 4 + PostgreSQL
@@ -192,7 +192,7 @@
     - sends text messages, answers callback queries, clears inline keyboards, and sets the webhook URL
   - `TelegramUpdateHandler`
     - handles `/start`, `/login`, Telegram-side logout, and email/password linking against existing site users
-    - handles callback queries for scheduled Telegram runs (`Начать` / `Отмена`)
+    - handles callback queries for scheduled Telegram runs (`РќР°С‡Р°С‚СЊ` / `РћС‚РјРµРЅР°`)
     - updates `users.tg_chat_id`, `users.tg_login`, and `users.tg_linked_at` on successful link
     - never persists or logs the submitted password
   - `TelegramAuthStateStore`
@@ -208,7 +208,7 @@
     - prepares Telegram run items through the shared Remainder core
     - stores runtime state in Telegram-specific tables instead of reusing web `game_sessions`
   - `TelegramGameRunNotifier`
-    - sends the intro message with inline buttons `Начать` / `Отмена`
+    - sends the intro message with inline buttons `РќР°С‡Р°С‚СЊ` / `РћС‚РјРµРЅР°`
     - moves the run to `awaiting_start` and stores the Telegram intro message id
   - `TelegramGameRunCallbackData`
     - centralizes callback payload generation and parsing for Telegram scheduled runs
@@ -827,6 +827,12 @@
     - `Отмена`
 - The Telegram webhook receives callback queries from those buttons
 - `TelegramUpdateHandler` parses callback payloads through `TelegramGameRunCallbackData`
+- `TelegramGameRuntimeService` owns the Telegram question/answer loop and reuses `GameAnswerEvaluator` from the shared Remainder core instead of copying answer-check logic
+- `TelegramGameQuestionSender` formats one Telegram question message with:
+  - progress line (`Вопрос X из N`)
+  - prompt text
+  - optional part-of-speech label
+  - 6 inline answer buttons
 - On `Отмена`:
   - the run moves from `awaiting_start` to `cancelled`
   - `cancelled_at` is stored
@@ -835,7 +841,17 @@
   - the run moves from `awaiting_start` to `in_progress`
   - `started_at` is stored
   - inline buttons are removed from the intro message
-  - the full question/answer gameplay is intentionally deferred to the next implementation stage
+  - the first unanswered `telegram_game_run_item` is sent immediately
+- On `telegram_answer:{runId}:{itemId}:{optionIndex}` callback:
+  - the handler verifies run ownership through `users.tg_chat_id`
+  - the runtime checks that the run is `in_progress`, the item belongs to that run, the item is still unanswered, the callback points to the current unanswered item, and the selected option index exists
+  - the selected option text is evaluated through `GameAnswerEvaluator::evaluateChoiceAnswer()`
+  - `telegram_game_run_items.user_answer`, `is_correct`, and `answered_at` are stored
+  - the bot sends immediate feedback:
+    - `Корректно.`
+    - or `Некорректно. Правильный ответ: ...`
+  - if there is another unanswered item, the next question is sent immediately
+  - if all items are answered, the run moves to `finished` and Telegram receives a temporary finish stub; final summary and mistake-flag syncing are deferred to the next implementation stage
 
 ## Important Implementation Notes
 - Dictionary page totals show the total number of words in the dictionary, independent of active filters
@@ -880,3 +896,4 @@
 - `resources/views/remainder.blade.php`
 - `resources/views/remainder-show.blade.php`
 - `resources/views/livewire/remainder/show.blade.php`
+

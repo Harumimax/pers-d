@@ -133,30 +133,17 @@ class TelegramScheduledSessionsTest extends TestCase
         Http::assertSent(fn (\Illuminate\Http\Client\Request $request): bool => str_ends_with($request->url(), '/sendMessage') && str_contains((string) $request['text'], 'отменена'));
     }
 
-    public function test_start_callback_marks_run_as_in_progress(): void
+    public function test_start_callback_marks_run_as_in_progress_and_sends_first_question(): void
     {
         Http::fake([
-            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => true], 200),
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => ['message_id' => 555]], 200),
         ]);
 
-        $user = User::factory()->create([
-            'tg_chat_id' => '1001',
-            'tg_linked_at' => now(),
-        ]);
-        $setting = TelegramSetting::query()->create([
-            'user_id' => $user->id,
-            'timezone' => 'UTC',
-            'random_words_enabled' => true,
-        ]);
-        $session = TelegramRandomWordSession::query()->create([
-            'telegram_setting_id' => $setting->id,
-            'position' => 1,
-            'send_time' => '09:15:00',
-            'translation_direction' => 'foreign_to_ru',
-        ]);
+        [$user, $session] = $this->createConnectedTelegramSession('UTC', '09:15:00');
+
         $run = TelegramGameRun::query()->create([
             'user_id' => $user->id,
-            'telegram_setting_id' => $setting->id,
+            'telegram_setting_id' => $session->telegram_setting_id,
             'telegram_random_word_session_id' => $session->id,
             'mode' => 'choice',
             'direction' => 'foreign_to_ru',
@@ -165,6 +152,16 @@ class TelegramScheduledSessionsTest extends TestCase
             'scheduled_for' => now(),
             'intro_message_id' => 321,
             'config_snapshot' => [],
+        ]);
+
+        $item = $run->items()->create([
+            'word_id' => null,
+            'order_index' => 1,
+            'prompt_text' => 'apple',
+            'part_of_speech_snapshot' => 'noun',
+            'correct_answer' => 'яблоко',
+            'source_type_snapshot' => 'user_dictionary',
+            'options_json' => ['яблоко', 'груша', 'стол', 'окно', 'дом', 'море'],
         ]);
 
         $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate('telegram_run:start:'.$run->id))
@@ -177,7 +174,12 @@ class TelegramScheduledSessionsTest extends TestCase
 
         Http::assertSent(fn (\Illuminate\Http\Client\Request $request): bool => str_ends_with($request->url(), '/answerCallbackQuery'));
         Http::assertSent(fn (\Illuminate\Http\Client\Request $request): bool => str_ends_with($request->url(), '/editMessageReplyMarkup'));
-        Http::assertSent(fn (\Illuminate\Http\Client\Request $request): bool => str_ends_with($request->url(), '/sendMessage') && str_contains((string) $request['text'], 'Полный игровой поток'));
+        Http::assertSent(function (\Illuminate\Http\Client\Request $request) use ($run, $item): bool {
+            return str_ends_with($request->url(), '/sendMessage')
+                && str_contains((string) $request['text'], 'Вопрос 1 из 2')
+                && str_contains((string) $request['text'], 'apple')
+                && data_get($request->data(), 'reply_markup.inline_keyboard.0.0.callback_data') === "telegram_answer:{$run->id}:{$item->id}:0";
+        });
     }
 
     public function test_callback_cannot_control_run_from_another_chat(): void

@@ -13,6 +13,7 @@ class TelegramUpdateHandler
         private readonly TelegramBotService $bot,
         private readonly TelegramAuthStateStore $stateStore,
         private readonly TelegramGameRunCallbackData $telegramGameRunCallbackData,
+        private readonly TelegramGameRuntimeService $telegramGameRuntimeService,
     ) {
     }
 
@@ -100,7 +101,7 @@ class TelegramUpdateHandler
 
         /** @var TelegramGameRun|null $run */
         $run = TelegramGameRun::query()
-            ->with('user')
+            ->with(['user', 'items'])
             ->find($payload['run_id']);
 
         if (! $run instanceof TelegramGameRun || (string) $run->user->tg_chat_id !== $chatId) {
@@ -109,14 +110,20 @@ class TelegramUpdateHandler
             return;
         }
 
-        if ($payload['action'] === TelegramGameRunCallbackData::ACTION_CANCEL) {
+        if (($payload['type'] ?? null) === 'run_action' && ($payload['action'] ?? null) === TelegramGameRunCallbackData::ACTION_CANCEL) {
             $this->cancelRun($run, $callbackQueryId, $chatId, $messageId);
 
             return;
         }
 
-        if ($payload['action'] === TelegramGameRunCallbackData::ACTION_START) {
+        if (($payload['type'] ?? null) === 'run_action' && ($payload['action'] ?? null) === TelegramGameRunCallbackData::ACTION_START) {
             $this->startRun($run, $callbackQueryId, $chatId, $messageId);
+
+            return;
+        }
+
+        if (($payload['type'] ?? null) === TelegramGameRunCallbackData::ACTION_ANSWER) {
+            $this->submitRunAnswer($run, $callbackQueryId, $chatId, $messageId, $payload['item_id'], $payload['option_index']);
         }
     }
 
@@ -134,7 +141,7 @@ class TelegramUpdateHandler
                 return $lockedRun;
             }
 
-            if ($lockedRun->status !== TelegramGameRun::STATUS_AWAITING_START) {
+            if (! in_array($lockedRun->status, [TelegramGameRun::STATUS_AWAITING_START, TelegramGameRun::STATUS_IN_PROGRESS], true)) {
                 return $lockedRun;
             }
 
@@ -159,45 +166,106 @@ class TelegramUpdateHandler
 
     private function startRun(TelegramGameRun $run, string $callbackQueryId, string $chatId, ?int $messageId): void
     {
-        /** @var TelegramGameRun $freshRun */
-        $freshRun = DB::transaction(function () use ($run): TelegramGameRun {
-            /** @var TelegramGameRun $lockedRun */
-            $lockedRun = TelegramGameRun::query()
-                ->whereKey($run->id)
-                ->lockForUpdate()
-                ->firstOrFail();
+        $result = $this->telegramGameRuntimeService->startRun($run);
 
-            if ($lockedRun->status === TelegramGameRun::STATUS_IN_PROGRESS) {
-                return $lockedRun;
-            }
-
-            if ($lockedRun->status !== TelegramGameRun::STATUS_AWAITING_START) {
-                return $lockedRun;
-            }
-
-            $lockedRun->forceFill([
-                'status' => TelegramGameRun::STATUS_IN_PROGRESS,
-                'started_at' => now(),
-            ])->save();
-
-            return $lockedRun;
-        });
-
-        if ($freshRun->status === TelegramGameRun::STATUS_IN_PROGRESS) {
-            $this->bot->answerCallbackQuery($callbackQueryId, 'Сессия запущена.');
-            $this->clearInlineKeyboard($chatId, $messageId);
-            $this->bot->sendMessage($chatId, 'Сессия подготовлена. Полный игровой поток будет подключён следующим этапом.');
-
-            return;
-        }
-
-        if ($freshRun->status === TelegramGameRun::STATUS_CANCELLED) {
+        if ($result['status'] === 'cancelled') {
             $this->bot->answerCallbackQuery($callbackQueryId, 'Сессия уже отменена.');
 
             return;
         }
 
-        $this->bot->answerCallbackQuery($callbackQueryId, 'Эту сессию уже нельзя запустить.');
+        if ($result['status'] === 'not_startable') {
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Эту сессию уже нельзя запустить.');
+
+            return;
+        }
+
+        if ($result['status'] === 'finished_without_items') {
+            $this->bot->answerCallbackQuery($callbackQueryId, 'В этой сессии нет доступных вопросов.');
+            $this->clearInlineKeyboard($chatId, $messageId);
+            $this->bot->sendMessage($chatId, 'Сессия завершена: для неё не нашлось доступных вопросов.');
+
+            return;
+        }
+
+        if ($result['status'] === 'already_started') {
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Сессия уже запущена.');
+
+            return;
+        }
+
+        $this->bot->answerCallbackQuery($callbackQueryId, 'Сессия запущена.');
+        $this->clearInlineKeyboard($chatId, $messageId);
+
+        if (isset($result['first_item']) && $result['first_item'] !== null) {
+            $this->telegramGameRuntimeService->sendQuestion($run->fresh('user'), $result['first_item']);
+
+            return;
+        }
+
+        $this->bot->sendMessage($chatId, 'Сессия запущена, но активный вопрос не найден.');
+    }
+
+    private function submitRunAnswer(
+        TelegramGameRun $run,
+        string $callbackQueryId,
+        string $chatId,
+        ?int $messageId,
+        int $itemId,
+        int $optionIndex,
+    ): void {
+        $result = $this->telegramGameRuntimeService->submitAnswer($run, $itemId, $optionIndex);
+
+        if ($result['status'] === 'run_not_in_progress') {
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Сессия сейчас не активна.');
+
+            return;
+        }
+
+        if ($result['status'] === 'item_not_found') {
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Вопрос не найден.');
+
+            return;
+        }
+
+        if ($result['status'] === 'already_answered') {
+            $this->bot->answerCallbackQuery($callbackQueryId, 'На этот вопрос уже ответили.');
+
+            return;
+        }
+
+        if ($result['status'] === 'wrong_item') {
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Сначала ответьте на текущий вопрос.');
+
+            return;
+        }
+
+        if ($result['status'] === 'invalid_option') {
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Такой вариант ответа недоступен.');
+
+            return;
+        }
+
+        $this->bot->answerCallbackQuery($callbackQueryId, 'Ответ принят.');
+        $this->clearInlineKeyboard($chatId, $messageId);
+
+        if ($result['is_correct'] === true) {
+            $this->bot->sendMessage($chatId, 'Корректно.');
+        } else {
+            $correctAnswer = (string) $result['correct_answer'];
+            $this->bot->sendMessage($chatId, "Некорректно. Правильный ответ: {$correctAnswer}");
+        }
+
+        /** @var TelegramGameRun $freshRun */
+        $freshRun = $result['run'];
+
+        if ($result['next_item'] !== null) {
+            $this->telegramGameRuntimeService->sendQuestion($freshRun, $result['next_item']);
+
+            return;
+        }
+
+        $this->bot->sendMessage($chatId, 'Сессия завершена. Итоговый результат и разбор ошибок подключим следующим этапом.');
     }
 
     private function handleEmailStep(string $chatId, string $text): void

@@ -37,4 +37,18 @@ class GameAnswerEvaluatorTest extends TestCase
 
         $evaluator->evaluate($gameSession, $item, 'orange');
     }
+
+    public function test_choice_answer_can_be_evaluated_without_web_game_models(): void
+    {
+        $evaluator = new GameAnswerEvaluator();
+
+        [$storedAnswer, $isCorrect] = $evaluator->evaluateChoiceAnswer(
+            '  blue ',
+            ['red', 'blue', 'green'],
+            'blue',
+        );
+
+        $this->assertSame('blue', $storedAnswer);
+        $this->assertTrue($isCorrect);
+    }
 }

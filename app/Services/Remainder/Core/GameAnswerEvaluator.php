@@ -16,30 +16,54 @@ class GameAnswerEvaluator
     public function evaluate(GameSession $gameSession, GameSessionItem $currentItem, string $answer): array
     {
         if ($gameSession->mode === GameSession::MODE_CHOICE) {
-            $selectedChoice = $this->sanitizeAnswer($answer);
-
-            if ($selectedChoice === '') {
-                throw ValidationException::withMessages([
-                    'selectedChoice' => __('remainder.messages.play.choose_option'),
-                ]);
-            }
-
-            $options = collect($currentItem->options_json ?? [])
-                ->map(static fn ($option): string => (string) $option)
-                ->values();
-
-            if (! $options->contains($selectedChoice)) {
-                throw ValidationException::withMessages([
-                    'selectedChoice' => __('remainder.messages.play.choose_available_option'),
-                ]);
-            }
-
-            return [
-                $selectedChoice,
-                $selectedChoice === $currentItem->correct_answer,
-            ];
+            return $this->evaluateChoiceAnswer(
+                $answer,
+                collect($currentItem->options_json ?? [])
+                    ->map(static fn ($option): string => (string) $option)
+                    ->values()
+                    ->all(),
+                $currentItem->correct_answer,
+            );
         }
 
+        return $this->evaluateManualAnswer($answer, $currentItem->correct_answer);
+    }
+
+    /**
+     * @param array<int, string> $options
+     * @return array{0: string, 1: bool}
+     */
+    public function evaluateChoiceAnswer(string $answer, array $options, string $correctAnswer): array
+    {
+        $selectedChoice = $this->sanitizeAnswer($answer);
+
+        if ($selectedChoice === '') {
+            throw ValidationException::withMessages([
+                'selectedChoice' => __('remainder.messages.play.choose_option'),
+            ]);
+        }
+
+        $availableOptions = collect($options)
+            ->map(static fn ($option): string => (string) $option)
+            ->values();
+
+        if (! $availableOptions->contains($selectedChoice)) {
+            throw ValidationException::withMessages([
+                'selectedChoice' => __('remainder.messages.play.choose_available_option'),
+            ]);
+        }
+
+        return [
+            $selectedChoice,
+            $selectedChoice === $correctAnswer,
+        ];
+    }
+
+    /**
+     * @return array{0: string, 1: bool}
+     */
+    public function evaluateManualAnswer(string $answer, string $correctAnswer): array
+    {
         $sanitizedAnswer = $this->sanitizeAnswer($answer);
 
         if ($sanitizedAnswer === '') {
@@ -50,7 +74,7 @@ class GameAnswerEvaluator
 
         return [
             $sanitizedAnswer,
-            $this->isManualAnswerCorrect($sanitizedAnswer, $currentItem->correct_answer),
+            $this->isManualAnswerCorrect($sanitizedAnswer, $correctAnswer),
         ];
     }
 
