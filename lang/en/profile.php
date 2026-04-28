@@ -40,6 +40,12 @@ return [
         'email' => 'Email',
         'preferred_locale' => 'Preferred language',
         'tg_login' => 'Telegram login',
+        'tg_auth_status' => [
+            'label' => 'Telegram bot authorization:',
+            'connected' => 'authorized',
+            'not_connected' => 'not authorized',
+            'hint' => 'To access TG bot settings, authorize in the bot',
+        ],
         'locale_options' => [
             'ru' => 'Russian',
             'en' => 'English',

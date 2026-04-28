@@ -39,7 +39,13 @@ return [
         'name' => 'Имя',
         'email' => 'Email',
         'preferred_locale' => 'Предпочитаемый язык',
-        'tg_login' => 'Логин в telegram',
+        'tg_login' => 'Логин в Telegram',
+        'tg_auth_status' => [
+            'label' => 'Авторизация в Telegram-боте:',
+            'connected' => 'выполнена',
+            'not_connected' => 'не выполнена',
+            'hint' => 'Чтобы открыть настройки TG bot, авторизуйтесь в боте',
+        ],
         'locale_options' => [
             'ru' => 'Русский',
             'en' => 'Английский',

@@ -95,6 +95,20 @@
                 >
             </div>
             <x-input-error class="profile-error" :messages="$errors->get('tg_login')" />
+            <div class="profile-telegram-status">
+                <p class="profile-telegram-status__state">
+                    <span class="profile-telegram-status__label">{{ __('profile.personal_information.tg_auth_status.label') }}</span>
+                    <span class="profile-telegram-status__badge {{ filled($user->tg_chat_id) ? 'profile-telegram-status__badge--success' : 'profile-telegram-status__badge--muted' }}">
+                        {{ filled($user->tg_chat_id) ? __('profile.personal_information.tg_auth_status.connected') : __('profile.personal_information.tg_auth_status.not_connected') }}
+                    </span>
+                </p>
+                <p class="profile-telegram-status__hint">
+                    @if (! filled($user->tg_chat_id))
+                        {{ __('profile.personal_information.tg_auth_status.hint') }}
+                        <a href="https://t.me/WordKeeperBot_bot" target="_blank" rel="noopener noreferrer" class="profile-inline-link">@WordKeeperBot_bot</a>.
+                    @endif
+                </p>
+            </div>
         </div>
 
         <div class="profile-actions">

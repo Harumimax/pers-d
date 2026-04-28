@@ -26,7 +26,8 @@
 - Authenticated routes:
   - `/dashboard` -> redirects to dictionaries index
   - `/profile` -> `ProfileController`
-  - `/tg-bot` -> `TgBotController`
+  - `GET /tg-bot` -> `TgBotController@index`
+  - `PUT /tg-bot` -> `TgBotController@update`
   - `POST /about/contact` -> `AboutContactController@store`
   - `/dictionaries` -> `App\Livewire\Dictionaries\Index`
   - `/dictionaries/{dictionary}` -> `App\Livewire\Dictionaries\Show`
@@ -56,7 +57,10 @@
   - serves as the first guest demo entry point
   - delegates ready dictionary catalog queries and filter normalization to `ReadyDictionaryCatalogService`
 - `App\Http\Controllers\TgBotController`
-  - renders the authenticated `TG bot` placeholder page
+  - renders the authenticated `TG bot` settings page
+  - loads personal dictionaries, prepared dictionaries, timezone options, and saved Telegram configuration
+  - blocks settings persistence until the user is actually linked to the bot through `users.tg_chat_id`
+  - delegates settings persistence to `SaveTelegramSettingsService`
   - reuses shared authenticated header/footer navigation through `HeaderNavigationService`
 - `App\Http\Controllers\TelegramWebhookController`
   - accepts Telegram webhook requests on a public endpoint
@@ -192,6 +196,10 @@
   - `TelegramAuthStateStore`
     - stores the temporary login dialog state in cache for 10 minutes
     - keeps the first Telegram auth slice simple without a full state machine subsystem
+  - `SaveTelegramSettingsService`
+    - creates or updates one `telegram_settings` row per user
+    - recreates the configured daily Telegram random-word sessions in a transaction
+    - synchronizes selected parts of speech, personal dictionaries, and prepared dictionaries per session
 - Profile read-model services live under `app/Services/Profile`
   - `RemainderStatisticsService`
     - aggregates finished game sessions for the authenticated user's profile page
@@ -251,6 +259,42 @@
 - Relationships:
   - `hasMany(UserDictionary::class)` via `dictionaries()`
   - `hasMany(GameSession::class)` via `gameSessions()`
+  - `hasOne(TelegramSetting::class)` via `telegramSetting()`
+
+### TelegramSetting
+- Model: `App\Models\TelegramSetting`
+- Purpose:
+  - stores user-wide Telegram settings for the `/tg-bot` page
+  - currently holds the shared timezone and the active/inactive switch for the `Send random words to Telegram` mode
+- Important fields:
+  - `user_id` unique foreign key
+  - `timezone`
+  - `random_words_enabled`
+- Relationships:
+  - `belongsTo(User::class)`
+  - `hasMany(TelegramRandomWordSession::class)` via `randomWordSessions()`
+
+### TelegramRandomWordSession
+- Model: `App\Models\TelegramRandomWordSession`
+- Purpose:
+  - stores one configured Telegram daily session inside the random-word mode
+  - each user can configure from 1 to 5 rows
+- Important fields:
+  - `telegram_setting_id`
+  - `position`
+  - `send_time`
+  - `translation_direction`
+- Relationships:
+  - `belongsTo(TelegramSetting::class)`
+  - `belongsToMany(UserDictionary::class)` via `telegram_random_word_session_user_dictionary`
+  - `belongsToMany(ReadyDictionary::class)` via `telegram_random_word_session_ready_dictionary`
+  - `hasMany(TelegramRandomWordSessionPartOfSpeech::class)` via `partsOfSpeech()`
+
+### TelegramRandomWordSessionPartOfSpeech
+- Model: `App\Models\TelegramRandomWordSessionPartOfSpeech`
+- Purpose:
+  - stores selected parts of speech for one configured Telegram daily session
+  - an empty set means the session should later use all parts of speech
 
 ### UserDictionary
 - Model: `App\Models\UserDictionary`
@@ -258,6 +302,20 @@
   - `user_id`
   - `name`
   - `language`
+
+## Database Structure Additions
+- `telegram_settings`
+  - one row per user
+  - stores shared Telegram configuration such as timezone and random-word mode status
+- `telegram_random_word_sessions`
+  - child rows for `telegram_settings`
+  - stores up to 5 configured daily sessions per user
+- `telegram_random_word_session_part_of_speech`
+  - stores selected parts of speech per configured Telegram session
+- `telegram_random_word_session_user_dictionary`
+  - stores selected personal dictionaries per configured Telegram session
+- `telegram_random_word_session_ready_dictionary`
+  - stores selected prepared dictionaries per configured Telegram session
 - Relationships:
   - `belongsTo(User::class)` via `user()`
   - `belongsToMany(Word::class)` via `words()`
