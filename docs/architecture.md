@@ -230,22 +230,44 @@
   - `LanguageLevelCatalog`
     - stores the canonical language level values from `A0` to `C2` and their labels
 - Remainder game services live under `app/Services/Remainder`
+  - `Core\GameSessionConfigData`
+    - normalizes dictionary ids, ready dictionary ids, parts of speech, and requested words count into one domain config object
+    - removes the need for the game core to depend on HTTP request payload shape
+  - `Core\GameWordSelectionService`
+    - validates dictionary ownership / ready dictionary availability at the domain layer
+    - loads candidate words from personal and prepared dictionaries
+    - filters by parts of speech
+    - applies the `50% previous mistakes` selection rule and top-up behavior
+  - `Core\GameItemSnapshotFactory`
+    - converts selected domain words into immutable per-question snapshot payloads
+    - prepares prompt text, correct answer, and part-of-speech snapshot independently of the delivery channel
+  - `Core\GameSessionFactory`
+    - persists the immutable `game_sessions` row and its `game_session_items`
+    - creates snapshot `words` rows for prepared-dictionary items so live prepared data stays decoupled from played sessions
+  - `Core\GameAnswerEvaluator`
+    - checks both manual and choice answers
+    - performs answer sanitization and case-insensitive comparison logic
+  - `Core\RemainderMistakeFlagSyncService`
+    - updates `words.remainder_had_mistake` for finished personal-dictionary sessions
+    - skips demo sessions and ignores prepared-dictionary snapshots
+  - `Core\GameResultSummaryService`
+    - produces final result summaries from immutable session items
   - `PrepareGameService`
-    - validates dictionary ownership at the domain layer
-    - treats a null user as demo mode and allows ready dictionaries only
-    - collects words using the selected configuration
-    - removes duplicates
-    - creates the snapshot session and session items
+    - is now the orchestration layer for web/Telegram-compatible session preparation
+    - converts validated request config into `GameSessionConfigData`
+    - delegates candidate loading and selection to `GameWordSelectionService`
+    - delegates immutable item snapshot building to `GameItemSnapshotFactory`
+    - delegates persistence to `GameSessionFactory`
   - `ChoiceOptionsBuilder`
     - builds unique multiple choice options from the full filtered answer pool used to prepare the session
     - persists up to 6 shuffled options per question
   - `GameEngineService`
+    - remains the public gameplay orchestration layer for the web UI
     - finds the current unanswered item
-    - checks manual answers and selected choice answers
+    - delegates answer checking to `GameAnswerEvaluator`
     - updates progress counters and finished status
-    - updates `words.remainder_had_mistake` for finished personal-dictionary session items
-    - skips `words.remainder_had_mistake` updates for demo sessions
-    - produces final result summaries
+    - delegates finished-session mistake-flag syncing to `RemainderMistakeFlagSyncService`
+    - delegates final summary generation to `GameResultSummaryService`
 
 ## Domain Model
 
@@ -656,13 +678,12 @@
 - guest requests may include only `ready_dictionary_ids`; `dictionary_ids` are rejected
 - guest session creation is throttled per browser session to reduce demo abuse and unbounded snapshot creation
 - `PrepareGameService`:
-  - verifies dictionary ownership for authenticated users
+  - converts the start payload into `GameSessionConfigData`
   - creates demo sessions with `user_id = null` and `config_snapshot['is_demo'] = true`
-  - filters available words by selected personal dictionaries, selected ready dictionaries, and parts of speech
-  - deduplicates personal words across many-to-many dictionary selection
-  - randomizes order
-  - creates `GameSession`
-  - creates `GameSessionItem` snapshot rows, including `part_of_speech_snapshot`
+  - delegates filtered candidate loading and ownership checks to `GameWordSelectionService`
+  - delegates the `50% mistake words` rule and top-up behavior to `GameWordSelectionService`
+  - delegates immutable snapshot payload creation to `GameItemSnapshotFactory`
+  - delegates database persistence of `GameSession` and `GameSessionItem` rows to `GameSessionFactory`
 - Personal dictionary session items store the original `words.id`, so `GameEngineService` updates `words.remainder_had_mistake` for words attached to the current user's dictionaries when a non-demo session finishes
 - Demo sessions never update `words.remainder_had_mistake`
 - Ready dictionary words are stored in separate `ready_dictionary_words`; when they are selected for a game, `PrepareGameService` copies them into `words` as session snapshot records so the existing `game_session_items.word_id` flow remains stable
@@ -672,6 +693,7 @@
 - Game page (`/remainder/sessions/{gameSession}`) renders a Blade shell with embedded `App\Livewire\Remainder\Show`
 - guest demo session pages are reachable only through temporary signed URLs that were generated during session creation and are also checked against the current session state
 - `GameEngineService` validates and checks each answer, updates counters, and finishes the session after the last item
+- `GameEngineService` now acts as a thin orchestration layer over reusable core services, so Telegram can later use the same answer and finalization logic without copying the web flow
 - choice-mode warnings about incomplete option sets are stored in `config_snapshot['warnings']` and shown on the game screen
 - Result screen is rendered by the same Livewire component when the session status becomes `finished`
 - On the finished result screen, authenticated users can copy incorrect prepared-dictionary words into a selected personal dictionary; copied words are created as new `words` rows with `remainder_had_mistake = true`
@@ -694,6 +716,13 @@
 - `app/Http/Controllers/RemainderController.php`
 - `app/Livewire/Remainder/Show.php`
 - `app/Services/Remainder/PrepareGameService.php`
+- `app/Services/Remainder/Core/GameSessionConfigData.php`
+- `app/Services/Remainder/Core/GameWordSelectionService.php`
+- `app/Services/Remainder/Core/GameItemSnapshotFactory.php`
+- `app/Services/Remainder/Core/GameSessionFactory.php`
+- `app/Services/Remainder/Core/GameAnswerEvaluator.php`
+- `app/Services/Remainder/Core/RemainderMistakeFlagSyncService.php`
+- `app/Services/Remainder/Core/GameResultSummaryService.php`
 - `app/Services/Remainder/ChoiceOptionsBuilder.php`
 - `app/Services/Remainder/GameEngineService.php`
 - `app/Models/GameSession.php`

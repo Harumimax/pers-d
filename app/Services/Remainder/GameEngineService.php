@@ -4,15 +4,21 @@ namespace App\Services\Remainder;
 
 use App\Models\GameSession;
 use App\Models\GameSessionItem;
-use App\Models\Word;
-use Illuminate\Database\Eloquent\Builder;
+use App\Services\Remainder\Core\GameAnswerEvaluator;
+use App\Services\Remainder\Core\GameResultSummaryService;
+use App\Services\Remainder\Core\RemainderMistakeFlagSyncService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class GameEngineService
 {
-    private const ZERO_WIDTH_CHARACTER_PATTERN = '/[\x{200B}\x{200C}\x{200D}\x{2060}\x{FEFF}]/u';
+    public function __construct(
+        private readonly GameAnswerEvaluator $gameAnswerEvaluator,
+        private readonly RemainderMistakeFlagSyncService $remainderMistakeFlagSyncService,
+        private readonly GameResultSummaryService $gameResultSummaryService,
+    ) {
+    }
 
     public function currentItem(GameSession $gameSession): ?GameSessionItem
     {
@@ -54,14 +60,14 @@ class GameEngineService
                     'status' => GameSession::STATUS_FINISHED,
                     'finished_at' => now(),
                 ])->save();
-                $this->syncRemainderMistakeFlags($session);
+                $this->remainderMistakeFlagSyncService->sync($session);
 
                 throw ValidationException::withMessages([
                     'answer' => __('remainder.messages.play.finished'),
                 ]);
             }
 
-            [$storedAnswer, $isCorrect] = $this->evaluateAnswer($session, $currentItem, $answer);
+            [$storedAnswer, $isCorrect] = $this->gameAnswerEvaluator->evaluate($session, $currentItem, $answer);
 
             $currentItem->forceFill([
                 'user_answer' => $storedAnswer,
@@ -84,7 +90,7 @@ class GameEngineService
                     'status' => GameSession::STATUS_FINISHED,
                     'finished_at' => now(),
                 ])->save();
-                $this->syncRemainderMistakeFlags($session);
+                $this->remainderMistakeFlagSyncService->sync($session);
             }
 
             return [
@@ -101,118 +107,6 @@ class GameEngineService
      */
     public function resultSummary(GameSession $gameSession): array
     {
-        /** @var Collection<int, GameSessionItem> $incorrectItems */
-        $incorrectItems = $gameSession->items()
-            ->where('is_correct', false)
-            ->orderBy('order_index')
-            ->get();
-
-        return [
-            'correct_answers' => (int) $gameSession->correct_answers,
-            'total_words' => (int) $gameSession->total_words,
-            'incorrect_items' => $incorrectItems,
-        ];
-    }
-
-    /**
-     * @return array{0: string, 1: bool}
-     */
-    private function evaluateAnswer(GameSession $gameSession, GameSessionItem $currentItem, string $answer): array
-    {
-        if ($gameSession->mode === GameSession::MODE_CHOICE) {
-            $selectedChoice = $this->sanitizeAnswer($answer);
-
-            if ($selectedChoice === '') {
-                throw ValidationException::withMessages([
-                    'selectedChoice' => __('remainder.messages.play.choose_option'),
-                ]);
-            }
-
-            $options = collect($currentItem->options_json ?? [])
-                ->map(static fn ($option): string => (string) $option)
-                ->values();
-
-            if (! $options->contains($selectedChoice)) {
-                throw ValidationException::withMessages([
-                    'selectedChoice' => __('remainder.messages.play.choose_available_option'),
-                ]);
-            }
-
-            return [
-                $selectedChoice,
-                $selectedChoice === $currentItem->correct_answer,
-            ];
-        }
-
-        $sanitizedAnswer = $this->sanitizeAnswer($answer);
-
-        if ($sanitizedAnswer === '') {
-            throw ValidationException::withMessages([
-                'answer' => __('remainder.messages.play.enter_translation'),
-            ]);
-        }
-
-        return [
-            $sanitizedAnswer,
-            $this->isManualAnswerCorrect($sanitizedAnswer, $currentItem->correct_answer),
-        ];
-    }
-
-    private function sanitizeAnswer(string $answer): string
-    {
-        $withoutZeroWidth = preg_replace(self::ZERO_WIDTH_CHARACTER_PATTERN, '', $answer) ?? $answer;
-
-        return trim($withoutZeroWidth);
-    }
-
-    private function normalizeForComparison(string $value): string
-    {
-        return mb_strtolower($this->sanitizeAnswer($value));
-    }
-
-    private function isManualAnswerCorrect(string $answer, string $correctAnswer): bool
-    {
-        $normalizedAnswer = $this->normalizeForComparison($answer);
-
-        if ($normalizedAnswer === $this->normalizeForComparison($correctAnswer)) {
-            return true;
-        }
-
-        return collect(preg_split('/[,;]+/u', $correctAnswer) ?: [])
-            ->map(fn (string $answerOption): string => $this->normalizeForComparison($answerOption))
-            ->filter()
-            ->contains($normalizedAnswer);
-    }
-
-    private function syncRemainderMistakeFlags(GameSession $session): void
-    {
-        if ($session->isDemo()) {
-            return;
-        }
-
-        $this->sessionUserWordsQuery($session, false)
-            ->update(['remainder_had_mistake' => true]);
-
-        $this->sessionUserWordsQuery($session, true)
-            ->where('words.remainder_had_mistake', true)
-            ->update(['remainder_had_mistake' => false]);
-    }
-
-    private function sessionUserWordsQuery(GameSession $session, bool $isCorrect): Builder
-    {
-        return Word::query()
-            ->whereIn('words.id', function ($query) use ($session, $isCorrect): void {
-                $query->select('game_session_items.word_id')
-                    ->from('game_session_items')
-                    ->where('game_session_items.game_session_id', $session->id)
-                    ->where('game_session_items.is_correct', $isCorrect);
-            })
-            ->whereExists(function ($query) use ($session): void {
-                $query->select(DB::raw(1))
-                    ->from('user_dictionary_word')
-                    ->join('user_dictionaries', 'user_dictionaries.id', '=', 'user_dictionary_word.user_dictionary_id')
-                    ->whereColumn('user_dictionary_word.word_id', 'words.id')
-                    ->where('user_dictionaries.user_id', $session->user_id);
-            });
+        return $this->gameResultSummaryService->summarize($gameSession);
     }
 }
