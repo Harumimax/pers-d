@@ -12,6 +12,7 @@ class TelegramGameRuntimeService
     public function __construct(
         private readonly GameAnswerEvaluator $gameAnswerEvaluator,
         private readonly TelegramGameQuestionSender $telegramGameQuestionSender,
+        private readonly TelegramGameResultFinalizer $telegramGameResultFinalizer,
     ) {
     }
 
@@ -56,6 +57,8 @@ class TelegramGameRuntimeService
                     'status' => TelegramGameRun::STATUS_FINISHED,
                     'started_at' => now(),
                     'finished_at' => now(),
+                    'correct_answers' => 0,
+                    'incorrect_answers' => 0,
                 ])->save();
 
                 return [
@@ -84,7 +87,8 @@ class TelegramGameRuntimeService
      *   selected_answer:?string,
      *   is_correct:?bool,
      *   correct_answer:?string,
-     *   next_item:?TelegramGameRunItem
+     *   next_item:?TelegramGameRunItem,
+     *   summary_text:?string
      * }
      */
     public function submitAnswer(TelegramGameRun $run, int $itemId, int $optionIndex): array
@@ -106,6 +110,7 @@ class TelegramGameRuntimeService
                     'is_correct' => null,
                     'correct_answer' => null,
                     'next_item' => null,
+                    'summary_text' => null,
                 ];
             }
 
@@ -121,6 +126,7 @@ class TelegramGameRuntimeService
                     'is_correct' => null,
                     'correct_answer' => null,
                     'next_item' => null,
+                    'summary_text' => null,
                 ];
             }
 
@@ -133,6 +139,7 @@ class TelegramGameRuntimeService
                     'is_correct' => $currentItem->is_correct,
                     'correct_answer' => $currentItem->correct_answer,
                     'next_item' => $this->nextUnansweredItem($lockedRun),
+                    'summary_text' => null,
                 ];
             }
 
@@ -147,6 +154,7 @@ class TelegramGameRuntimeService
                     'is_correct' => null,
                     'correct_answer' => null,
                     'next_item' => $expectedItem,
+                    'summary_text' => null,
                 ];
             }
 
@@ -165,6 +173,7 @@ class TelegramGameRuntimeService
                     'is_correct' => null,
                     'correct_answer' => $currentItem->correct_answer,
                     'next_item' => $currentItem,
+                    'summary_text' => null,
                 ];
             }
 
@@ -185,21 +194,24 @@ class TelegramGameRuntimeService
 
             $nextItem = $this->nextUnansweredItem($lockedRun);
 
+            $summaryText = null;
+            $freshRun = $lockedRun->fresh(['user', 'items']);
+
             if (! $nextItem instanceof TelegramGameRunItem) {
-                $lockedRun->forceFill([
-                    'status' => TelegramGameRun::STATUS_FINISHED,
-                    'finished_at' => now(),
-                ])->save();
+                $finalization = $this->telegramGameResultFinalizer->finalize($lockedRun);
+                $freshRun = $finalization['run'];
+                $summaryText = $finalization['summary_text'];
             }
 
             return [
                 'status' => 'answered',
-                'run' => $lockedRun->fresh(['user', 'items']),
+                'run' => $freshRun,
                 'item' => $currentItem->fresh(),
                 'selected_answer' => $sanitizedAnswer,
                 'is_correct' => $isCorrect,
                 'correct_answer' => $currentItem->correct_answer,
                 'next_item' => $nextItem?->fresh(),
+                'summary_text' => $summaryText,
             ];
         });
     }

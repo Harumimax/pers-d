@@ -265,7 +265,11 @@ class TelegramUpdateHandler
             return;
         }
 
-        $this->bot->sendMessage($chatId, 'Сессия завершена. Итоговый результат и разбор ошибок подключим следующим этапом.');
+        $summaryText = is_string($result['summary_text'] ?? null) && $result['summary_text'] !== ''
+            ? $result['summary_text']
+            : 'Сессия завершена.';
+
+        $this->bot->sendMessage($chatId, $summaryText);
     }
 
     private function handleEmailStep(string $chatId, string $text): void

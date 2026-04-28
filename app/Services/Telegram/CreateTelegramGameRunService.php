@@ -59,6 +59,8 @@ class CreateTelegramGameRunService
                 'mode' => $config->mode,
                 'direction' => $config->direction,
                 'total_words' => $selectedWords->count(),
+                'correct_answers' => 0,
+                'incorrect_answers' => 0,
                 'status' => TelegramGameRun::STATUS_SCHEDULED,
                 'scheduled_for' => $scheduledFor,
                 'config_snapshot' => [

@@ -212,6 +212,11 @@
     - moves the run to `awaiting_start` and stores the Telegram intro message id
   - `TelegramGameRunCallbackData`
     - centralizes callback payload generation and parsing for Telegram scheduled runs
+  - `TelegramGameResultFinalizer`
+    - finalizes a completed Telegram run
+    - persists `correct_answers` and `incorrect_answers`
+    - builds the final Telegram summary message with incorrect answers
+    - delegates personal-word mistake flag syncing to `RemainderMistakeFlagSyncService`
   - `SaveTelegramSettingsService`
     - creates or updates one `telegram_settings` row per user
     - recreates the configured daily Telegram random-word sessions in a transaction
@@ -266,6 +271,7 @@
   - `Core\RemainderMistakeFlagSyncService`
     - updates `words.remainder_had_mistake` for finished personal-dictionary sessions
     - skips demo sessions and ignores prepared-dictionary snapshots
+    - also supports finished Telegram runs and updates only Telegram items with `source_type_snapshot = user`
   - `Core\GameResultSummaryService`
     - produces final result summaries from immutable session items
   - `PrepareGameService`
@@ -624,6 +630,7 @@
 
 #### `telegram_game_runs`
 - Created in `2026_04_28_000027_create_telegram_game_runs_tables.php`
+- Extended in `2026_04_29_000029_add_result_counters_to_telegram_game_runs_table.php`
 - Purpose: stores one scheduled Telegram launch created from a user's active Telegram random-word configuration
 - Fields:
   - `id`
@@ -633,6 +640,8 @@
   - `mode`
   - `direction`
   - `total_words`
+  - `correct_answers`
+  - `incorrect_answers`
   - `status`
   - `scheduled_for`
   - `intro_message_sent_at` nullable
@@ -831,6 +840,7 @@
 - The Telegram webhook receives callback queries from those buttons
 - `TelegramUpdateHandler` parses callback payloads through `TelegramGameRunCallbackData`
 - `TelegramGameRuntimeService` owns the Telegram question/answer loop and reuses `GameAnswerEvaluator` from the shared Remainder core instead of copying answer-check logic
+- `TelegramGameRuntimeService` delegates completed-run finalization to `TelegramGameResultFinalizer`
 - `TelegramGameQuestionSender` formats one Telegram question message with:
   - progress line (`Вопрос X из N`)
   - prompt text
@@ -854,7 +864,10 @@
     - `Корректно.`
     - or `Некорректно. Правильный ответ: ...`
   - if there is another unanswered item, the next question is sent immediately
-  - if all items are answered, the run moves to `finished` and Telegram receives a temporary finish stub; final summary and mistake-flag syncing are deferred to the next implementation stage
+  - if all items are answered:
+    - the run stores `correct_answers` and `incorrect_answers`
+    - personal words synchronize `words.remainder_had_mistake`
+    - Telegram receives a final summary with the incorrect answers list
 
 ## Important Implementation Notes
 - Dictionary page totals show the total number of words in the dictionary, independent of active filters
@@ -890,6 +903,7 @@
 - `app/Services/Telegram/CreateTelegramGameRunService.php`
 - `app/Services/Telegram/TelegramGameRunNotifier.php`
 - `app/Services/Telegram/TelegramGameRunCallbackData.php`
+- `app/Services/Telegram/TelegramGameResultFinalizer.php`
 - `app/Services/Telegram/TelegramUpdateHandler.php`
 - `app/Console/Commands/DispatchScheduledTelegramSessionsCommand.php`
 - `app/Models/GameSession.php`

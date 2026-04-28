@@ -22,6 +22,8 @@ class TelegramGameRun extends Model
         'mode',
         'direction',
         'total_words',
+        'correct_answers',
+        'incorrect_answers',
         'status',
         'scheduled_for',
         'intro_message_sent_at',
@@ -35,6 +37,9 @@ class TelegramGameRun extends Model
     protected function casts(): array
     {
         return [
+            'total_words' => 'integer',
+            'correct_answers' => 'integer',
+            'incorrect_answers' => 'integer',
             'scheduled_for' => 'datetime',
             'intro_message_sent_at' => 'datetime',
             'started_at' => 'datetime',
