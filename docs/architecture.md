@@ -189,15 +189,25 @@
 - Telegram bot integration lives under `app/Services/Telegram`
   - `TelegramBotService`
     - wraps Telegram Bot HTTP API calls
-    - sends text messages, answers callback queries, clears inline keyboards, and sets the webhook URL
+    - sends text messages, answers callback queries, clears inline keyboards, edits Telegram message text, and sets the webhook URL
     - retries temporary Telegram API failures (`429`, `5xx`, and connection problems) with a short bounded backoff
     - emits structured logs for retry attempts and terminal transport failures
   - `TelegramUpdateHandler`
     - handles `/start`, `/login`, Telegram-side logout, and email/password linking against existing site users
+    - serves the authenticated Telegram dictionary browsing flow (`Словари`)
     - handles callback queries for scheduled Telegram runs (`РќР°С‡Р°С‚СЊ` / `РћС‚РјРµРЅР°`)
     - deduplicates incoming webhook updates before business processing through `TelegramProcessedUpdateService`
     - updates `users.tg_chat_id`, `users.tg_login`, and `users.tg_linked_at` on successful link
     - never persists or logs the submitted password
+  - `TelegramDictionaryCallbackData`
+    - centralizes callback payload generation and parsing for Telegram dictionary browsing
+  - `TelegramDictionaryMenuService`
+    - renders the authenticated user's dictionary list in Telegram
+    - returns an empty-state message with a link to the site when the user has no dictionaries yet
+  - `TelegramDictionaryViewService`
+    - renders one user dictionary in Telegram with 20 words per page
+    - formats only existing word attributes (`word`, `part of speech`, `translation`, `comment`)
+    - builds compact pagination controls and the `К словарям` back navigation
   - `TelegramProcessedUpdateService`
     - stores processed Telegram `update_id` / `callback_query_id` pairs in the database
     - prevents duplicate webhook delivery from re-running start, cancel, and answer side effects
@@ -885,6 +895,28 @@
 - On the finished result screen, authenticated users can copy incorrect prepared-dictionary words into a selected personal dictionary; copied words are created as new `words` rows with `remainder_had_mistake = true`
 
 ## Telegram Scheduled Session Flow
+- After Telegram authorization, the bot exposes a small reply-keyboard main menu:
+  - `Словари`
+  - `Выход`
+- `Словари` opens the authenticated Telegram dictionary browsing flow
+- `TelegramDictionaryMenuService` sends:
+  - the user's dictionaries as a numbered list (`1. Name — Language`)
+  - or an empty-state message with `https://wordkeeper.space` when the user has no dictionaries yet
+- Dictionary selection in Telegram uses inline callback buttons with numeric labels (`1`, `2`, `3`, ...)
+- `TelegramDictionaryViewService` shows the chosen dictionary page-by-page:
+  - 20 words per page
+  - each word includes only the available attributes:
+    - word
+    - part of speech
+    - translation
+    - comment
+- Dictionary pagination uses a compact inline layout:
+  - `← Назад`
+  - `X/Y`
+  - `Вперёд →`
+  - `К словарям`
+- Dictionary page navigation edits the existing Telegram message instead of spamming the chat with new messages
+- Dictionary callbacks always re-check dictionary ownership against the currently linked `users.tg_chat_id`, so a user cannot open another user's dictionary by forging callback data
 - Telegram random-word settings are configured on `/tg-bot` and stored in `telegram_settings` plus child `telegram_random_word_sessions`
 - Each configured Telegram daily session stores its own `words_count` in the allowed `2..20` range, and `TelegramGameConfigFactory` passes that value into the shared `GameSessionConfigData`
 - `routes/console.php` schedules `telegram:dispatch-scheduled-sessions` every minute with `withoutOverlapping()`
@@ -977,6 +1009,9 @@
 - `app/Services/Telegram/TelegramScheduledSessionLocator.php`
 - `app/Services/Telegram/TelegramGameConfigFactory.php`
 - `app/Services/Telegram/CreateTelegramGameRunService.php`
+- `app/Services/Telegram/TelegramDictionaryCallbackData.php`
+- `app/Services/Telegram/TelegramDictionaryMenuService.php`
+- `app/Services/Telegram/TelegramDictionaryViewService.php`
 - `app/Services/Telegram/TelegramGameRunNotifier.php`
 - `app/Services/Telegram/TelegramGameRunCallbackData.php`
 - `app/Services/Telegram/TelegramGameResultFinalizer.php`

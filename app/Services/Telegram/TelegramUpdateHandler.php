@@ -17,6 +17,9 @@ class TelegramUpdateHandler
         private readonly TelegramProcessedUpdateService $telegramProcessedUpdateService,
         private readonly TelegramGameRunCallbackData $telegramGameRunCallbackData,
         private readonly TelegramGameRuntimeService $telegramGameRuntimeService,
+        private readonly TelegramDictionaryCallbackData $telegramDictionaryCallbackData,
+        private readonly TelegramDictionaryMenuService $telegramDictionaryMenuService,
+        private readonly TelegramDictionaryViewService $telegramDictionaryViewService,
     ) {
     }
 
@@ -61,10 +64,11 @@ class TelegramUpdateHandler
             }
 
             $username = $this->sanitizeTelegramUsername($message['from']['username'] ?? null);
+            $linkedUser = $this->findLinkedUserByChatId($chatId);
 
             if ($text === '/start') {
                 $this->stateStore->clear($chatId);
-                $this->sendStartMessage($chatId);
+                $this->sendStartMessage($chatId, $linkedUser);
                 $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
 
                 return;
@@ -81,6 +85,20 @@ class TelegramUpdateHandler
             if ($text === 'Выход' || $text === '/logout') {
                 $this->stateStore->clear($chatId);
                 $this->handleLogout($chatId);
+                $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
+
+                return;
+            }
+
+            if ($text === 'Словари') {
+                if (! $linkedUser instanceof User) {
+                    $this->bot->sendMessage($chatId, 'Сначала авторизуйтесь в боте через /login.');
+                    $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
+
+                    return;
+                }
+
+                $this->telegramDictionaryMenuService->show($linkedUser, $chatId);
                 $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
 
                 return;
@@ -122,13 +140,15 @@ class TelegramUpdateHandler
     private function handleCallbackQuery(array $callbackQuery): void
     {
         $callbackQueryId = trim((string) ($callbackQuery['id'] ?? ''));
-        $payload = $this->telegramGameRunCallbackData->parse(trim((string) ($callbackQuery['data'] ?? '')));
+        $callbackData = trim((string) ($callbackQuery['data'] ?? ''));
+        $gamePayload = $this->telegramGameRunCallbackData->parse($callbackData);
+        $dictionaryPayload = $this->telegramDictionaryCallbackData->parse($callbackData);
         $chatId = $this->extractCallbackChatId($callbackQuery);
         $messageId = isset($callbackQuery['message']['message_id']) && is_numeric($callbackQuery['message']['message_id'])
             ? (int) $callbackQuery['message']['message_id']
             : null;
 
-        if ($callbackQueryId === '' || $payload === null || $chatId === null) {
+        if ($callbackQueryId === '' || $chatId === null) {
             if ($callbackQueryId !== '') {
                 $this->bot->answerCallbackQuery($callbackQueryId, 'Действие недоступно.');
             }
@@ -136,10 +156,22 @@ class TelegramUpdateHandler
             return;
         }
 
+        if (is_array($dictionaryPayload)) {
+            $this->handleDictionaryCallbackQuery($callbackQueryId, $chatId, $messageId, $dictionaryPayload);
+
+            return;
+        }
+
+        if ($gamePayload === null) {
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Действие недоступно.');
+
+            return;
+        }
+
         /** @var TelegramGameRun|null $run */
         $run = TelegramGameRun::query()
             ->with(['user', 'items'])
-            ->find($payload['run_id']);
+            ->find($gamePayload['run_id']);
 
         if (! $run instanceof TelegramGameRun || (string) $run->user->tg_chat_id !== $chatId) {
             $this->bot->answerCallbackQuery($callbackQueryId, 'Сессия не найдена.');
@@ -147,21 +179,77 @@ class TelegramUpdateHandler
             return;
         }
 
-        if (($payload['type'] ?? null) === 'run_action' && ($payload['action'] ?? null) === TelegramGameRunCallbackData::ACTION_CANCEL) {
+        if (($gamePayload['type'] ?? null) === 'run_action' && ($gamePayload['action'] ?? null) === TelegramGameRunCallbackData::ACTION_CANCEL) {
             $this->cancelRun($run, $callbackQueryId, $chatId, $messageId);
 
             return;
         }
 
-        if (($payload['type'] ?? null) === 'run_action' && ($payload['action'] ?? null) === TelegramGameRunCallbackData::ACTION_START) {
+        if (($gamePayload['type'] ?? null) === 'run_action' && ($gamePayload['action'] ?? null) === TelegramGameRunCallbackData::ACTION_START) {
             $this->startRun($run, $callbackQueryId, $chatId, $messageId);
 
             return;
         }
 
-        if (($payload['type'] ?? null) === TelegramGameRunCallbackData::ACTION_ANSWER) {
-            $this->submitRunAnswer($run, $callbackQueryId, $chatId, $messageId, $payload['item_id'], $payload['option_index']);
+        if (($gamePayload['type'] ?? null) === TelegramGameRunCallbackData::ACTION_ANSWER) {
+            $this->submitRunAnswer($run, $callbackQueryId, $chatId, $messageId, $gamePayload['item_id'], $gamePayload['option_index']);
         }
+    }
+
+    /**
+     * @param  array<string, int|string>  $payload
+     */
+    private function handleDictionaryCallbackQuery(string $callbackQueryId, string $chatId, ?int $messageId, array $payload): void
+    {
+        $linkedUser = $this->findLinkedUserByChatId($chatId);
+
+        if (! $linkedUser instanceof User) {
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Сначала авторизуйтесь в боте через /login.');
+
+            return;
+        }
+
+        $action = $payload['action'] ?? null;
+
+        if ($action === TelegramDictionaryCallbackData::ACTION_NOOP) {
+            $this->bot->answerCallbackQuery($callbackQueryId);
+
+            return;
+        }
+
+        if (in_array($action, [TelegramDictionaryCallbackData::ACTION_LIST, TelegramDictionaryCallbackData::ACTION_BACK], true)) {
+            $this->bot->answerCallbackQuery($callbackQueryId);
+
+            if ($messageId !== null) {
+                $this->telegramDictionaryMenuService->show($linkedUser, $chatId, $messageId);
+            } else {
+                $this->telegramDictionaryMenuService->show($linkedUser, $chatId);
+            }
+
+            return;
+        }
+
+        if ($messageId === null) {
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Не удалось открыть словарь.');
+
+            return;
+        }
+
+        $result = $this->telegramDictionaryViewService->show(
+            $linkedUser,
+            (int) $payload['dictionary_id'],
+            (int) $payload['page'],
+            $chatId,
+            $messageId,
+        );
+
+        if ($result['status'] === 'not_found') {
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Словарь не найден.');
+
+            return;
+        }
+
+        $this->bot->answerCallbackQuery($callbackQueryId);
     }
 
     private function cancelRun(TelegramGameRun $run, string $callbackQueryId, string $chatId, ?int $messageId): void
@@ -397,14 +485,7 @@ class TelegramUpdateHandler
         $this->bot->sendMessage(
             $chatId,
             'Telegram успешно подключён к вашему аккаунту WordKeeper.',
-            [
-                'reply_markup' => [
-                    'keyboard' => [
-                        [['text' => 'Выход']],
-                    ],
-                    'resize_keyboard' => true,
-                ],
-            ]
+            $this->mainMenuReplyMarkup(),
         );
     }
 
@@ -428,8 +509,22 @@ class TelegramUpdateHandler
         );
     }
 
-    private function sendStartMessage(string $chatId): void
+    private function sendStartMessage(string $chatId, ?User $linkedUser = null): void
     {
+        if ($linkedUser instanceof User) {
+            $this->bot->sendMessage(
+                $chatId,
+                implode("\n\n", [
+                    'Это Telegram-бот WordKeeper.',
+                    'Вы уже авторизованы и можете просматривать свои словари прямо из Telegram.',
+                    'Нажмите «Словари», чтобы открыть список ваших словарей.',
+                ]),
+                $this->mainMenuReplyMarkup(),
+            );
+
+            return;
+        }
+
         $this->bot->sendMessage(
             $chatId,
             implode("\n\n", [
@@ -480,5 +575,28 @@ class TelegramUpdateHandler
         $username = ltrim(trim($username), '@');
 
         return $username !== '' ? $username : null;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function mainMenuReplyMarkup(): array
+    {
+        return [
+            'reply_markup' => [
+                'keyboard' => [
+                    [['text' => 'Словари']],
+                    [['text' => 'Выход']],
+                ],
+                'resize_keyboard' => true,
+            ],
+        ];
+    }
+
+    private function findLinkedUserByChatId(string $chatId): ?User
+    {
+        return User::query()
+            ->where('tg_chat_id', $chatId)
+            ->first();
     }
 }

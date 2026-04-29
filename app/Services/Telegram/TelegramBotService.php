@@ -51,6 +51,15 @@ class TelegramBotService
         ]);
     }
 
+    public function editMessageText(string $chatId, int $messageId, string $text, array $extra = []): array
+    {
+        return $this->post('editMessageText', array_merge([
+            'chat_id' => $chatId,
+            'message_id' => $messageId,
+            'text' => $text,
+        ], $extra));
+    }
+
     private function post(string $method, array $payload): array
     {
         $attempt = 0;
