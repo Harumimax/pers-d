@@ -49,6 +49,16 @@ class TelegramGameRunMonitorService
         );
     }
 
+    public function markExpiredBecauseNewSessionStarted(TelegramGameRun $run): TelegramGameRun
+    {
+        return $this->recordFailure(
+            $run,
+            'expired_by_new_session',
+            'Run expired because a newer scheduled Telegram session started.',
+            TelegramGameRun::STATUS_EXPIRED,
+        );
+    }
+
     public function markAbandoned(TelegramGameRun $run): TelegramGameRun
     {
         return $this->recordFailure(

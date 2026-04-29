@@ -86,6 +86,78 @@ class TelegramScheduledSessionsTest extends TestCase
         $this->assertDatabaseCount('telegram_game_runs', 1);
     }
 
+    public function test_dispatch_command_expires_previous_unfinished_runs_before_sending_new_intro(): void
+    {
+        CarbonImmutable::setTestNow('2026-04-28 15:15:00 UTC');
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response([
+                'ok' => true,
+                'result' => ['message_id' => 444],
+            ], 200),
+        ]);
+
+        [$user, $session] = $this->createConnectedTelegramSession('UTC', '15:15:00', 6);
+        $setting = $user->telegramSetting()->firstOrFail();
+
+        $awaitingStartRun = TelegramGameRun::query()->create([
+            'user_id' => $user->id,
+            'telegram_setting_id' => $setting->id,
+            'telegram_random_word_session_id' => $session->id,
+            'mode' => 'choice',
+            'direction' => 'foreign_to_ru',
+            'total_words' => 2,
+            'correct_answers' => 0,
+            'incorrect_answers' => 0,
+            'status' => TelegramGameRun::STATUS_AWAITING_START,
+            'scheduled_for' => CarbonImmutable::parse('2026-04-28 15:10:00 UTC'),
+            'intro_message_sent_at' => CarbonImmutable::parse('2026-04-28 15:10:05 UTC'),
+            'config_snapshot' => [],
+        ]);
+
+        $inProgressRun = TelegramGameRun::query()->create([
+            'user_id' => $user->id,
+            'telegram_setting_id' => $setting->id,
+            'telegram_random_word_session_id' => $session->id,
+            'mode' => 'choice',
+            'direction' => 'foreign_to_ru',
+            'total_words' => 2,
+            'correct_answers' => 0,
+            'incorrect_answers' => 0,
+            'status' => TelegramGameRun::STATUS_IN_PROGRESS,
+            'scheduled_for' => CarbonImmutable::parse('2026-04-28 15:12:00 UTC'),
+            'started_at' => CarbonImmutable::parse('2026-04-28 15:12:10 UTC'),
+            'last_interaction_at' => CarbonImmutable::parse('2026-04-28 15:13:00 UTC'),
+            'config_snapshot' => [],
+        ]);
+
+        $this->artisan('telegram:dispatch-scheduled-sessions')->assertSuccessful();
+
+        $awaitingStartRun->refresh();
+        $inProgressRun->refresh();
+
+        $this->assertSame(TelegramGameRun::STATUS_EXPIRED, $awaitingStartRun->status);
+        $this->assertSame('expired_by_new_session', $awaitingStartRun->last_error_code);
+        $this->assertSame(TelegramGameRun::STATUS_EXPIRED, $inProgressRun->status);
+        $this->assertSame('expired_by_new_session', $inProgressRun->last_error_code);
+
+        $newRun = TelegramGameRun::query()
+            ->where('status', TelegramGameRun::STATUS_AWAITING_START)
+            ->where('scheduled_for', CarbonImmutable::parse('2026-04-28 15:15:00 UTC'))
+            ->firstOrFail();
+
+        $this->assertSame($user->id, $newRun->user_id);
+
+        Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
+            return str_ends_with($request->url(), '/sendMessage')
+                && str_contains((string) $request['text'], 'предыдущие незавершённые сессии будут закрыты');
+        });
+
+        Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
+            return str_ends_with($request->url(), '/sendMessage')
+                && str_contains((string) $request['text'], 'Запланировано к повторению');
+        });
+    }
+
     public function test_cancel_callback_marks_run_as_cancelled(): void
     {
         Http::fake([

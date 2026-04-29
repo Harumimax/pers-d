@@ -898,6 +898,8 @@
   - inline buttons:
     - `Начать`
     - `Отмена`
+- Before a new scheduled run is created for a user, older unfinished Telegram runs with statuses `awaiting_start` or `in_progress` are automatically moved to `expired`
+- When such older runs are closed because a newer scheduled session time has arrived, Telegram sends an informational message explaining that the previous unfinished session was closed before the new intro message is sent
 - The Telegram webhook receives callback queries from those buttons
 - `TelegramUpdateHandler` first claims the incoming webhook through `TelegramProcessedUpdateService`; duplicate `update_id` / `callback_query_id` deliveries are acknowledged and skipped
 - `TelegramUpdateHandler` parses callback payloads through `TelegramGameRunCallbackData`

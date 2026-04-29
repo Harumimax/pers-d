@@ -6,6 +6,7 @@ use App\Models\TelegramGameRun;
 use App\Services\Telegram\CreateTelegramGameRunService;
 use App\Services\Telegram\TelegramGameRunMonitorService;
 use App\Services\Telegram\TelegramGameRunNotifier;
+use App\Services\Telegram\TelegramRunConflictResolverService;
 use App\Services\Telegram\TelegramScheduledSessionLocator;
 use Illuminate\Console\Command;
 use Illuminate\Database\QueryException;
@@ -24,6 +25,7 @@ class DispatchScheduledTelegramSessionsCommand extends Command
         CreateTelegramGameRunService $createTelegramGameRunService,
         TelegramGameRunNotifier $notifier,
         TelegramGameRunMonitorService $telegramGameRunMonitorService,
+        TelegramRunConflictResolverService $telegramRunConflictResolverService,
     ): int {
         $createdRuns = 0;
         $skippedRuns = 0;
@@ -36,6 +38,7 @@ class DispatchScheduledTelegramSessionsCommand extends Command
             $run = null;
 
             try {
+                $telegramRunConflictResolverService->expireRunsBeforeSchedulingNext($user, $scheduledFor);
                 $run = $createTelegramGameRunService->create($user, $setting, $session, $scheduledFor);
                 $notifier->sendIntro($run);
 
