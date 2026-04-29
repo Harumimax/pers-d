@@ -190,17 +190,24 @@
   - `TelegramBotService`
     - wraps Telegram Bot HTTP API calls
     - sends text messages, answers callback queries, clears inline keyboards, and sets the webhook URL
+    - retries temporary Telegram API failures (`429`, `5xx`, and connection problems) with a short bounded backoff
+    - emits structured logs for retry attempts and terminal transport failures
   - `TelegramUpdateHandler`
     - handles `/start`, `/login`, Telegram-side logout, and email/password linking against existing site users
     - handles callback queries for scheduled Telegram runs (`РќР°С‡Р°С‚СЊ` / `РћС‚РјРµРЅР°`)
+    - deduplicates incoming webhook updates before business processing through `TelegramProcessedUpdateService`
     - updates `users.tg_chat_id`, `users.tg_login`, and `users.tg_linked_at` on successful link
     - never persists or logs the submitted password
+  - `TelegramProcessedUpdateService`
+    - stores processed Telegram `update_id` / `callback_query_id` pairs in the database
+    - prevents duplicate webhook delivery from re-running start, cancel, and answer side effects
+    - keeps failed update attempts visible for diagnostics
   - `TelegramAuthStateStore`
     - stores the temporary login dialog state in cache for 10 minutes
     - keeps the first Telegram auth slice simple without a full state machine subsystem
   - `TelegramGameConfigFactory`
     - maps one configured Telegram random-word session into the shared `GameSessionConfigData`
-    - currently uses a temporary default of `10` requested words until per-session word count is added to `/tg-bot`
+    - passes per-session `words_count` from `/tg-bot` into the shared game core
   - `TelegramScheduledSessionLocator`
     - finds active due Telegram sessions by comparing `telegram_settings.timezone` + `send_time` against the current UTC minute
     - only considers bot-connected users (`users.tg_chat_id is not null`)
@@ -210,8 +217,14 @@
   - `TelegramGameRunNotifier`
     - sends the intro message with inline buttons `РќР°С‡Р°С‚СЊ` / `РћС‚РјРµРЅР°`
     - moves the run to `awaiting_start` and stores the Telegram intro message id
+    - initializes `last_interaction_at` after successful intro delivery
   - `TelegramGameRunCallbackData`
     - centralizes callback payload generation and parsing for Telegram scheduled runs
+  - `TelegramGameRunMonitorService`
+    - tracks Telegram run diagnostics and recent activity
+    - updates `last_interaction_at` after successful intro, start, answer, and finish steps
+    - records runtime failures in `last_error_code`, `last_error_message`, and `last_error_at`
+    - marks stale runs as `expired` or `abandoned`
   - `TelegramGameResultFinalizer`
     - finalizes a completed Telegram run
     - persists `correct_answers` and `incorrect_answers`
@@ -346,11 +359,26 @@
   - stores selected parts of speech for one configured Telegram daily session
   - an empty set means the session should later use all parts of speech
 
+### TelegramProcessedUpdate
+- Model: `App\Models\TelegramProcessedUpdate`
+- Purpose:
+  - stores one processed or in-flight Telegram webhook update
+  - protects the Telegram runtime from duplicate `update_id` and `callback_query_id` deliveries
+- Important fields:
+  - `telegram_update_id` nullable unique
+  - `callback_query_id` nullable unique
+  - `chat_id` nullable
+  - `update_type`
+  - `status`
+  - `attempts`
+  - `last_error_message` nullable
+  - `processed_at` nullable
+
 ### TelegramGameRun
 - Model: `App\Models\TelegramGameRun`
 - Purpose:
   - stores one real scheduled Telegram launch created from an active Telegram random-word configuration
-  - acts as the runtime aggregate for `awaiting_start`, `in_progress`, and `cancelled`
+  - acts as the runtime aggregate for scheduled, active, finished, failed, and stale Telegram session states
 - Important fields:
   - `user_id`
   - `telegram_setting_id`
@@ -365,6 +393,10 @@
   - `started_at`
   - `finished_at`
   - `cancelled_at`
+  - `last_interaction_at`
+  - `last_error_code`
+  - `last_error_message`
+  - `last_error_at`
   - `config_snapshot`
 - Relationships:
   - `belongsTo(User::class)`
@@ -414,8 +446,11 @@
 - `telegram_game_runs`
   - stores real scheduled Telegram launches created by the dispatcher command
   - unique by `telegram_random_word_session_id + scheduled_for` to prevent duplicate launches for one time slot
+  - stores runtime diagnostics such as `last_interaction_at` and the latest error fields
 - `telegram_game_run_items`
   - stores immutable snapshot items prepared for each Telegram run
+- `telegram_processed_updates`
+  - stores processed Telegram webhook identifiers for idempotency and duplicate update protection
 
 ### Word
 - Model: `App\Models\Word`
@@ -633,6 +668,7 @@
 #### `telegram_game_runs`
 - Created in `2026_04_28_000027_create_telegram_game_runs_tables.php`
 - Extended in `2026_04_29_000029_add_result_counters_to_telegram_game_runs_table.php`
+- Extended in `2026_04_29_000030_add_reliability_fields_to_telegram_runs_and_create_processed_updates_table.php`
 - Purpose: stores one scheduled Telegram launch created from a user's active Telegram random-word configuration
 - Fields:
   - `id`
@@ -651,11 +687,31 @@
   - `started_at` nullable
   - `finished_at` nullable
   - `cancelled_at` nullable
+  - `last_interaction_at` nullable
+  - `last_error_code` nullable
+  - `last_error_message` nullable
+  - `last_error_at` nullable
   - `config_snapshot` jsonb
   - `created_at`
   - `updated_at`
 - Constraints:
   - unique composite key on `telegram_random_word_session_id + scheduled_for`
+
+#### `telegram_processed_updates`
+- Created in `2026_04_29_000030_add_reliability_fields_to_telegram_runs_and_create_processed_updates_table.php`
+- Purpose: stores processed Telegram webhook identifiers and minimal diagnostics for idempotent runtime handling
+- Fields:
+  - `id`
+  - `telegram_update_id` nullable unique
+  - `callback_query_id` nullable unique
+  - `chat_id` nullable
+  - `update_type`
+  - `status`
+  - `attempts`
+  - `last_error_message` nullable
+  - `processed_at` nullable
+  - `created_at`
+  - `updated_at`
 
 #### `telegram_game_run_items`
 - Created in `2026_04_28_000027_create_telegram_game_runs_tables.php`
@@ -763,6 +819,8 @@
   - `cancelled`
   - `finished`
   - `failed`
+  - `expired`
+  - `abandoned`
 
 ## Automatic Translation Flow
 
@@ -830,6 +888,7 @@
 - Telegram random-word settings are configured on `/tg-bot` and stored in `telegram_settings` plus child `telegram_random_word_sessions`
 - Each configured Telegram daily session stores its own `words_count` in the allowed `2..20` range, and `TelegramGameConfigFactory` passes that value into the shared `GameSessionConfigData`
 - `routes/console.php` schedules `telegram:dispatch-scheduled-sessions` every minute with `withoutOverlapping()`
+- `routes/console.php` also schedules `telegram:cleanup-stale-runs` every 15 minutes with `withoutOverlapping()`
 - `TelegramScheduledSessionLocator` finds active due Telegram sessions by comparing each configured timezone + `send_time` against the current UTC minute
 - `CreateTelegramGameRunService` maps each due Telegram session into the shared `GameSessionConfigData`, reuses the Remainder core to select words and precompute choice options, and stores the result in:
   - `telegram_game_runs`
@@ -840,6 +899,7 @@
     - `Начать`
     - `Отмена`
 - The Telegram webhook receives callback queries from those buttons
+- `TelegramUpdateHandler` first claims the incoming webhook through `TelegramProcessedUpdateService`; duplicate `update_id` / `callback_query_id` deliveries are acknowledged and skipped
 - `TelegramUpdateHandler` parses callback payloads through `TelegramGameRunCallbackData`
 - `TelegramGameRuntimeService` owns the Telegram question/answer loop and reuses `GameAnswerEvaluator` from the shared Remainder core instead of copying answer-check logic
 - `TelegramGameRuntimeService` delegates completed-run finalization to `TelegramGameResultFinalizer`
@@ -870,6 +930,16 @@
     - the run stores `correct_answers` and `incorrect_answers`
     - personal words synchronize `words.remainder_had_mistake`
     - Telegram receives a final summary with the incorrect answers list
+- Runtime diagnostics:
+  - successful intro delivery, start, answer handling, and finalization refresh `telegram_game_runs.last_interaction_at`
+  - runtime/send failures store `last_error_code`, `last_error_message`, and `last_error_at`
+  - transport retries are limited to recoverable Telegram API failures only
+- Duplicate update protection:
+  - repeated `update_id` or `callback_query_id` values are persisted in `telegram_processed_updates`
+  - duplicate deliveries must not send the same question twice, apply counters twice, or repeat finished transitions
+- Stale run cleanup:
+  - `awaiting_start` runs older than 12 hours are marked `expired`
+  - `in_progress` runs without activity for more than 12 hours are marked `abandoned`
 - `/profile` statistics now include finished Telegram runs together with finished web `game_sessions`
 - `/about` global statistics now include finished Telegram runs in the total sessions counter and answer accuracy
 

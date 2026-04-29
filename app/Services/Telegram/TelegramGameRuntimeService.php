@@ -13,6 +13,7 @@ class TelegramGameRuntimeService
         private readonly GameAnswerEvaluator $gameAnswerEvaluator,
         private readonly TelegramGameQuestionSender $telegramGameQuestionSender,
         private readonly TelegramGameResultFinalizer $telegramGameResultFinalizer,
+        private readonly TelegramGameRunMonitorService $telegramGameRunMonitorService,
     ) {
     }
 
@@ -59,6 +60,10 @@ class TelegramGameRuntimeService
                     'finished_at' => now(),
                     'correct_answers' => 0,
                     'incorrect_answers' => 0,
+                    'last_interaction_at' => now(),
+                    'last_error_code' => null,
+                    'last_error_message' => null,
+                    'last_error_at' => null,
                 ])->save();
 
                 return [
@@ -70,6 +75,10 @@ class TelegramGameRuntimeService
             $lockedRun->forceFill([
                 'status' => TelegramGameRun::STATUS_IN_PROGRESS,
                 'started_at' => now(),
+                'last_interaction_at' => now(),
+                'last_error_code' => null,
+                'last_error_message' => null,
+                'last_error_at' => null,
             ])->save();
 
             return [
@@ -189,6 +198,13 @@ class TelegramGameRuntimeService
                 'answered_at' => now(),
             ])->save();
 
+            $lockedRun->forceFill([
+                'last_interaction_at' => now(),
+                'last_error_code' => null,
+                'last_error_message' => null,
+                'last_error_at' => null,
+            ])->save();
+
             $lockedRun->unsetRelation('items');
             $lockedRun->load('items');
 
@@ -218,7 +234,10 @@ class TelegramGameRuntimeService
 
     public function sendQuestion(TelegramGameRun $run, TelegramGameRunItem $item): array
     {
-        return $this->telegramGameQuestionSender->send($run, $item);
+        $response = $this->telegramGameQuestionSender->send($run, $item);
+        $this->telegramGameRunMonitorService->touchInteraction($run);
+
+        return $response;
     }
 
     private function nextUnansweredItem(TelegramGameRun $run): ?TelegramGameRunItem

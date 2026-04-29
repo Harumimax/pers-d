@@ -36,7 +36,7 @@ class TelegramGameRuntimeTest extends TestCase
 
         [$run, $firstItem, $secondItem] = $this->createRunWithItems();
 
-        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("telegram_answer:{$run->id}:{$firstItem->id}:0"))
+        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("telegram_answer:{$run->id}:{$firstItem->id}:0", 20001))
             ->assertOk();
 
         $firstItem->refresh();
@@ -75,7 +75,7 @@ class TelegramGameRuntimeTest extends TestCase
             'answered_at' => now(),
         ])->save();
 
-        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("telegram_answer:{$run->id}:{$secondItem->id}:1"))
+        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("telegram_answer:{$run->id}:{$secondItem->id}:1", 20002))
             ->assertOk();
 
         $secondItem->refresh();
@@ -110,10 +110,10 @@ class TelegramGameRuntimeTest extends TestCase
 
         [$run, $firstItem, $secondItem, $firstWord, $secondWord] = $this->createRunWithItems(firstWordHadMistake: true, secondWordHadMistake: false);
 
-        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("telegram_answer:{$run->id}:{$firstItem->id}:0"))
+        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("telegram_answer:{$run->id}:{$firstItem->id}:0", 20001))
             ->assertOk();
 
-        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("telegram_answer:{$run->id}:{$secondItem->id}:1"))
+        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("telegram_answer:{$run->id}:{$secondItem->id}:1", 20002))
             ->assertOk();
 
         $run->refresh();
@@ -141,7 +141,7 @@ class TelegramGameRuntimeTest extends TestCase
             'answered_at' => now(),
         ])->save();
 
-        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("telegram_answer:{$run->id}:{$firstItem->id}:0"))
+        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("telegram_answer:{$run->id}:{$firstItem->id}:0", 20001))
             ->assertOk();
 
         Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/answerCallbackQuery') && str_contains((string) $request['text'], 'уже ответили'));
@@ -156,7 +156,7 @@ class TelegramGameRuntimeTest extends TestCase
 
         [$run, $firstItem] = $this->createRunWithItems();
 
-        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("telegram_answer:{$run->id}:{$firstItem->id}:99"))
+        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("telegram_answer:{$run->id}:{$firstItem->id}:99", 20001))
             ->assertOk();
 
         $firstItem->refresh();
@@ -256,12 +256,12 @@ class TelegramGameRuntimeTest extends TestCase
     /**
      * @return array<string,mixed>
      */
-    private function callbackUpdate(string $data): array
+    private function callbackUpdate(string $data, int $updateId = 20001): array
     {
         return [
-            'update_id' => 20001,
+            'update_id' => $updateId,
             'callback_query' => [
-                'id' => 'callback-runtime-1',
+                'id' => 'callback-runtime-'.$updateId,
                 'from' => [
                     'id' => 5001,
                     'is_bot' => false,

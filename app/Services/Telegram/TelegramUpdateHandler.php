@@ -6,12 +6,15 @@ use App\Models\TelegramGameRun;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class TelegramUpdateHandler
 {
     public function __construct(
         private readonly TelegramBotService $bot,
         private readonly TelegramAuthStateStore $stateStore,
+        private readonly TelegramProcessedUpdateService $telegramProcessedUpdateService,
         private readonly TelegramGameRunCallbackData $telegramGameRunCallbackData,
         private readonly TelegramGameRuntimeService $telegramGameRuntimeService,
     ) {
@@ -19,66 +22,100 @@ class TelegramUpdateHandler
 
     public function handle(array $update): void
     {
-        $callbackQuery = $update['callback_query'] ?? null;
+        $processedUpdate = $this->telegramProcessedUpdateService->claim($update);
 
-        if (is_array($callbackQuery)) {
-            $this->handleCallbackQuery($callbackQuery);
-
-            return;
-        }
-
-        $message = $update['message'] ?? null;
-
-        if (! is_array($message)) {
-            return;
-        }
-
-        $chatId = $this->extractChatId($message);
-        $text = trim((string) ($message['text'] ?? ''));
-
-        if ($chatId === null || $text === '') {
-            return;
-        }
-
-        $username = $this->sanitizeTelegramUsername($message['from']['username'] ?? null);
-
-        if ($text === '/start') {
-            $this->stateStore->clear($chatId);
-            $this->sendStartMessage($chatId);
+        if ($processedUpdate === null) {
+            Log::info('telegram.webhook.duplicate_update_skipped', [
+                'telegram_update_id' => $update['update_id'] ?? null,
+                'callback_query_id' => data_get($update, 'callback_query.id'),
+            ]);
 
             return;
         }
 
-        if ($text === '/login') {
-            $this->stateStore->start($chatId);
-            $this->bot->sendMessage($chatId, 'Введите email от аккаунта WordKeeper.');
+        try {
+            $callbackQuery = $update['callback_query'] ?? null;
 
-            return;
-        }
+            if (is_array($callbackQuery)) {
+                $this->handleCallbackQuery($callbackQuery);
+                $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
 
-        if ($text === 'Выход' || $text === '/logout') {
-            $this->stateStore->clear($chatId);
-            $this->handleLogout($chatId);
+                return;
+            }
 
-            return;
-        }
+            $message = $update['message'] ?? null;
 
-        $state = $this->stateStore->get($chatId);
+            if (! is_array($message)) {
+                $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
 
-        if ($state === null) {
-            $this->bot->sendMessage($chatId, 'Отправьте /start, чтобы увидеть доступные команды.');
+                return;
+            }
 
-            return;
-        }
+            $chatId = $this->extractChatId($message);
+            $text = trim((string) ($message['text'] ?? ''));
 
-        if ($state['step'] === TelegramAuthStateStore::STEP_AWAITING_EMAIL) {
-            $this->handleEmailStep($chatId, $text);
+            if ($chatId === null || $text === '') {
+                $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
 
-            return;
-        }
+                return;
+            }
 
-        if ($state['step'] === TelegramAuthStateStore::STEP_AWAITING_PASSWORD) {
-            $this->handlePasswordStep($chatId, $text, $state['email'], $username);
+            $username = $this->sanitizeTelegramUsername($message['from']['username'] ?? null);
+
+            if ($text === '/start') {
+                $this->stateStore->clear($chatId);
+                $this->sendStartMessage($chatId);
+                $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
+
+                return;
+            }
+
+            if ($text === '/login') {
+                $this->stateStore->start($chatId);
+                $this->bot->sendMessage($chatId, 'Введите email от аккаунта WordKeeper.');
+                $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
+
+                return;
+            }
+
+            if ($text === 'Выход' || $text === '/logout') {
+                $this->stateStore->clear($chatId);
+                $this->handleLogout($chatId);
+                $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
+
+                return;
+            }
+
+            $state = $this->stateStore->get($chatId);
+
+            if ($state === null) {
+                $this->bot->sendMessage($chatId, 'Отправьте /start, чтобы увидеть доступные команды.');
+                $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
+
+                return;
+            }
+
+            if ($state['step'] === TelegramAuthStateStore::STEP_AWAITING_EMAIL) {
+                $this->handleEmailStep($chatId, $text);
+                $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
+
+                return;
+            }
+
+            if ($state['step'] === TelegramAuthStateStore::STEP_AWAITING_PASSWORD) {
+                $this->handlePasswordStep($chatId, $text, $state['email'], $username);
+                $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
+            }
+        } catch (Throwable $exception) {
+            $this->telegramProcessedUpdateService->markFailed($processedUpdate, $exception->getMessage());
+
+            Log::error('telegram.webhook.update_failed', [
+                'telegram_update_id' => $update['update_id'] ?? null,
+                'callback_query_id' => data_get($update, 'callback_query.id'),
+                'message' => $exception->getMessage(),
+            ]);
+
+            throw $exception;
         }
     }
 
@@ -148,12 +185,21 @@ class TelegramUpdateHandler
             $lockedRun->forceFill([
                 'status' => TelegramGameRun::STATUS_CANCELLED,
                 'cancelled_at' => now(),
+                'last_interaction_at' => now(),
+                'last_error_code' => null,
+                'last_error_message' => null,
+                'last_error_at' => null,
             ])->save();
 
             return $lockedRun;
         });
 
         if ($freshRun->status === TelegramGameRun::STATUS_CANCELLED) {
+            Log::info('telegram.runtime.run_cancelled', [
+                'telegram_game_run_id' => $freshRun->id,
+                'user_id' => $freshRun->user_id,
+            ]);
+
             $this->bot->answerCallbackQuery($callbackQueryId, 'Сессия отменена.');
             $this->clearInlineKeyboard($chatId, $messageId);
             $this->bot->sendMessage($chatId, 'Текущая Telegram-сессия отменена.');
@@ -193,6 +239,11 @@ class TelegramUpdateHandler
 
             return;
         }
+
+        Log::info('telegram.runtime.run_started', [
+            'telegram_game_run_id' => $run->id,
+            'user_id' => $run->user_id,
+        ]);
 
         $this->bot->answerCallbackQuery($callbackQueryId, 'Сессия запущена.');
         $this->clearInlineKeyboard($chatId, $messageId);
@@ -246,6 +297,14 @@ class TelegramUpdateHandler
             return;
         }
 
+        Log::info('telegram.runtime.answer_accepted', [
+            'telegram_game_run_id' => $run->id,
+            'user_id' => $run->user_id,
+            'item_id' => $itemId,
+            'option_index' => $optionIndex,
+            'is_correct' => $result['is_correct'],
+        ]);
+
         $this->bot->answerCallbackQuery($callbackQueryId, 'Ответ принят.');
         $this->clearInlineKeyboard($chatId, $messageId);
 
@@ -268,6 +327,13 @@ class TelegramUpdateHandler
         $summaryText = is_string($result['summary_text'] ?? null) && $result['summary_text'] !== ''
             ? $result['summary_text']
             : 'Сессия завершена.';
+
+        Log::info('telegram.runtime.run_finished', [
+            'telegram_game_run_id' => $freshRun->id,
+            'user_id' => $freshRun->user_id,
+            'correct_answers' => $freshRun->correct_answers,
+            'incorrect_answers' => $freshRun->incorrect_answers,
+        ]);
 
         $this->bot->sendMessage($chatId, $summaryText);
     }

@@ -78,9 +78,9 @@ class TelegramWebhookTest extends TestCase
             'password' => Hash::make('secret-password'),
         ]);
 
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('/login'));
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('tester@example.com'));
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('secret-password', 'new_tg_login'));
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('/login', 'wordkeeper_user', 10001));
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('tester@example.com', 'wordkeeper_user', 10002));
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('secret-password', 'new_tg_login', 10003));
 
         $user->refresh();
 
@@ -106,9 +106,9 @@ class TelegramWebhookTest extends TestCase
             'tg_linked_at' => now()->subDay(),
         ]);
 
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('/login', 'fresh_login'));
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('tester@example.com', 'fresh_login'));
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('secret-password', 'fresh_login'));
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('/login', 'fresh_login', 10001));
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('tester@example.com', 'fresh_login', 10002));
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('secret-password', 'fresh_login', 10003));
 
         $user->refresh();
 
@@ -127,9 +127,9 @@ class TelegramWebhookTest extends TestCase
             'password' => Hash::make('secret-password'),
         ]);
 
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('/login'));
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('tester@example.com'));
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('wrong-password'));
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('/login', 'wordkeeper_user', 10001));
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('tester@example.com', 'wordkeeper_user', 10002));
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('wrong-password', 'wordkeeper_user', 10003));
 
         $user->refresh();
 
@@ -143,10 +143,10 @@ class TelegramWebhookTest extends TestCase
     /**
      * @return array<string, mixed>
      */
-    private function messageUpdate(string $text, string $username = 'wordkeeper_user'): array
+    private function messageUpdate(string $text, string $username = 'wordkeeper_user', int $updateId = 10000): array
     {
         return [
-            'update_id' => 10000,
+            'update_id' => $updateId,
             'message' => [
                 'message_id' => 1,
                 'from' => [

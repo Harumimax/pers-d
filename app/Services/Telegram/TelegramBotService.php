@@ -2,11 +2,16 @@
 
 namespace App\Services\Telegram;
 
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class TelegramBotService
 {
+    private const MAX_ATTEMPTS = 3;
+
     public function sendMessage(string $chatId, string $text, array $extra = []): array
     {
         return $this->post('sendMessage', array_merge([
@@ -48,14 +53,69 @@ class TelegramBotService
 
     private function post(string $method, array $payload): array
     {
-        $response = Http::asJson()
-            ->acceptJson()
-            ->timeout(20)
-            ->post($this->apiBaseUrl().'/'.$method, $payload);
+        $attempt = 0;
 
-        $response->throw();
+        beginning:
+        $attempt++;
 
-        return $response->json() ?? [];
+        try {
+            $response = Http::asJson()
+                ->acceptJson()
+                ->timeout(20)
+                ->post($this->apiBaseUrl().'/'.$method, $payload);
+
+            $response->throw();
+
+            return $response->json() ?? [];
+        } catch (ConnectionException|RequestException $exception) {
+            $status = $exception instanceof RequestException
+                ? $exception->response?->status()
+                : null;
+
+            if ($this->shouldRetry($exception, $attempt)) {
+                Log::warning('telegram.api.retrying_request', [
+                    'method' => $method,
+                    'attempt' => $attempt,
+                    'status' => $status,
+                    'message' => $exception->getMessage(),
+                ]);
+
+                usleep(200000 * $attempt);
+                goto beginning;
+            }
+
+            Log::error('telegram.api.request_failed', [
+                'method' => $method,
+                'attempt' => $attempt,
+                'status' => $status,
+                'message' => $exception->getMessage(),
+            ]);
+
+            throw $exception;
+        }
+    }
+
+    private function shouldRetry(ConnectionException|RequestException $exception, int $attempt): bool
+    {
+        if ($attempt >= self::MAX_ATTEMPTS) {
+            return false;
+        }
+
+        if ($exception instanceof ConnectionException) {
+            return true;
+        }
+
+        $status = $exception->response?->status();
+
+        if ($status === null) {
+            return false;
+        }
+
+        if ($status === 429) {
+            return true;
+        }
+
+        return $status >= 500;
     }
 
     private function apiBaseUrl(): string

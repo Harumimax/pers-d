@@ -14,6 +14,8 @@ class TelegramGameRun extends Model
     public const STATUS_CANCELLED = 'cancelled';
     public const STATUS_FINISHED = 'finished';
     public const STATUS_FAILED = 'failed';
+    public const STATUS_EXPIRED = 'expired';
+    public const STATUS_ABANDONED = 'abandoned';
 
     protected $fillable = [
         'user_id',
@@ -31,6 +33,10 @@ class TelegramGameRun extends Model
         'started_at',
         'finished_at',
         'cancelled_at',
+        'last_interaction_at',
+        'last_error_code',
+        'last_error_message',
+        'last_error_at',
         'config_snapshot',
     ];
 
@@ -45,6 +51,8 @@ class TelegramGameRun extends Model
             'started_at' => 'datetime',
             'finished_at' => 'datetime',
             'cancelled_at' => 'datetime',
+            'last_interaction_at' => 'datetime',
+            'last_error_at' => 'datetime',
             'config_snapshot' => 'array',
         ];
     }

@@ -47,6 +47,10 @@ class TelegramGameResultFinalizer
             'finished_at' => $run->finished_at ?? now(),
             'correct_answers' => $correctAnswers,
             'incorrect_answers' => $incorrectAnswers,
+            'last_interaction_at' => now(),
+            'last_error_code' => null,
+            'last_error_message' => null,
+            'last_error_at' => null,
         ])->save();
 
         $this->remainderMistakeFlagSyncService->syncTelegramRun($run);

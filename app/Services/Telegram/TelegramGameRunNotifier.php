@@ -10,6 +10,7 @@ class TelegramGameRunNotifier
     public function __construct(
         private readonly TelegramBotService $bot,
         private readonly TelegramGameRunCallbackData $callbackData,
+        private readonly TelegramGameRunMonitorService $telegramGameRunMonitorService,
     ) {
     }
 
@@ -40,8 +41,12 @@ class TelegramGameRunNotifier
             'status' => TelegramGameRun::STATUS_AWAITING_START,
             'intro_message_sent_at' => CarbonImmutable::now('UTC'),
             'intro_message_id' => is_numeric($messageId) ? (int) $messageId : null,
+            'last_interaction_at' => now(),
+            'last_error_code' => null,
+            'last_error_message' => null,
+            'last_error_at' => null,
         ])->save();
 
-        return $run->fresh();
+        return $this->telegramGameRunMonitorService->touchInteraction($run);
     }
 }
