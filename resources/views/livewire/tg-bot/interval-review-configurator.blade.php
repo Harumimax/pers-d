@@ -321,13 +321,17 @@
                         <div class="tg-bot-interval__first-session-list">
                             @foreach ($firstSessionPreviewWords as $word)
                                 <div class="tg-bot-interval__first-session-word" wire:key="preview-word-{{ $word['selection_key'] }}">
-                                    <div class="tg-bot-interval__selected-word-title">{{ $word['word'] }}</div>
-                                    <div class="tg-bot-interval__selected-word-meta">
-                                        {{ $word['translation'] }}
-                                        @if ($word['part_of_speech'])
-                                            <span aria-hidden="true">&middot;</span>
-                                            {{ $word['part_of_speech'] }}
-                                        @endif
+                                    <div>
+                                        <div class="tg-bot-interval__selected-word-title">
+                                            {{ $word['word'] }}
+                                        </div>
+                                        <div class="tg-bot-interval__selected-word-comment">
+                                            {{ $word['translation'] }}
+                                            @if ($word['part_of_speech'])
+                                                <span aria-hidden="true">&middot;</span>
+                                                {{ $word['part_of_speech'] }}
+                                            @endif
+                                        </div>
                                     </div>
                                     @if ($word['comment'])
                                         <div class="tg-bot-interval__selected-word-comment">{{ $word['comment'] }}</div>
