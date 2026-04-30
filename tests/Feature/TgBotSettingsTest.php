@@ -48,9 +48,12 @@ class TgBotSettingsTest extends TestCase
             ->assertSee('name="timezone"', false)
             ->assertSee('UTC+')
             ->assertSee('Send random words to Telegram')
+            ->assertSee('Interval review of words')
             ->assertSee('Sessions per day')
             ->assertSee('Words per session')
-            ->assertSee('Select all dictionaries');
+            ->assertSee('Select all dictionaries')
+            ->assertSee('wire:id=', false)
+            ->assertSee('/livewire-', false);
     }
 
     public function test_connected_user_can_save_telegram_settings(): void

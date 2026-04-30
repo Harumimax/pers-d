@@ -77,7 +77,7 @@
                     </article>
                 @else
                     <article class="dictionary-card tg-bot-card">
-                        <div class="dictionary-card__content" x-data="{ settingsExpanded: true }">
+                        <div class="dictionary-card__content" x-data="{ settingsExpanded: false }">
                             @if (session('tgBotSettingsStatus'))
                                 <div class="tg-bot-alert tg-bot-alert--success" role="status">
                                     {{ session('tgBotSettingsStatus') }}
@@ -214,19 +214,7 @@
                                     @method('PUT')
 
                                     <section class="tg-bot-form__section">
-                                        <div class="tg-bot-form__field">
-                                            <label for="tg-bot-timezone" class="tg-bot-form__label">{{ __('tg-bot.form.timezone.label') }}</label>
-                                            <select id="tg-bot-timezone" name="timezone" class="tg-bot-form__control">
-                                                @foreach ($timezoneOptions as $timezone)
-                                                    <option value="{{ $timezone['value'] }}" @selected($initialTelegramSettings['timezone'] === $timezone['value'])>
-                                                        {{ $timezone['label'] }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            <p class="tg-bot-form__hint">{{ __('tg-bot.form.timezone.hint') }}</p>
-                                        </div>
-
-                                        <div class="tg-bot-form__switch-row">
+                                        <div class="tg-bot-form__switch-row tg-bot-form__switch-row--spaced">
                                             <div>
                                                 <h3 class="tg-bot-form__switch-title">{{ __('tg-bot.form.random_words.enabled') }}</h3>
                                                 <p class="tg-bot-form__hint">{{ __('tg-bot.form.random_words.choice_hint') }}</p>
@@ -242,6 +230,18 @@
                                                 >
                                                 <span class="tg-bot-switch__track" aria-hidden="true"></span>
                                             </label>
+                                        </div>
+
+                                        <div class="tg-bot-form__field">
+                                            <label for="tg-bot-timezone" class="tg-bot-form__label">{{ __('tg-bot.form.timezone.label') }}</label>
+                                            <select id="tg-bot-timezone" name="timezone" class="tg-bot-form__control">
+                                                @foreach ($timezoneOptions as $timezone)
+                                                    <option value="{{ $timezone['value'] }}" @selected($initialTelegramSettings['timezone'] === $timezone['value'])>
+                                                        {{ $timezone['label'] }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            <p class="tg-bot-form__hint">{{ __('tg-bot.form.timezone.hint') }}</p>
                                         </div>
                                     </section>
 
@@ -455,6 +455,8 @@
                             </div>
                         </div>
                     </article>
+
+                    <livewire:tg-bot.interval-review-configurator :timezone="$telegramSettingsFormData['timezone']" />
                 @endif
             </section>
         </div>

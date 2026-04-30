@@ -18,6 +18,7 @@
         @stack('styles')
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @livewireStyles
     </head>
     @php($activeNav = $activeNav ?? null)
     <body class="profile-shell">
@@ -127,5 +128,6 @@
         </div>
 
         <x-site-footer :link-href="route('about')" :link-label="__('common.links.about')" />
+        @livewireScripts
     </body>
 </html>

@@ -115,6 +115,12 @@
   - renders either the current question, immediate feedback, or the final result summary
   - delegates answer checking and session transitions to `GameEngineService`
   - allows authenticated users to copy incorrect prepared-dictionary result words into personal dictionaries
+- `App\Livewire\TgBot\IntervalReviewConfigurator`
+  - renders the first UI-only interval review configurator inside `/tg-bot`
+  - filters personal and prepared dictionaries by selected language
+  - opens a modal dictionary picker with search, part-of-speech filtering, pagination, and bulk selection
+  - keeps the temporary selected words state in Livewire without persisting an interval plan yet
+  - builds a preview of the 6-session interval schedule through `TelegramIntervalReviewSchedulePreviewService`
 
 ### Views and Layouts
 - Shared dictionaries layout: `resources/views/layouts/dictionaries.blade.php`
@@ -127,6 +133,8 @@
   - `resources/views/remainder.blade.php`
   - `resources/views/remainder-show.blade.php`
   - `resources/views/tg-bot.blade.php`
+- Additional TG bot Livewire view:
+  - `resources/views/livewire/tg-bot/interval-review-configurator.blade.php`
 - Reusable shared components:
   - `resources/views/components/language-switcher.blade.php`
   - `resources/views/components/site-footer.blade.php`
@@ -208,6 +216,9 @@
     - renders one user dictionary in Telegram with 20 words per page
     - formats only existing word attributes (`word`, `part of speech`, `translation`, `comment`)
     - builds compact pagination controls and the `К словарям` back navigation
+  - `TelegramIntervalReviewSchedulePreviewService`
+    - calculates the UI preview schedule for the future interval review mode
+    - returns 6 local datetimes based on the selected start time and the shared Telegram timezone
   - `TelegramProcessedUpdateService`
     - stores processed Telegram `update_id` / `callback_query_id` pairs in the database
     - prevents duplicate webhook delivery from re-running start, cancel, and answer side effects
@@ -895,6 +906,15 @@
 - On the finished result screen, authenticated users can copy incorrect prepared-dictionary words into a selected personal dictionary; copied words are created as new `words` rows with `remainder_had_mistake = true`
 
 ## Telegram Scheduled Session Flow
+- `/tg-bot` now contains two expandable Telegram mode blocks:
+  - the persisted random-words mode
+  - the first UI-only interval review configurator
+- The interval review configurator currently does not persist plans yet:
+  - it lets the user choose a language
+  - browse personal and prepared dictionaries in modal pickers
+  - select up to 20 words
+  - preview the future 6-session interval schedule
+  - preview the first session word set
 - After Telegram authorization, the bot exposes a small reply-keyboard main menu:
   - `Словари`
   - `Выход`
@@ -1012,10 +1032,12 @@
 - `app/Services/Telegram/TelegramDictionaryCallbackData.php`
 - `app/Services/Telegram/TelegramDictionaryMenuService.php`
 - `app/Services/Telegram/TelegramDictionaryViewService.php`
+- `app/Services/Telegram/TelegramIntervalReviewSchedulePreviewService.php`
 - `app/Services/Telegram/TelegramGameRunNotifier.php`
 - `app/Services/Telegram/TelegramGameRunCallbackData.php`
 - `app/Services/Telegram/TelegramGameResultFinalizer.php`
 - `app/Services/Telegram/TelegramUpdateHandler.php`
+- `app/Livewire/TgBot/IntervalReviewConfigurator.php`
 - `app/Console/Commands/DispatchScheduledTelegramSessionsCommand.php`
 - `app/Models/GameSession.php`
 - `app/Models/GameSessionItem.php`

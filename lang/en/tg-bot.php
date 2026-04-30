@@ -2,7 +2,7 @@
 
 return [
     'title' => 'TG bot',
-    'subtitle' => 'Configure how WordKeeper will send practice sessions to Telegram. This section stores only the mode settings. The actual Telegram gameplay will be added in the next steps.',
+    'subtitle' => 'Configure how WordKeeper will send practice sessions to Telegram. This page already contains a working random words mode and the first UX slice for interval review.',
     'bot_address_title' => 'Bot address',
     'bot_address_text' => 'You can open the bot at',
     'connection' => [
@@ -22,7 +22,7 @@ return [
         ],
         'random_words' => [
             'title' => 'Send random words to Telegram',
-            'description' => 'The bot will use the multiple choice format with 6 answer options and will later send scheduled practice sessions directly to Telegram.',
+            'description' => 'The bot uses the multiple choice format with 6 answer options and can send scheduled practice sessions directly to Telegram.',
             'enabled' => 'Mode status',
             'choice_hint' => 'This mode always uses the 6-option multiple choice format.',
         ],
@@ -32,10 +32,10 @@ return [
         ],
         'sessions' => [
             'title' => 'Sessions per day',
-            'hint' => 'Add from 1 to 5 daily sessions. Each session stores its own time, translation direction, part of speech filter, and dictionaries.',
+            'hint' => 'Add from 1 to 5 daily sessions. Each session stores its own time, translation direction, parts of speech, and dictionaries.',
             'first_title' => '1st session',
             'additional_title_prefix' => 'Session',
-            'session_hint' => 'The bot will use these settings when this session is implemented in Telegram delivery.',
+            'session_hint' => 'The bot uses these settings when it delivers scheduled practice sessions in Telegram.',
             'words_count_hint' => 'Choose from 2 to 20 words for this session.',
             'fields' => [
                 'send_time' => 'Send time',
@@ -47,6 +47,73 @@ return [
             ],
             'empty_user_dictionaries' => 'No personal dictionaries yet.',
             'empty_ready_dictionaries' => 'No prepared dictionaries available yet.',
+        ],
+    ],
+    'interval_review' => [
+        'title' => 'Interval review of words',
+        'description' => 'Choose up to 20 words, pick the language and start time, then preview the 6-session interval review schedule that will later be delivered to Telegram.',
+        'toggle' => 'Toggle interval review section',
+        'enabled' => 'Mode status',
+        'enabled_hint' => 'This switch currently affects only the configuration preview on the page. Real plan activation will be added in the next stage.',
+        'language' => [
+            'label' => 'Review language',
+            'hint' => 'Words and dictionaries below are filtered by the selected language.',
+        ],
+        'start_time' => [
+            'label' => 'Start time',
+            'hint' => 'The first session will be scheduled for the nearest upcoming occurrence of this time in the selected timezone.',
+        ],
+        'timezone' => [
+            'label' => 'Timezone for the future plan',
+            'hint' => 'The common Telegram timezone above will be used for interval review as well.',
+        ],
+        'dictionary_picker' => [
+            'title' => 'Choose words for interval review',
+            'hint' => 'Open a dictionary, filter the list, and select up to 20 words.',
+            'user_title' => 'My dictionaries',
+            'ready_title' => 'Prepared dictionaries',
+            'empty_user' => 'There are no personal dictionaries for this language yet.',
+            'empty_ready' => 'There are no prepared dictionaries for this language yet.',
+        ],
+        'modal' => [
+            'subtitle' => 'Choose words for the future interval review sessions.',
+            'search_label' => 'Search words',
+            'filter_label' => 'Part of speech filter',
+            'select_page' => 'Select page',
+            'clear_page' => 'Clear page',
+            'empty' => 'No words match the current filters.',
+            'pagination' => 'Showing :from-:to of :total words.',
+            'table' => [
+                'select' => 'Select',
+                'word' => 'Word',
+                'part_of_speech' => 'Part of speech',
+                'translation' => 'Translation',
+                'comment' => 'Comment',
+            ],
+        ],
+        'selected_words' => [
+            'title' => 'Selected words',
+            'counter' => 'Selected :count of :max words.',
+            'empty' => 'No words selected yet.',
+            'remove' => 'Remove',
+            'source_user' => 'My dictionaries',
+            'source_ready' => 'Prepared dictionaries',
+        ],
+        'preview' => [
+            'action' => 'Show schedule',
+            'apply_action' => 'Apply plan',
+            'apply_hint' => 'This button is shown now for a clearer flow. Real plan saving and activation will be added in the next stage.',
+            'title' => 'Schedule preview',
+            'hint' => 'This is only a preview. The interval plan is not saved yet at this stage.',
+            'schedule_title' => '6 review sessions plan',
+            'first_session_title' => 'First session preview',
+            'first_session_hint' => 'The first session will include all selected words. Current selection: :count.',
+            'session_label' => 'Session :number',
+        ],
+        'validation' => [
+            'words_required' => 'Select at least one word for interval review.',
+            'start_time_required' => 'Please specify the start time for the interval review plan.',
+            'selection_limit' => 'You can select no more than :count words.',
         ],
     ],
     'validation' => [
