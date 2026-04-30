@@ -116,10 +116,11 @@
   - delegates answer checking and session transitions to `GameEngineService`
   - allows authenticated users to copy incorrect prepared-dictionary result words into personal dictionaries
 - `App\Livewire\TgBot\IntervalReviewConfigurator`
-  - renders the first UI-only interval review configurator inside `/tg-bot`
+  - renders the interval review configurator inside `/tg-bot`
   - filters personal and prepared dictionaries by selected language
   - opens a modal dictionary picker with search, part-of-speech filtering, pagination, and bulk selection
-  - keeps the temporary selected words state in Livewire without persisting an interval plan yet
+  - saves and reloads one persisted interval review plan per user
+  - supports plan preview, pause/resume, and confirm-reset flows
   - builds a preview of the 6-session interval schedule through `TelegramIntervalReviewSchedulePreviewService`
 
 ### Views and Layouts
@@ -219,6 +220,11 @@
   - `TelegramIntervalReviewSchedulePreviewService`
     - calculates the UI preview schedule for the future interval review mode
     - returns 6 local datetimes based on the selected start time and the shared Telegram timezone
+  - `TelegramIntervalReviewPlanService`
+    - persists one interval review plan per user
+    - stores snapshot selected words and the calculated 6 scheduled interval sessions
+    - reloads the saved plan back into the `/tg-bot` Livewire configurator
+    - supports pause/resume via plan status and reset through plan deletion
   - `TelegramProcessedUpdateService`
     - stores processed Telegram `update_id` / `callback_query_id` pairs in the database
     - prevents duplicate webhook delivery from re-running start, cancel, and answer side effects
@@ -753,6 +759,51 @@
   - `created_at`
   - `updated_at`
 
+#### `telegram_interval_review_plans`
+- Created in `2026_04_30_000031_create_telegram_interval_review_tables.php`
+- Purpose: stores one persisted interval review configuration per user
+- Fields:
+  - `id`
+  - `user_id` -> FK to `users.id`, unique
+  - `status`
+  - `language`
+  - `start_time`
+  - `timezone`
+  - `words_count`
+  - `created_at`
+  - `updated_at`
+
+#### `telegram_interval_review_plan_words`
+- Created in `2026_04_30_000031_create_telegram_interval_review_tables.php`
+- Purpose: stores the immutable snapshot of words selected into an interval review plan
+- Fields:
+  - `id`
+  - `telegram_interval_review_plan_id` -> FK to `telegram_interval_review_plans.id`
+  - `source_type`
+  - `source_dictionary_id` nullable
+  - `source_word_id` nullable
+  - `dictionary_name`
+  - `language`
+  - `word`
+  - `translation`
+  - `part_of_speech` nullable
+  - `comment` nullable
+  - `position`
+  - `created_at`
+  - `updated_at`
+
+#### `telegram_interval_review_sessions`
+- Created in `2026_04_30_000031_create_telegram_interval_review_tables.php`
+- Purpose: stores the 6 precomputed future interval review sessions for one saved plan
+- Fields:
+  - `id`
+  - `telegram_interval_review_plan_id` -> FK to `telegram_interval_review_plans.id`
+  - `session_number`
+  - `scheduled_for`
+  - `status`
+  - `created_at`
+  - `updated_at`
+
 #### `about_contact_messages`
 - Created in `2026_04_17_000014_create_about_contact_messages_table.php`
 - Purpose: stores About page contact form submissions and email delivery state
@@ -908,13 +959,25 @@
 ## Telegram Scheduled Session Flow
 - `/tg-bot` now contains two expandable Telegram mode blocks:
   - the persisted random-words mode
-  - the first UI-only interval review configurator
-- The interval review configurator currently does not persist plans yet:
+  - the persisted interval review configurator
+- The interval review configurator currently supports:
   - it lets the user choose a language
   - browse personal and prepared dictionaries in modal pickers
   - select up to 20 words
   - preview the future 6-session interval schedule
   - preview the first session word set
+  - save one interval review plan per user
+  - reload the saved plan after reopening `/tg-bot`
+  - pause/resume the saved plan
+  - delete the saved plan through a confirm-reset flow
+- The interval review plan is persisted as:
+  - one root `telegram_interval_review_plans` row
+  - snapshot selected words in `telegram_interval_review_plan_words`
+  - six precomputed future sessions in `telegram_interval_review_sessions`
+- At this stage the interval review plan is configuration-only:
+  - it does not dispatch Telegram sessions yet
+  - it does not send intro messages yet
+  - it does not run game questions yet
 - After Telegram authorization, the bot exposes a small reply-keyboard main menu:
   - `Словари`
   - `Выход`

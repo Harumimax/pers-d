@@ -66,6 +66,19 @@
                         <p class="tg-bot-form__hint">{{ __('tg-bot.interval_review.timezone.hint') }}</p>
                     </div>
                 </div>
+
+                @if ($hasPersistedPlan)
+                    <div class="tg-bot-interval__status-card">
+                        <div>
+                            <h4 class="tg-bot-interval__status-title">{{ __('tg-bot.interval_review.plan_status.title') }}</h4>
+                            <p class="tg-bot-form__hint">{{ __('tg-bot.interval_review.plan_status.hint') }}</p>
+                        </div>
+
+                        <span class="tg-bot-interval__status-badge {{ $enabled ? 'is-active' : 'is-paused' }}">
+                            {{ $planStatusLabel }}
+                        </span>
+                    </div>
+                @endif
             </section>
 
             <section class="tg-bot-form__section">
@@ -202,15 +215,85 @@
                 @endif
             </section>
 
+            @if ($feedbackMessage)
+                <div class="tg-bot-alert {{ $feedbackType === 'error' ? 'tg-bot-alert--error' : 'tg-bot-alert--success' }}" role="{{ $feedbackType === 'error' ? 'alert' : 'status' }}">
+                    {{ $feedbackMessage }}
+                </div>
+            @endif
+
             <div class="tg-bot-form__actions">
-                <button type="button" class="btn btn-primary tg-bot-form__submit" wire:click="buildPlanPreview">
-                    {{ __('tg-bot.interval_review.preview.action') }}
-                </button>
-                <button type="button" class="btn btn-secondary tg-bot-form__submit" disabled aria-disabled="true">
+                @if (! $planPreviewVisible)
+                    <button type="button" class="btn btn-secondary tg-bot-form__submit" wire:click="buildPlanPreview">
+                        {{ __('tg-bot.interval_review.preview.action') }}
+                    </button>
+                @else
+                    <button type="button" class="btn btn-secondary tg-bot-form__submit" wire:click="collapsePlanPreview">
+                        {{ __('tg-bot.interval_review.preview.collapse_action') }}
+                    </button>
+                @endif
+                <button type="button" class="btn btn-primary tg-bot-form__submit" wire:click="applyPlan">
                     {{ __('tg-bot.interval_review.preview.apply_action') }}
                 </button>
             </div>
             <p class="tg-bot-form__hint">{{ __('tg-bot.interval_review.preview.apply_hint') }}</p>
+
+            @if ($hasPersistedPlan)
+                <section class="tg-bot-form__section tg-bot-interval__reset-section">
+                    <div>
+                        <h3 class="tg-bot-form__section-title">{{ __('tg-bot.interval_review.reset.title') }}</h3>
+                        <p class="tg-bot-form__hint">{{ __('tg-bot.interval_review.reset.description') }}</p>
+                    </div>
+
+                    @if (! $showResetConfirmation)
+                        <div class="tg-bot-form__actions">
+                            <button
+                                type="button"
+                                class="btn btn-secondary tg-bot-form__submit tg-bot-form__submit--danger"
+                                x-on:click="
+                                    const scrollTop = window.scrollY;
+                                    $el.blur();
+                                    $wire.confirmReset();
+                                    requestAnimationFrame(() => window.scrollTo({ top: scrollTop }));
+                                "
+                            >
+                                {{ __('tg-bot.interval_review.reset.action') }}
+                            </button>
+                        </div>
+                    @else
+                        <div class="tg-bot-alert tg-bot-alert--error" role="alert">
+                            <p class="tg-bot-alert__title">{{ __('tg-bot.interval_review.reset.confirm_title') }}</p>
+                            <p class="tg-bot-form__hint">{{ __('tg-bot.interval_review.reset.confirm_text') }}</p>
+                        </div>
+
+                        <div class="tg-bot-form__actions">
+                            <button
+                                type="button"
+                                class="btn btn-secondary tg-bot-form__submit tg-bot-form__submit--danger"
+                                x-on:click="
+                                    const scrollTop = window.scrollY;
+                                    $el.blur();
+                                    $wire.resetPlan();
+                                    requestAnimationFrame(() => window.scrollTo({ top: scrollTop }));
+                                "
+                            >
+                                {{ __('tg-bot.interval_review.reset.confirm_action') }}
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-secondary tg-bot-form__submit"
+                                x-on:click="
+                                    const scrollTop = window.scrollY;
+                                    $el.blur();
+                                    $wire.cancelReset();
+                                    requestAnimationFrame(() => window.scrollTo({ top: scrollTop }));
+                                "
+                            >
+                                {{ __('tg-bot.interval_review.reset.cancel_action') }}
+                            </button>
+                        </div>
+                    @endif
+                </section>
+            @endif
 
             @if ($planPreviewVisible)
                 <section class="tg-bot-form__section tg-bot-interval__preview-section">
@@ -253,19 +336,19 @@
                             @endforeach
                         </div>
                     </div>
-
-                    <div class="tg-bot-form__actions">
-                        <button type="button" class="btn btn-secondary tg-bot-form__submit" disabled aria-disabled="true">
-                            {{ __('tg-bot.interval_review.preview.apply_action') }}
-                        </button>
-                    </div>
-                    <p class="tg-bot-form__hint">{{ __('tg-bot.interval_review.preview.apply_hint') }}</p>
                 </section>
             @endif
         </div>
 
         @if ($modalOpen && $modalDictionary)
-            <div class="tg-bot-modal-backdrop" wire:click="closeDictionary"></div>
+            <div
+                class="tg-bot-modal-backdrop"
+                x-on:click="
+                    const scrollTop = window.scrollY;
+                    $wire.closeDictionary();
+                    requestAnimationFrame(() => window.scrollTo({ top: scrollTop }));
+                "
+            ></div>
             <section class="tg-bot-modal" role="dialog" aria-modal="true" aria-label="{{ $modalDictionary->name }}">
                 <div class="tg-bot-modal__card" wire:click.stop>
                     <div class="tg-bot-modal__header">
@@ -274,7 +357,16 @@
                             <p class="tg-bot-form__hint">{{ __('tg-bot.interval_review.modal.subtitle') }}</p>
                         </div>
 
-                        <button type="button" class="tg-bot-modal__close" wire:click="closeDictionary">×</button>
+                        <button
+                            type="button"
+                            class="tg-bot-modal__close"
+                            x-on:click="
+                                const scrollTop = window.scrollY;
+                                $el.blur();
+                                $wire.closeDictionary();
+                                requestAnimationFrame(() => window.scrollTo({ top: scrollTop }));
+                            "
+                        >&times;</button>
                     </div>
 
                     <div class="tg-bot-modal__toolbar">

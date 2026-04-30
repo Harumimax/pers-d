@@ -42,6 +42,11 @@ class User extends Authenticatable
         return $this->hasOne(TelegramSetting::class);
     }
 
+    public function telegramIntervalReviewPlan(): HasOne
+    {
+        return $this->hasOne(TelegramIntervalReviewPlan::class);
+    }
+
     public function hasPreferredLocale(): bool
     {
         $preferredLocale = trim((string) $this->preferred_locale);

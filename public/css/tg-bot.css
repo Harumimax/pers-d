@@ -437,6 +437,16 @@
     border-radius: 14px;
 }
 
+.tg-bot-form__submit--danger {
+    border-color: rgba(185, 28, 28, 0.22);
+    color: #991b1b;
+}
+
+.tg-bot-form__submit--danger:hover {
+    border-color: rgba(185, 28, 28, 0.38);
+    background: rgba(254, 242, 242, 0.95);
+}
+
 .tg-bot-inline-error {
     margin: 0;
     font-size: 0.92rem;
@@ -609,6 +619,52 @@
 
 .tg-bot-interval__preview-section {
     gap: 16px;
+}
+
+.tg-bot-interval__status-card,
+.tg-bot-interval__reset-section {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 16px;
+    background: rgba(248, 250, 252, 0.64);
+}
+
+.tg-bot-interval__status-card {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.tg-bot-interval__status-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.tg-bot-interval__status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.tg-bot-interval__status-badge.is-active {
+    background: rgba(15, 118, 110, 0.12);
+    color: #0f766e;
+}
+
+.tg-bot-interval__status-badge.is-paused {
+    background: rgba(148, 163, 184, 0.16);
+    color: #475569;
 }
 
 .tg-bot-interval__schedule-list {
@@ -788,6 +844,7 @@
     }
 
     .tg-bot-interval__selected-header,
+    .tg-bot-interval__status-card,
     .tg-bot-interval__selected-word,
     .tg-bot-interval__schedule-item,
     .tg-bot-modal__header,

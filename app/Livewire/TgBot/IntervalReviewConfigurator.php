@@ -2,13 +2,17 @@
 
 namespace App\Livewire\TgBot;
 
+use App\Data\Telegram\IntervalReviewPlanData;
 use App\Models\ReadyDictionary;
 use App\Models\ReadyDictionaryWord;
+use App\Models\TelegramIntervalReviewPlan;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
+use App\Services\Telegram\TelegramIntervalReviewPlanService;
 use App\Services\Telegram\TelegramIntervalReviewSchedulePreviewService;
 use App\Support\PartOfSpeechCatalog;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
@@ -30,10 +34,15 @@ class IntervalReviewConfigurator extends Component
     public array $selectedWords = [];
     public array $schedulePreview = [];
     public bool $planPreviewVisible = false;
+    public bool $hasPersistedPlan = false;
+    public bool $showResetConfirmation = false;
+    public ?string $feedbackMessage = null;
+    public string $feedbackType = 'success';
 
     public function mount(string $timezone = 'Europe/Moscow'): void
     {
         $this->timezone = $timezone;
+        $this->loadPersistedPlan(app(TelegramIntervalReviewPlanService::class));
     }
 
     public function render(): View
@@ -48,6 +57,9 @@ class IntervalReviewConfigurator extends Component
             'selectedWordGroups' => $this->selectedWordGroups(),
             'selectedWordsCount' => count($this->selectedWords),
             'firstSessionPreviewWords' => array_values($this->selectedWords),
+            'planStatusLabel' => $this->enabled
+                ? __('tg-bot.interval_review.plan_status.active')
+                : __('tg-bot.interval_review.plan_status.paused'),
         ]);
     }
 
@@ -82,16 +94,39 @@ class IntervalReviewConfigurator extends Component
             ->all();
 
         $this->closeDictionary();
+        $this->hideFeedback();
+        $this->showResetConfirmation = false;
         $this->resetPreview();
     }
 
     public function updatedStartTime(): void
     {
+        $this->hideFeedback();
+        $this->showResetConfirmation = false;
         $this->resetPreview();
     }
 
     public function updatedEnabled(): void
     {
+        $this->hideFeedback();
+        $this->showResetConfirmation = false;
+
+        if ($this->hasPersistedPlan) {
+            /** @var User $user */
+            $user = auth()->user();
+            $plan = app(TelegramIntervalReviewPlanService::class)->toggleStatus($user, $this->enabled);
+
+            if ($plan instanceof TelegramIntervalReviewPlan) {
+                $this->hasPersistedPlan = true;
+                $this->feedbackType = 'success';
+                $this->feedbackMessage = $this->enabled
+                    ? __('tg-bot.interval_review.messages.resumed')
+                    : __('tg-bot.interval_review.messages.paused');
+
+                return;
+            }
+        }
+
         $this->resetPreview();
     }
 
@@ -105,9 +140,37 @@ class IntervalReviewConfigurator extends Component
         $this->modalPage = 1;
     }
 
+    public function applyPlan(TelegramIntervalReviewPlanService $planService): void
+    {
+        $this->resetErrorBag();
+        $this->hideFeedback();
+        $this->showResetConfirmation = false;
+
+        if (count($this->selectedWords) === 0) {
+            $this->addError('interval_review_words', __('tg-bot.interval_review.validation.words_required'));
+
+            return;
+        }
+
+        if ($this->startTime === '') {
+            $this->addError('interval_review_start_time', __('tg-bot.interval_review.validation.start_time_required'));
+
+            return;
+        }
+
+        /** @var User $user */
+        $user = auth()->user();
+
+        $plan = $planService->save($user, $this->toPlanData());
+        $this->applyPlanState($plan);
+        $this->feedbackType = 'success';
+        $this->feedbackMessage = __('tg-bot.interval_review.messages.saved');
+    }
+
     public function buildPlanPreview(TelegramIntervalReviewSchedulePreviewService $previewService): void
     {
         $this->resetErrorBag();
+        $this->hideFeedback();
 
         if (count($this->selectedWords) === 0) {
             $this->addError('interval_review_words', __('tg-bot.interval_review.validation.words_required'));
@@ -125,8 +188,14 @@ class IntervalReviewConfigurator extends Component
         $this->planPreviewVisible = true;
     }
 
+    public function collapsePlanPreview(): void
+    {
+        $this->planPreviewVisible = false;
+    }
+
     public function toggleWordSelection(string $source, int $dictionaryId, int $wordId): void
     {
+        $this->hideFeedback();
         $wordData = $this->findWordData($source, $dictionaryId, $wordId);
 
         if ($wordData === null) {
@@ -157,6 +226,8 @@ class IntervalReviewConfigurator extends Component
 
     public function selectAllVisibleWords(): void
     {
+        $this->hideFeedback();
+
         foreach ($this->modalWords()['items'] as $word) {
             if (count($this->selectedWords) >= self::MAX_SELECTED_WORDS) {
                 $this->addError('selection_limit', __('tg-bot.interval_review.validation.selection_limit', ['count' => self::MAX_SELECTED_WORDS]));
@@ -173,6 +244,8 @@ class IntervalReviewConfigurator extends Component
 
     public function clearVisibleWordsSelection(): void
     {
+        $this->hideFeedback();
+
         foreach ($this->modalWords()['items'] as $word) {
             unset($this->selectedWords[$word['selection_key']]);
         }
@@ -184,6 +257,7 @@ class IntervalReviewConfigurator extends Component
 
     public function removeSelectedWord(string $selectionKey): void
     {
+        $this->hideFeedback();
         unset($this->selectedWords[$selectionKey]);
         $this->selectedWords = $this->selectedWords;
         $this->resetErrorBag('selection_limit');
@@ -204,6 +278,43 @@ class IntervalReviewConfigurator extends Component
     public function nextModalPage(): void
     {
         $this->gotoModalPage($this->modalPage + 1);
+    }
+
+    public function confirmReset(): void
+    {
+        $this->showResetConfirmation = true;
+        $this->hideFeedback();
+    }
+
+    public function cancelReset(): void
+    {
+        $this->showResetConfirmation = false;
+    }
+
+    public function resetPlan(TelegramIntervalReviewPlanService $planService): void
+    {
+        /** @var User $user */
+        $user = auth()->user();
+
+        $planService->reset($user);
+
+        $this->enabled = false;
+        $this->selectedLanguage = 'English';
+        $this->startTime = '09:00';
+        $this->selectedWords = [];
+        $this->schedulePreview = [];
+        $this->planPreviewVisible = false;
+        $this->hasPersistedPlan = false;
+        $this->showResetConfirmation = false;
+        $this->modalOpen = false;
+        $this->modalDictionaryId = null;
+        $this->modalSource = 'user';
+        $this->modalSearch = '';
+        $this->modalPartOfSpeech = PartOfSpeechCatalog::ALL;
+        $this->modalPage = 1;
+        $this->feedbackType = 'success';
+        $this->feedbackMessage = __('tg-bot.interval_review.messages.reset');
+        $this->resetErrorBag();
     }
 
     public function isWordSelected(string $selectionKey): bool
@@ -290,7 +401,6 @@ class IntervalReviewConfigurator extends Component
         }
 
         $search = mb_strtolower(trim($this->modalSearch));
-        $offset = ($this->modalPage - 1) * self::WORDS_PER_PAGE;
 
         if ($dictionary instanceof UserDictionary) {
             $query = $dictionary->words()->select('words.*');
@@ -407,5 +517,83 @@ class IntervalReviewConfigurator extends Component
     {
         $this->planPreviewVisible = false;
         $this->schedulePreview = [];
+    }
+
+    private function toPlanData(): IntervalReviewPlanData
+    {
+        return new IntervalReviewPlanData(
+            enabled: $this->enabled,
+            language: $this->selectedLanguage,
+            startTime: $this->startTime,
+            timezone: $this->timezone,
+            selectedWords: array_values($this->selectedWords),
+        );
+    }
+
+    private function loadPersistedPlan(TelegramIntervalReviewPlanService $planService): void
+    {
+        /** @var User $user */
+        $user = auth()->user();
+        $plan = $planService->loadForUser($user);
+
+        if (! $plan instanceof TelegramIntervalReviewPlan) {
+            return;
+        }
+
+        $this->applyPlanState($plan);
+    }
+
+    private function applyPlanState(TelegramIntervalReviewPlan $plan): void
+    {
+        $this->enabled = $plan->status === TelegramIntervalReviewPlan::STATUS_ACTIVE;
+        $this->selectedLanguage = (string) $plan->language;
+        $this->startTime = substr((string) $plan->start_time, 0, 5);
+        $this->timezone = (string) $plan->timezone;
+        $this->selectedWords = $plan->words
+            ->map(function ($word): array {
+                $selectionKey = "{$word->source_type}:{$word->source_dictionary_id}:{$word->source_word_id}";
+
+                return [
+                    'selection_key' => $selectionKey,
+                    'source' => (string) $word->source_type,
+                    'source_label' => $word->source_type === 'user'
+                        ? __('tg-bot.interval_review.selected_words.source_user')
+                        : __('tg-bot.interval_review.selected_words.source_ready'),
+                    'dictionary_id' => (int) $word->source_dictionary_id,
+                    'dictionary_name' => (string) $word->dictionary_name,
+                    'language' => (string) $word->language,
+                    'word_id' => (int) $word->source_word_id,
+                    'word' => (string) $word->word,
+                    'translation' => (string) $word->translation,
+                    'part_of_speech' => $word->part_of_speech !== null && trim((string) $word->part_of_speech) !== ''
+                        ? (string) $word->part_of_speech
+                        : null,
+                    'comment' => $word->comment !== null && trim((string) $word->comment) !== ''
+                        ? (string) $word->comment
+                        : null,
+                ];
+            })
+            ->keyBy('selection_key')
+            ->all();
+        $this->schedulePreview = $plan->sessions
+            ->map(fn ($session): array => [
+                'session_number' => $session->session_number,
+                'label' => __('tg-bot.interval_review.preview.session_label', ['number' => $session->session_number]),
+                'scheduled_at_local' => $session->scheduled_for
+                    ->setTimezone($plan->timezone)
+                    ->translatedFormat('d.m.Y H:i'),
+                'scheduled_at_iso' => CarbonImmutable::parse($session->scheduled_for)->toIso8601String(),
+            ])
+            ->values()
+            ->all();
+        $this->planPreviewVisible = $this->schedulePreview !== [];
+        $this->hasPersistedPlan = true;
+        $this->showResetConfirmation = false;
+    }
+
+    private function hideFeedback(): void
+    {
+        $this->feedbackMessage = null;
+        $this->feedbackType = 'success';
     }
 }
