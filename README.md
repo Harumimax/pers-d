@@ -47,9 +47,10 @@ The product is intentionally lightweight, practical, and built around personal u
 | Publish privacy and cookie policy sections on the About page | `done` |
 | Add Yandex Metrika through environment-based configuration | `done` |
 | Show welcome-page use cases and product preview screenshots | `done` |
-| Create a Telegram bot | `planning` |
-| Connect site functionality to the Telegram bot | `planning` |
-| Create a mode for sending words to the Telegram bot | `planning` |
+| Create and authorize a Telegram bot linked to a site account | `done` |
+| Browse your personal dictionaries directly inside the Telegram bot | `done` |
+| Configure and run scheduled random-word Telegram sessions from `/tg-bot` | `done` |
+| Configure and run a 6-session interval review flow in Telegram | `done` |
 | Switch to another local translation provider | `planning` |
 | Make the game interface more varied with alternate progress images and memes | `planning` |
 
@@ -129,6 +130,17 @@ Authenticated users can:
 
 The About contact form is queued and delivered through the NotiSend Email API.
 
+### Telegram bot
+Authenticated users who linked Telegram can:
+
+- authorize in the WordKeeper Telegram bot
+- open the `Словари` flow and browse their own dictionaries inside Telegram
+- open one dictionary and page through its words directly in chat
+- configure scheduled random-word sessions on `/tg-bot`
+- receive Telegram practice sessions with `Начать / Отменить` runtime flow
+- configure an interval review plan with up to 20 selected words on `/tg-bot`
+- receive the full 6-session interval review cycle in Telegram, including word preview, quiz flow, and per-session summary
+
 ### Remainder
 Authenticated users can:
 
@@ -178,12 +190,13 @@ php artisan test
 - guest demo mode is available for Prepared dictionaries and Remainder
 - dictionary and word management are the core of the current product
 - game sessions are snapshot-based and do not depend on live dictionary data during play
+- Telegram practice flows are configured on `/tg-bot` and executed through the linked Telegram bot
 - About contact form delivery uses the NotiSend Email API through queued jobs
 - architecture decisions are documented in [`docs/architecture.md`](docs/architecture.md)
 
 ## Roadmap direction
 
-The current product already covers the main dictionary workflow, prepared dictionary browsing, a working Remainder game flow, guest demo mode, API-backed feedback delivery, and a bilingual interface with remembered user language preference. The next major steps are expanding prepared content and later Telegram-based workflows with deeper learning scenarios.
+The current product already covers the main dictionary workflow, prepared dictionary browsing, a working Remainder game flow, guest demo mode, Telegram bot integration with two learning modes, API-backed feedback delivery, and a bilingual interface with remembered user language preference. The next major steps are expanding prepared content, polishing the learning UX, and growing the existing Telegram practice scenarios further.
 
 ---
 

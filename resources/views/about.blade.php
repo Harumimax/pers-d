@@ -324,15 +324,19 @@
                                 </tr>
                                 <tr>
                                     <td>{{ __('about.status.items.telegram_bot') }}</td>
-                                    <td><span class="about-status-badge about-status-badge--planning">{{ __('about.status.badges.planning') }}</span></td>
+                                    <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
                                 </tr>
                                 <tr>
-                                    <td>{{ __('about.status.items.telegram_integration') }}</td>
-                                    <td><span class="about-status-badge about-status-badge--planning">{{ __('about.status.badges.planning') }}</span></td>
+                                    <td>{{ __('about.status.items.telegram_dictionary_browsing') }}</td>
+                                    <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
                                 </tr>
                                 <tr>
                                     <td>{{ __('about.status.items.telegram_send_mode') }}</td>
-                                    <td><span class="about-status-badge about-status-badge--planning">{{ __('about.status.badges.planning') }}</span></td>
+                                    <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td>{{ __('about.status.items.telegram_interval_review') }}</td>
+                                    <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
                                 </tr>
                                 <tr>
                                     <td>{{ __('about.status.items.local_translation_provider') }}</td>
