@@ -12,6 +12,10 @@ Schedule::command('telegram:dispatch-scheduled-sessions')
     ->everyMinute()
     ->withoutOverlapping();
 
+Schedule::command('telegram:dispatch-interval-review-sessions')
+    ->everyMinute()
+    ->withoutOverlapping();
+
 Schedule::command('telegram:cleanup-stale-runs')
     ->everyFifteenMinutes()
     ->withoutOverlapping();

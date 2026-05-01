@@ -9,6 +9,10 @@ class TelegramIntervalReviewSession extends Model
 {
     public const STATUS_SCHEDULED = 'scheduled';
     public const STATUS_PAUSED = 'paused';
+    public const STATUS_AWAITING_START = 'awaiting_start';
+    public const STATUS_IN_PROGRESS = 'in_progress';
+    public const STATUS_CANCELLED = 'cancelled';
+    public const STATUS_FAILED = 'failed';
 
     protected $fillable = [
         'telegram_interval_review_plan_id',
@@ -28,5 +32,10 @@ class TelegramIntervalReviewSession extends Model
     public function plan(): BelongsTo
     {
         return $this->belongsTo(TelegramIntervalReviewPlan::class, 'telegram_interval_review_plan_id');
+    }
+
+    public function runs(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(TelegramIntervalReviewRun::class, 'telegram_interval_review_session_id');
     }
 }

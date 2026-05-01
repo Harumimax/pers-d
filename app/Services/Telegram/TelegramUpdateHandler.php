@@ -3,6 +3,7 @@
 namespace App\Services\Telegram;
 
 use App\Models\TelegramGameRun;
+use App\Models\TelegramIntervalReviewRun;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -17,6 +18,8 @@ class TelegramUpdateHandler
         private readonly TelegramProcessedUpdateService $telegramProcessedUpdateService,
         private readonly TelegramGameRunCallbackData $telegramGameRunCallbackData,
         private readonly TelegramGameRuntimeService $telegramGameRuntimeService,
+        private readonly TelegramIntervalReviewRunCallbackData $telegramIntervalReviewRunCallbackData,
+        private readonly TelegramIntervalReviewRuntimeService $telegramIntervalReviewRuntimeService,
         private readonly TelegramDictionaryCallbackData $telegramDictionaryCallbackData,
         private readonly TelegramDictionaryMenuService $telegramDictionaryMenuService,
         private readonly TelegramDictionaryViewService $telegramDictionaryViewService,
@@ -141,6 +144,7 @@ class TelegramUpdateHandler
     {
         $callbackQueryId = trim((string) ($callbackQuery['id'] ?? ''));
         $callbackData = trim((string) ($callbackQuery['data'] ?? ''));
+        $intervalPayload = $this->telegramIntervalReviewRunCallbackData->parse($callbackData);
         $gamePayload = $this->telegramGameRunCallbackData->parse($callbackData);
         $dictionaryPayload = $this->telegramDictionaryCallbackData->parse($callbackData);
         $chatId = $this->extractCallbackChatId($callbackQuery);
@@ -158,6 +162,12 @@ class TelegramUpdateHandler
 
         if (is_array($dictionaryPayload)) {
             $this->handleDictionaryCallbackQuery($callbackQueryId, $chatId, $messageId, $dictionaryPayload);
+
+            return;
+        }
+
+        if (is_array($intervalPayload)) {
+            $this->handleIntervalReviewCallbackQuery($callbackQueryId, $chatId, $messageId, $intervalPayload);
 
             return;
         }
@@ -424,6 +434,81 @@ class TelegramUpdateHandler
         ]);
 
         $this->bot->sendMessage($chatId, $summaryText);
+    }
+
+    /**
+     * @param  array{action:string,run_id:int}  $payload
+     */
+    private function handleIntervalReviewCallbackQuery(string $callbackQueryId, string $chatId, ?int $messageId, array $payload): void
+    {
+        /** @var TelegramIntervalReviewRun|null $run */
+        $run = TelegramIntervalReviewRun::query()
+            ->with(['user', 'session'])
+            ->find($payload['run_id']);
+
+        if (! $run instanceof TelegramIntervalReviewRun || (string) $run->user->tg_chat_id !== $chatId) {
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Сессия не найдена.');
+
+            return;
+        }
+
+        if ($payload['action'] === TelegramIntervalReviewRunCallbackData::ACTION_CANCEL) {
+            $result = $this->telegramIntervalReviewRuntimeService->cancelRun($run);
+
+            if ($result['status'] === 'cancelled') {
+                Log::info('telegram.interval_review.run_cancelled', [
+                    'telegram_interval_review_run_id' => $run->id,
+                    'user_id' => $run->user_id,
+                ]);
+
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Сессия отменена.');
+                $this->clearInlineKeyboard($chatId, $messageId);
+                $this->bot->sendMessage($chatId, 'Эта сессия интервального повторения отменена. Следующие сессии плана продолжат работать по расписанию.');
+
+                return;
+            }
+
+            if ($result['status'] === 'already_cancelled') {
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Сессия уже отменена.');
+
+                return;
+            }
+
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Эту сессию уже нельзя отменить.');
+
+            return;
+        }
+
+        if ($payload['action'] === TelegramIntervalReviewRunCallbackData::ACTION_START) {
+            $result = $this->telegramIntervalReviewRuntimeService->startRun($run);
+
+            if ($result['status'] === 'started') {
+                Log::info('telegram.interval_review.run_started', [
+                    'telegram_interval_review_run_id' => $run->id,
+                    'user_id' => $run->user_id,
+                ]);
+
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Сессия запущена.');
+                $this->clearInlineKeyboard($chatId, $messageId);
+                $this->bot->sendMessage($chatId, 'Сессия интервального повторения подготовлена. Полный игровой поток будет подключён следующим этапом.');
+
+                return;
+            }
+
+            if ($result['status'] === 'already_started') {
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Сессия уже запущена.');
+
+                return;
+            }
+
+            if ($result['status'] === 'cancelled') {
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Сессия уже отменена.');
+
+                return;
+            }
+
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Эту сессию уже нельзя запустить.');
+        }
     }
 
     private function handleEmailStep(string $chatId, string $text): void

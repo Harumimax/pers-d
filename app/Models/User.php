@@ -37,6 +37,11 @@ class User extends Authenticatable
         return $this->hasMany(TelegramGameRun::class);
     }
 
+    public function telegramIntervalReviewRuns(): HasMany
+    {
+        return $this->hasMany(TelegramIntervalReviewRun::class);
+    }
+
     public function telegramSetting(): HasOne
     {
         return $this->hasOne(TelegramSetting::class);

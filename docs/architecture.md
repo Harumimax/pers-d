@@ -225,6 +225,24 @@
     - stores snapshot selected words and the calculated 6 scheduled interval sessions
     - reloads the saved plan back into the `/tg-bot` Livewire configurator
     - supports pause/resume via plan status and reset through plan deletion
+  - `TelegramIntervalReviewDueSessionLocator`
+    - finds due scheduled interval review sessions for active plans
+    - ignores paused plans and users without a linked Telegram chat
+  - `TelegramIntervalReviewOptionsBuilder`
+    - builds multiple-choice options for interval review items
+    - uses the selected review language and gathers distractors from all personal and prepared dictionaries of that language
+  - `CreateTelegramIntervalReviewRunService`
+    - creates one runtime run for one due interval review session
+    - snapshots all selected plan words into runtime items
+    - precomputes choice options before the user opens the Telegram session
+  - `TelegramIntervalReviewRunNotifier`
+    - sends the intro message for one interval review session
+    - stores `intro_message_id` and moves the runtime session to `awaiting_start`
+  - `TelegramIntervalReviewRunCallbackData`
+    - centralizes callback payload generation and parsing for interval review intro actions
+  - `TelegramIntervalReviewRuntimeService`
+    - handles `start` and `cancel` actions for interval review runtime runs
+    - updates both runtime-run state and the parent planned interval session state
   - `TelegramProcessedUpdateService`
     - stores processed Telegram `update_id` / `callback_query_id` pairs in the database
     - prevents duplicate webhook delivery from re-running start, cancel, and answer side effects
@@ -804,6 +822,52 @@
   - `created_at`
   - `updated_at`
 
+#### `telegram_interval_review_runs`
+- Created in `2026_04_30_000032_create_telegram_interval_review_runtime_tables.php`
+- Purpose: stores the actual dispatched Telegram runtime launch for one due interval review session
+- Fields:
+  - `id`
+  - `user_id` -> FK to `users.id`
+  - `telegram_interval_review_plan_id` -> FK to `telegram_interval_review_plans.id`
+  - `telegram_interval_review_session_id` -> FK to `telegram_interval_review_sessions.id`, unique
+  - `session_number`
+  - `total_words`
+  - `status`
+  - `scheduled_for`
+  - `intro_message_sent_at` nullable
+  - `intro_message_id` nullable
+  - `started_at` nullable
+  - `cancelled_at` nullable
+  - `last_interaction_at` nullable
+  - `last_error_code` nullable
+  - `last_error_message` nullable
+  - `last_error_at` nullable
+  - `config_snapshot` jsonb
+  - `created_at`
+  - `updated_at`
+
+#### `telegram_interval_review_run_items`
+- Created in `2026_04_30_000032_create_telegram_interval_review_runtime_tables.php`
+- Purpose: stores the immutable prepared question items for one dispatched interval review runtime session
+- Fields:
+  - `id`
+  - `telegram_interval_review_run_id` -> FK to `telegram_interval_review_runs.id`
+  - `telegram_interval_review_plan_word_id` nullable -> FK to `telegram_interval_review_plan_words.id`
+  - `order_index`
+  - `word_snapshot`
+  - `translation_snapshot`
+  - `part_of_speech_snapshot` nullable
+  - `comment_snapshot` nullable
+  - `prompt_text`
+  - `correct_answer`
+  - `source_type_snapshot` nullable
+  - `options_json` nullable jsonb
+  - `user_answer` nullable
+  - `is_correct` nullable
+  - `answered_at` nullable
+  - `created_at`
+  - `updated_at`
+
 #### `about_contact_messages`
 - Created in `2026_04_17_000014_create_about_contact_messages_table.php`
 - Purpose: stores About page contact form submissions and email delivery state
@@ -974,10 +1038,26 @@
   - one root `telegram_interval_review_plans` row
   - snapshot selected words in `telegram_interval_review_plan_words`
   - six precomputed future sessions in `telegram_interval_review_sessions`
-- At this stage the interval review plan is configuration-only:
-  - it does not dispatch Telegram sessions yet
-  - it does not send intro messages yet
-  - it does not run game questions yet
+- Interval review Stage 3 runtime flow:
+  - `routes/console.php` schedules `telegram:dispatch-interval-review-sessions` every minute with `withoutOverlapping()`
+  - `TelegramIntervalReviewDueSessionLocator` finds due `telegram_interval_review_sessions` only for active plans
+  - `CreateTelegramIntervalReviewRunService` creates one `telegram_interval_review_run` plus prepared `telegram_interval_review_run_items`
+  - each prepared interval review item represents one word selected into the plan
+  - answer choices are precomputed with distractors from all personal and prepared dictionaries of the selected review language
+  - `TelegramIntervalReviewRunNotifier` sends the intro message:
+    - `Первая / Вторая / ... сессия интервального повторения слов`
+    - inline buttons:
+      - `Начать`
+      - `Отменить`
+  - `TelegramUpdateHandler` now also parses `interval_run:start:{id}` and `interval_run:cancel:{id}`
+  - `TelegramIntervalReviewRuntimeService` handles those callbacks:
+    - `Начать` moves the runtime run and planned session to `in_progress` and currently sends a stub message
+    - `Отменить` cancels only the current interval session and leaves future sessions of the same plan untouched
+- At this stage the interval review Telegram runtime does not yet:
+  - show the selected words before gameplay
+  - ask the actual questions
+  - calculate final summaries
+  - finish the full 6-session plan cycle
 - After Telegram authorization, the bot exposes a small reply-keyboard main menu:
   - `Словари`
   - `Выход`

@@ -94,7 +94,12 @@ class TelegramIntervalReviewPlanService
                 : TelegramIntervalReviewSession::STATUS_PAUSED;
 
             $plan->forceFill(['status' => $planStatus])->save();
-            $plan->sessions()->update(['status' => $sessionStatus]);
+            $plan->sessions()
+                ->whereIn('status', [
+                    TelegramIntervalReviewSession::STATUS_SCHEDULED,
+                    TelegramIntervalReviewSession::STATUS_PAUSED,
+                ])
+                ->update(['status' => $sessionStatus]);
 
             return $plan->fresh(['words', 'sessions']);
         });

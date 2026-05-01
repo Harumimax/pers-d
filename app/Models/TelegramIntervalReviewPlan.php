@@ -44,4 +44,10 @@ class TelegramIntervalReviewPlan extends Model
         return $this->hasMany(TelegramIntervalReviewSession::class)
             ->orderBy('session_number');
     }
+
+    public function runs(): HasMany
+    {
+        return $this->hasMany(TelegramIntervalReviewRun::class)
+            ->orderByDesc('scheduled_for');
+    }
 }
