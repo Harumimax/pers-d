@@ -131,6 +131,66 @@ class TgBotSettingsTest extends TestCase
         $this->assertEqualsCanonicalizing(['verb', 'adjective'], $secondSession->partsOfSpeech->pluck('part_of_speech')->all());
     }
 
+    public function test_connected_user_can_toggle_random_words_status_without_saving_full_form(): void
+    {
+        $user = User::factory()->create([
+            'tg_chat_id' => '123456789',
+        ]);
+
+        $setting = TelegramSetting::query()->create([
+            'user_id' => $user->id,
+            'timezone' => 'Europe/Berlin',
+            'random_words_enabled' => false,
+        ]);
+
+        $setting->randomWordSessions()->create([
+            'position' => 1,
+            'send_time' => '08:30:00',
+            'translation_direction' => 'foreign_to_ru',
+            'words_count' => 9,
+        ]);
+
+        $this->actingAs($user)
+            ->patchJson(route('tg-bot.random-words-status.update'), [
+                'random_words_enabled' => true,
+            ])
+            ->assertOk()
+            ->assertJson([
+                'random_words_enabled' => true,
+                'message' => __('tg-bot.form.saved'),
+            ]);
+
+        $setting->refresh();
+        $this->assertSame('Europe/Berlin', $setting->timezone);
+        $this->assertTrue($setting->random_words_enabled);
+        $this->assertCount(1, $setting->randomWordSessions);
+        $this->assertSame('08:30:00', $setting->randomWordSessions()->first()->send_time);
+        $this->assertSame(9, $setting->randomWordSessions()->first()->words_count);
+    }
+
+    public function test_connected_user_can_toggle_random_words_status_before_saving_full_settings(): void
+    {
+        $user = User::factory()->create([
+            'tg_chat_id' => '123456789',
+        ]);
+
+        $this->actingAs($user)
+            ->patchJson(route('tg-bot.random-words-status.update'), [
+                'random_words_enabled' => true,
+            ])
+            ->assertOk()
+            ->assertJson([
+                'random_words_enabled' => true,
+            ]);
+
+        $setting = TelegramSetting::query()->where('user_id', $user->id)->first();
+
+        $this->assertNotNull($setting);
+        $this->assertSame('Europe/Moscow', $setting->timezone);
+        $this->assertTrue($setting->random_words_enabled);
+        $this->assertCount(0, $setting->randomWordSessions);
+    }
+
     public function test_saved_tg_bot_settings_are_rendered_again_on_page_load(): void
     {
         $user = User::factory()->create([

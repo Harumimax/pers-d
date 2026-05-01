@@ -75,4 +75,26 @@ class SaveTelegramSettingsService
             ]);
         });
     }
+
+    public function saveRandomWordsEnabled(User $user, bool $enabled): TelegramSetting
+    {
+        return DB::transaction(function () use ($user, $enabled): TelegramSetting {
+            $setting = TelegramSetting::query()->firstOrNew([
+                'user_id' => $user->id,
+            ]);
+
+            if (! $setting->exists) {
+                $setting->timezone = 'Europe/Moscow';
+            }
+
+            $setting->random_words_enabled = $enabled;
+            $setting->save();
+
+            return $setting->fresh([
+                'randomWordSessions.partsOfSpeech',
+                'randomWordSessions.userDictionaries',
+                'randomWordSessions.readyDictionaries',
+            ]);
+        });
+    }
 }

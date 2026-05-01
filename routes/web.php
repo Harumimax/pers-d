@@ -49,6 +49,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::get('/tg-bot', [TgBotController::class, 'index'])->name('tg-bot');
     Route::put('/tg-bot', [TgBotController::class, 'update'])->name('tg-bot.update');
+    Route::patch('/tg-bot/random-words-status', [TgBotController::class, 'updateRandomWordsStatus'])
+        ->name('tg-bot.random-words-status.update');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/about/contact', [AboutContactController::class, 'store'])

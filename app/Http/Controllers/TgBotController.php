@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Telegram\UpdateTelegramRandomWordsStatusRequest;
 use App\Http\Requests\Telegram\UpdateTelegramSettingsRequest;
 use App\Models\GameSession;
 use App\Models\ReadyDictionary;
@@ -13,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use App\Services\Navigation\HeaderNavigationService;
 use App\Models\UserDictionary;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -75,6 +77,30 @@ class TgBotController extends Controller
         return redirect()
             ->route('tg-bot')
             ->with('tgBotSettingsStatus', __('tg-bot.form.saved'));
+    }
+
+    public function updateRandomWordsStatus(
+        UpdateTelegramRandomWordsStatusRequest $request,
+        SaveTelegramSettingsService $saveTelegramSettingsService,
+    ): JsonResponse {
+        $user = $request->user();
+
+        if (! filled($user->tg_chat_id)) {
+            return response()->json([
+                'message' => __('tg-bot.connection.required_to_configure'),
+            ], 403);
+        }
+
+        $payload = $request->validated();
+        $setting = $saveTelegramSettingsService->saveRandomWordsEnabled(
+            $user,
+            (bool) $payload['random_words_enabled'],
+        );
+
+        return response()->json([
+            'message' => __('tg-bot.form.saved'),
+            'random_words_enabled' => $setting->random_words_enabled,
+        ]);
     }
 
     private function buildFormData(?TelegramSetting $telegramSetting): array

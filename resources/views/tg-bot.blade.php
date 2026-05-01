@@ -133,11 +133,55 @@
                                     action="{{ route('tg-bot.update') }}"
                                     class="tg-bot-form"
                                     x-data="{
+                                        randomWordsEnabled: @js($initialTelegramSettings['random_words_enabled']),
+                                        randomWordsStatusSaving: false,
+                                        randomWordsStatusMessage: '',
+                                        randomWordsStatusError: '',
+                                        randomWordsStatusUrl: @js(route('tg-bot.random-words-status.update')),
+                                        csrfToken: document.querySelector('meta[name=\'csrf-token\']')?.getAttribute('content') ?? '',
                                         partOfSpeechAllValue: @js(\App\Support\PartOfSpeechCatalog::ALL),
                                         maxSessions: 5,
                                         availableUserDictionaryIds: @js($userDictionaries->pluck('id')->map(fn ($id) => (int) $id)->values()->all()),
                                         availableReadyDictionaryIds: @js($readyDictionaries->pluck('id')->map(fn ($id) => (int) $id)->values()->all()),
                                         sessions: @js($initialTelegramSettings['sessions']),
+                                        async updateRandomWordsStatus(nextValue) {
+                                            const previousValue = !nextValue;
+
+                                            this.randomWordsStatusSaving = true;
+                                            this.randomWordsStatusMessage = '';
+                                            this.randomWordsStatusError = '';
+
+                                            try {
+                                                const response = await fetch(this.randomWordsStatusUrl, {
+                                                    method: 'PATCH',
+                                                    headers: {
+                                                        'Content-Type': 'application/json',
+                                                        'Accept': 'application/json',
+                                                        'X-CSRF-TOKEN': this.csrfToken,
+                                                        'X-Requested-With': 'XMLHttpRequest',
+                                                    },
+                                                    body: JSON.stringify({
+                                                        random_words_enabled: nextValue,
+                                                    }),
+                                                });
+
+                                                const payload = await response.json().catch(() => ({}));
+
+                                                if (! response.ok) {
+                                                    throw new Error(payload.message || @js(__('common.demo.try_again')));
+                                                }
+
+                                                this.randomWordsEnabled = Boolean(payload.random_words_enabled);
+                                                this.randomWordsStatusMessage = typeof payload.message === 'string' ? payload.message : '';
+                                            } catch (error) {
+                                                this.randomWordsEnabled = previousValue;
+                                                this.randomWordsStatusError = error instanceof Error
+                                                    ? error.message
+                                                    : @js(__('common.demo.try_again'));
+                                            } finally {
+                                                this.randomWordsStatusSaving = false;
+                                            }
+                                        },
                                         createSession() {
                                             return {
                                                 send_time: '09:00',
@@ -213,6 +257,24 @@
                                     @csrf
                                     @method('PUT')
 
+                                    <div
+                                        x-cloak
+                                        x-show="randomWordsStatusMessage"
+                                        class="tg-bot-alert tg-bot-alert--success"
+                                        role="status"
+                                    >
+                                        <span x-text="randomWordsStatusMessage"></span>
+                                    </div>
+
+                                    <div
+                                        x-cloak
+                                        x-show="randomWordsStatusError"
+                                        class="tg-bot-alert tg-bot-alert--error"
+                                        role="alert"
+                                    >
+                                        <span x-text="randomWordsStatusError"></span>
+                                    </div>
+
                                     <section class="tg-bot-form__section">
                                         <div class="tg-bot-form__switch-row tg-bot-form__switch-row--spaced">
                                             <div>
@@ -226,7 +288,9 @@
                                                     type="checkbox"
                                                     name="random_words_enabled"
                                                     value="1"
-                                                    @checked($initialTelegramSettings['random_words_enabled'])
+                                                    x-model="randomWordsEnabled"
+                                                    :disabled="randomWordsStatusSaving"
+                                                    @change="updateRandomWordsStatus($event.target.checked)"
                                                 >
                                                 <span class="tg-bot-switch__track" aria-hidden="true"></span>
                                             </label>
