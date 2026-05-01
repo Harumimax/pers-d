@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\TelegramIntervalReviewRun;
 use App\Services\Telegram\CreateTelegramIntervalReviewRunService;
 use App\Services\Telegram\TelegramIntervalReviewDueSessionLocator;
+use App\Services\Telegram\TelegramIntervalReviewRunMonitorService;
 use App\Services\Telegram\TelegramIntervalReviewRunNotifier;
 use Illuminate\Console\Command;
 use Illuminate\Database\QueryException;
@@ -22,6 +23,7 @@ class DispatchScheduledTelegramIntervalReviewSessionsCommand extends Command
         TelegramIntervalReviewDueSessionLocator $locator,
         CreateTelegramIntervalReviewRunService $createTelegramIntervalReviewRunService,
         TelegramIntervalReviewRunNotifier $notifier,
+        TelegramIntervalReviewRunMonitorService $telegramIntervalReviewRunMonitorService,
     ): int {
         $createdRuns = 0;
         $skippedRuns = 0;
@@ -59,6 +61,10 @@ class DispatchScheduledTelegramIntervalReviewSessionsCommand extends Command
                 report($exception);
                 $this->error('Не удалось создать interval review Telegram-сессию: '.$exception->getMessage());
             } catch (ValidationException $exception) {
+                $session->forceFill([
+                    'status' => \App\Models\TelegramIntervalReviewSession::STATUS_FAILED,
+                ])->save();
+
                 Log::warning('telegram.interval_review.validation_skipped', [
                     'user_id' => $plan->user_id,
                     'telegram_interval_review_plan_id' => $plan->id,
@@ -70,11 +76,16 @@ class DispatchScheduledTelegramIntervalReviewSessionsCommand extends Command
                 $this->warn('Пропущена interval review Telegram-сессия из-за пустого или некорректного пула вариантов ответа.');
             } catch (Throwable $exception) {
                 if ($run instanceof TelegramIntervalReviewRun) {
-                    $run->forceFill([
-                        'status' => TelegramIntervalReviewRun::STATUS_FAILED,
-                        'last_error_code' => 'dispatch_failed',
-                        'last_error_message' => $exception->getMessage(),
-                        'last_error_at' => now(),
+                    $telegramIntervalReviewRunMonitorService->recordFailure(
+                        $run,
+                        'dispatch_failed',
+                        $exception->getMessage(),
+                        TelegramIntervalReviewRun::STATUS_FAILED,
+                        \App\Models\TelegramIntervalReviewSession::STATUS_FAILED,
+                    );
+                } else {
+                    $session->forceFill([
+                        'status' => \App\Models\TelegramIntervalReviewSession::STATUS_FAILED,
                     ])->save();
                 }
 

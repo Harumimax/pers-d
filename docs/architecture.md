@@ -259,6 +259,11 @@
     - updates `words.remainder_had_mistake` for personal words through `RemainderMistakeFlagSyncService`
     - updates `completed_sessions_count` and `completed_at` on the parent interval review plan
     - marks the whole plan as `completed` after the sixth finished session
+  - `TelegramIntervalReviewRunMonitorService`
+    - tracks interval review runtime diagnostics and recent activity
+    - updates `last_interaction_at` after successful word-list delivery and question delivery
+    - records runtime failures in `last_error_code`, `last_error_message`, and `last_error_at`
+    - marks stale interval review runs as `expired` or `abandoned`
   - `TelegramProcessedUpdateService`
     - stores processed Telegram `update_id` / `callback_query_id` pairs in the database
     - prevents duplicate webhook delivery from re-running start, cancel, and answer side effects
@@ -1091,9 +1096,16 @@
   - `completed`
   - completed sessions count (`X/6`)
   - next upcoming session, if one still exists
-- At this stage the interval review Telegram runtime still does not yet:
-  - add the dedicated reliability/cleanup layer for interval review
-  - provide advanced recovery or admin diagnostics beyond the existing scheduler/runtime flow
+- Interval review runtime now also includes the dedicated reliability layer:
+  - duplicate `update_id` / `callback_query_id` deliveries are skipped through `telegram_processed_updates`
+  - transport retry rules in `TelegramBotService` cover interval review message delivery as well
+  - `telegram:cleanup-stale-interval-review-runs` marks:
+    - `awaiting_start` runs older than 12 hours as `expired`
+    - `in_progress` runs without activity for more than 12 hours as `abandoned`
+  - stale cleanup updates both:
+    - `telegram_interval_review_runs.status`
+    - `telegram_interval_review_sessions.status`
+  - dispatch failures mark prepared interval sessions as `failed` instead of leaving half-prepared state without diagnostics
 - After Telegram authorization, the bot exposes a small reply-keyboard main menu:
   - `Словари`
   - `Выход`
@@ -1120,6 +1132,7 @@
 - Each configured Telegram daily session stores its own `words_count` in the allowed `2..20` range, and `TelegramGameConfigFactory` passes that value into the shared `GameSessionConfigData`
 - `routes/console.php` schedules `telegram:dispatch-scheduled-sessions` every minute with `withoutOverlapping()`
 - `routes/console.php` also schedules `telegram:cleanup-stale-runs` every 15 minutes with `withoutOverlapping()`
+- `routes/console.php` also schedules `telegram:cleanup-stale-interval-review-runs` every hour with `withoutOverlapping()`
 - `TelegramScheduledSessionLocator` finds active due Telegram sessions by comparing each configured timezone + `send_time` against the current UTC minute
 - `CreateTelegramGameRunService` maps each due Telegram session into the shared `GameSessionConfigData`, reuses the Remainder core to select words and precompute choice options, and stores the result in:
   - `telegram_game_runs`

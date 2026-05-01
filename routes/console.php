@@ -19,3 +19,7 @@ Schedule::command('telegram:dispatch-interval-review-sessions')
 Schedule::command('telegram:cleanup-stale-runs')
     ->everyFifteenMinutes()
     ->withoutOverlapping();
+
+Schedule::command('telegram:cleanup-stale-interval-review-runs')
+    ->hourly()
+    ->withoutOverlapping();

@@ -14,6 +14,8 @@ class TelegramIntervalReviewSession extends Model
     public const STATUS_CANCELLED = 'cancelled';
     public const STATUS_FINISHED = 'finished';
     public const STATUS_FAILED = 'failed';
+    public const STATUS_EXPIRED = 'expired';
+    public const STATUS_ABANDONED = 'abandoned';
 
     protected $fillable = [
         'telegram_interval_review_plan_id',

@@ -9,6 +9,7 @@ use App\Services\Remainder\Core\GameAnswerEvaluator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class TelegramIntervalReviewRuntimeService
 {
@@ -17,6 +18,7 @@ class TelegramIntervalReviewRuntimeService
         private readonly TelegramIntervalReviewWordListSender $wordListSender,
         private readonly TelegramIntervalReviewQuestionSender $questionSender,
         private readonly TelegramIntervalReviewResultFinalizer $telegramIntervalReviewResultFinalizer,
+        private readonly TelegramIntervalReviewRunMonitorService $telegramIntervalReviewRunMonitorService,
     ) {
     }
 
@@ -100,22 +102,34 @@ class TelegramIntervalReviewRuntimeService
      */
     public function sendWordList(TelegramIntervalReviewRun $run): array
     {
-        $freshRun = $run->fresh(['items', 'user', 'session']);
-        $response = $this->wordListSender->send($freshRun);
-        $messageId = data_get($response, 'result.message_id');
+        $freshRun = $run->fresh(['items', 'user', 'session', 'plan.sessions']);
 
-        if (is_numeric($messageId)) {
-            $freshRun->forceFill([
-                'word_list_message_id' => (int) $messageId,
-                'last_interaction_at' => now(),
-            ])->save();
+        try {
+            $response = $this->wordListSender->send($freshRun);
+            $messageId = data_get($response, 'result.message_id');
+
+            if (is_numeric($messageId)) {
+                $freshRun->forceFill([
+                    'word_list_message_id' => (int) $messageId,
+                ])->save();
+            }
+
+            $freshRun = $this->telegramIntervalReviewRunMonitorService->touchInteraction($freshRun);
+
+            return [
+                'status' => 'sent',
+                'run' => $freshRun,
+                'message_id' => is_numeric($messageId) ? (int) $messageId : null,
+            ];
+        } catch (Throwable $exception) {
+            $this->telegramIntervalReviewRunMonitorService->recordFailure(
+                $freshRun,
+                'word_list_send_failed',
+                $exception->getMessage(),
+            );
+
+            throw $exception;
         }
-
-        return [
-            'status' => 'sent',
-            'run' => $freshRun->fresh(['items', 'user', 'session']),
-            'message_id' => is_numeric($messageId) ? (int) $messageId : null,
-        ];
     }
 
     /**
@@ -172,7 +186,22 @@ class TelegramIntervalReviewRuntimeService
 
     public function sendQuestion(TelegramIntervalReviewRun $run, TelegramIntervalReviewRunItem $item): array
     {
-        return $this->questionSender->send($run->fresh('user'), $item);
+        $freshRun = $run->fresh(['user', 'session', 'items', 'plan.sessions']);
+
+        try {
+            $response = $this->questionSender->send($freshRun, $item);
+            $this->telegramIntervalReviewRunMonitorService->touchInteraction($freshRun);
+
+            return $response;
+        } catch (Throwable $exception) {
+            $this->telegramIntervalReviewRunMonitorService->recordFailure(
+                $freshRun,
+                'question_send_failed',
+                $exception->getMessage(),
+            );
+
+            throw $exception;
+        }
     }
 
     /**
