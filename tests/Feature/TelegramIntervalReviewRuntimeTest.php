@@ -86,7 +86,7 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
         });
     }
 
-    public function test_incorrect_last_answer_finishes_interval_session_and_sends_summary(): void
+    public function test_incorrect_last_answer_finishes_interval_session_stores_counters_and_sends_errors_block(): void
     {
         Http::fake([
             'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => ['message_id' => 903]], 200),
@@ -113,14 +113,79 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
         $this->assertSame(TelegramIntervalReviewRun::STATUS_FINISHED, $run->status);
         $this->assertSame(TelegramIntervalReviewSession::STATUS_FINISHED, $session->status);
         $this->assertNotNull($run->finished_at);
+        $this->assertSame(1, $run->correct_answers);
+        $this->assertSame(1, $run->incorrect_answers);
 
         Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/sendMessage') && str_contains((string) $request['text'], 'Некорректно. Правильный ответ: книга'));
         Http::assertSent(function (Request $request): bool {
             return str_ends_with($request->url(), '/sendMessage')
                 && str_contains((string) $request['text'], 'Сессия завершена.')
                 && str_contains((string) $request['text'], 'Правильных ответов: 1 из 2.')
-                && str_contains((string) $request['text'], 'Ошибок: 1.');
+                && str_contains((string) $request['text'], 'Ошибок: 1.')
+                && str_contains((string) $request['text'], 'Ошибки:')
+                && str_contains((string) $request['text'], '1. book')
+                && str_contains((string) $request['text'], 'Правильный ответ: книга')
+                && str_contains((string) $request['text'], 'Ваш ответ: река');
         });
+    }
+
+    public function test_finalization_updates_mistake_flags_for_user_words(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => ['message_id' => 904]], 200),
+        ]);
+
+        [$run, $firstItem, $secondItem, $session, $firstWord, $secondWord] = $this->createRunWithItems(firstWordHadMistake: true, secondWordHadMistake: false);
+
+        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("interval_answer:{$run->id}:{$firstItem->id}:0", 45006, 771))
+            ->assertOk();
+        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("interval_answer:{$run->id}:{$secondItem->id}:1", 45007, 772))
+            ->assertOk();
+
+        $run->refresh();
+        $session->refresh();
+        $firstWord->refresh();
+        $secondWord->refresh();
+
+        $this->assertSame(TelegramIntervalReviewRun::STATUS_FINISHED, $run->status);
+        $this->assertSame(TelegramIntervalReviewSession::STATUS_FINISHED, $session->status);
+        $this->assertFalse($firstWord->remainder_had_mistake);
+        $this->assertTrue($secondWord->remainder_had_mistake);
+    }
+
+    public function test_last_interval_session_completes_the_whole_plan_and_sends_completion_message(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => ['message_id' => 905]], 200),
+        ]);
+
+        [$run, $firstItem, $secondItem, $session, $firstWord, $secondWord, $plan] = $this->createRunWithItems(
+            firstWordHadMistake: false,
+            secondWordHadMistake: false,
+            sessionNumber: 6,
+            completedSessionsBeforeCurrent: 5,
+        );
+
+        $firstItem->forceFill([
+            'user_answer' => 'яблоко',
+            'is_correct' => true,
+            'answered_at' => now(),
+        ])->save();
+
+        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("interval_answer:{$run->id}:{$secondItem->id}:0", 45008, 773))
+            ->assertOk();
+
+        $run->refresh();
+        $session->refresh();
+        $plan->refresh();
+
+        $this->assertSame(TelegramIntervalReviewRun::STATUS_FINISHED, $run->status);
+        $this->assertSame(TelegramIntervalReviewSession::STATUS_FINISHED, $session->status);
+        $this->assertSame(TelegramIntervalReviewPlan::STATUS_COMPLETED, $plan->status);
+        $this->assertSame(6, $plan->completed_sessions_count);
+        $this->assertNotNull($plan->completed_at);
+
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/sendMessage') && str_contains((string) $request['text'], 'Интервальное повторение выбранных слов завершено.'));
     }
 
     public function test_cannot_answer_same_item_twice(): void
@@ -163,10 +228,14 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
     }
 
     /**
-     * @return array{0:TelegramIntervalReviewRun,1:TelegramIntervalReviewRunItem,2:TelegramIntervalReviewRunItem,3:TelegramIntervalReviewSession}
+     * @return array{0:TelegramIntervalReviewRun,1:TelegramIntervalReviewRunItem,2:TelegramIntervalReviewRunItem,3:TelegramIntervalReviewSession,4:Word,5:Word,6:TelegramIntervalReviewPlan}
      */
-    private function createRunWithItems(): array
-    {
+    private function createRunWithItems(
+        bool $firstWordHadMistake = false,
+        bool $secondWordHadMistake = false,
+        int $sessionNumber = 1,
+        int $completedSessionsBeforeCurrent = 0,
+    ): array {
         $user = User::factory()->create([
             'tg_chat_id' => '2001',
             'tg_linked_at' => now(),
@@ -182,6 +251,7 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
             'word' => 'apple',
             'translation' => 'яблоко',
             'part_of_speech' => 'noun',
+            'remainder_had_mistake' => $firstWordHadMistake,
         ]);
         $userDictionary->words()->attach($firstWord->id);
 
@@ -189,6 +259,7 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
             'word' => 'book',
             'translation' => 'книга',
             'part_of_speech' => 'noun',
+            'remainder_had_mistake' => $secondWordHadMistake,
         ]);
         $userDictionary->words()->attach($secondWord->id);
 
@@ -218,6 +289,7 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
             'start_time' => '09:15',
             'timezone' => 'UTC',
             'words_count' => 2,
+            'completed_sessions_count' => 0,
         ]);
 
         $planWordOne = TelegramIntervalReviewPlanWord::query()->create([
@@ -248,19 +320,30 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
             'position' => 2,
         ]);
 
-        $session = TelegramIntervalReviewSession::query()->create([
-            'telegram_interval_review_plan_id' => $plan->id,
-            'session_number' => 1,
-            'scheduled_for' => now(),
-            'status' => TelegramIntervalReviewSession::STATUS_IN_PROGRESS,
-        ]);
+        for ($i = 1; $i <= 6; $i++) {
+            TelegramIntervalReviewSession::query()->create([
+                'telegram_interval_review_plan_id' => $plan->id,
+                'session_number' => $i,
+                'scheduled_for' => now()->addDays($i),
+                'status' => $i < $sessionNumber && $i <= $completedSessionsBeforeCurrent
+                    ? TelegramIntervalReviewSession::STATUS_FINISHED
+                    : ($i === $sessionNumber ? TelegramIntervalReviewSession::STATUS_IN_PROGRESS : TelegramIntervalReviewSession::STATUS_SCHEDULED),
+            ]);
+        }
+
+        $session = TelegramIntervalReviewSession::query()
+            ->where('telegram_interval_review_plan_id', $plan->id)
+            ->where('session_number', $sessionNumber)
+            ->firstOrFail();
 
         $run = TelegramIntervalReviewRun::query()->create([
             'user_id' => $user->id,
             'telegram_interval_review_plan_id' => $plan->id,
             'telegram_interval_review_session_id' => $session->id,
-            'session_number' => 1,
+            'session_number' => $sessionNumber,
             'total_words' => 2,
+            'correct_answers' => 0,
+            'incorrect_answers' => 0,
             'status' => TelegramIntervalReviewRun::STATUS_IN_PROGRESS,
             'scheduled_for' => now(),
             'intro_message_id' => 321,
@@ -298,7 +381,7 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
             'options_json' => ['книга', 'река', 'море', 'стол', 'окно', 'трава'],
         ]);
 
-        return [$run->fresh(['user', 'items', 'session']), $firstItem, $secondItem, $session];
+        return [$run->fresh(['user', 'items', 'session', 'plan.sessions']), $firstItem, $secondItem, $session, $firstWord, $secondWord, $plan];
     }
 
     /**

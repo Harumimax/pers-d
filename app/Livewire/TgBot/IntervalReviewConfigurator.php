@@ -38,6 +38,9 @@ class IntervalReviewConfigurator extends Component
     public bool $showResetConfirmation = false;
     public ?string $feedbackMessage = null;
     public string $feedbackType = 'success';
+    public string $planStatusCode = 'paused';
+    public int $completedSessionsCount = 0;
+    public ?string $nextSessionLabel = null;
 
     public function mount(string $timezone = 'Europe/Moscow'): void
     {
@@ -57,9 +60,7 @@ class IntervalReviewConfigurator extends Component
             'selectedWordGroups' => $this->selectedWordGroups(),
             'selectedWordsCount' => count($this->selectedWords),
             'firstSessionPreviewWords' => array_values($this->selectedWords),
-            'planStatusLabel' => $this->enabled
-                ? __('tg-bot.interval_review.plan_status.active')
-                : __('tg-bot.interval_review.plan_status.paused'),
+            'planStatusLabel' => $this->resolvePlanStatusLabel(),
         ]);
     }
 
@@ -117,7 +118,26 @@ class IntervalReviewConfigurator extends Component
             $plan = app(TelegramIntervalReviewPlanService::class)->toggleStatus($user, $this->enabled);
 
             if ($plan instanceof TelegramIntervalReviewPlan) {
+                if ($plan->status === TelegramIntervalReviewPlan::STATUS_COMPLETED) {
+                    $this->applyPlanState($plan);
+                    $this->feedbackType = 'success';
+                    $this->feedbackMessage = __('tg-bot.interval_review.messages.completed');
+
+                    return;
+                }
+
                 $this->hasPersistedPlan = true;
+                $this->planStatusCode = (string) $plan->status;
+                $this->completedSessionsCount = (int) $plan->completed_sessions_count;
+                $this->nextSessionLabel = $plan->sessions
+                    ->first(fn ($session) => in_array($session->status, [
+                        'scheduled',
+                        'awaiting_start',
+                        'in_progress',
+                    ], true))
+                    ?->scheduled_for
+                    ?->setTimezone($plan->timezone)
+                    ?->translatedFormat('d.m.Y H:i');
                 $this->feedbackType = 'success';
                 $this->feedbackMessage = $this->enabled
                     ? __('tg-bot.interval_review.messages.resumed')
@@ -299,6 +319,9 @@ class IntervalReviewConfigurator extends Component
         $planService->reset($user);
 
         $this->enabled = false;
+        $this->planStatusCode = 'paused';
+        $this->completedSessionsCount = 0;
+        $this->nextSessionLabel = null;
         $this->selectedLanguage = 'English';
         $this->startTime = '09:00';
         $this->selectedWords = [];
@@ -546,6 +569,8 @@ class IntervalReviewConfigurator extends Component
     private function applyPlanState(TelegramIntervalReviewPlan $plan): void
     {
         $this->enabled = $plan->status === TelegramIntervalReviewPlan::STATUS_ACTIVE;
+        $this->planStatusCode = (string) $plan->status;
+        $this->completedSessionsCount = (int) $plan->completed_sessions_count;
         $this->selectedLanguage = (string) $plan->language;
         $this->startTime = substr((string) $plan->start_time, 0, 5);
         $this->timezone = (string) $plan->timezone;
@@ -586,9 +611,27 @@ class IntervalReviewConfigurator extends Component
             ])
             ->values()
             ->all();
+        $this->nextSessionLabel = $plan->sessions
+            ->first(fn ($session) => in_array($session->status, [
+                'scheduled',
+                'awaiting_start',
+                'in_progress',
+            ], true))
+            ?->scheduled_for
+            ?->setTimezone($plan->timezone)
+            ?->translatedFormat('d.m.Y H:i');
         $this->planPreviewVisible = $this->schedulePreview !== [];
         $this->hasPersistedPlan = true;
         $this->showResetConfirmation = false;
+    }
+
+    private function resolvePlanStatusLabel(): string
+    {
+        return match ($this->planStatusCode) {
+            TelegramIntervalReviewPlan::STATUS_ACTIVE => __('tg-bot.interval_review.plan_status.active'),
+            TelegramIntervalReviewPlan::STATUS_COMPLETED => __('tg-bot.interval_review.plan_status.completed'),
+            default => __('tg-bot.interval_review.plan_status.paused'),
+        };
     }
 
     private function hideFeedback(): void

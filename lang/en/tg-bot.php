@@ -104,6 +104,10 @@ return [
             'hint' => 'The saved interval review plan keeps its selected words and schedule until you reset it.',
             'active' => 'Active',
             'paused' => 'Paused',
+            'completed' => 'Completed',
+            'completed_sessions' => 'Completed sessions',
+            'next_session' => 'Next session',
+            'no_next_session' => 'No upcoming sessions',
         ],
         'preview' => [
             'action' => 'Show schedule',
@@ -130,6 +134,7 @@ return [
             'saved' => 'Interval review plan saved.',
             'paused' => 'Interval review plan paused.',
             'resumed' => 'Interval review plan resumed.',
+            'completed' => 'Interval review plan is already completed.',
             'reset' => 'Interval review plan deleted.',
         ],
         'validation' => [

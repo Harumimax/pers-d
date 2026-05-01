@@ -10,6 +10,7 @@ class TelegramIntervalReviewPlan extends Model
 {
     public const STATUS_ACTIVE = 'active';
     public const STATUS_PAUSED = 'paused';
+    public const STATUS_COMPLETED = 'completed';
 
     protected $fillable = [
         'user_id',
@@ -18,6 +19,8 @@ class TelegramIntervalReviewPlan extends Model
         'start_time',
         'timezone',
         'words_count',
+        'completed_sessions_count',
+        'completed_at',
     ];
 
     protected function casts(): array
@@ -25,6 +28,8 @@ class TelegramIntervalReviewPlan extends Model
         return [
             'start_time' => 'string',
             'words_count' => 'integer',
+            'completed_sessions_count' => 'integer',
+            'completed_at' => 'immutable_datetime',
         ];
     }
 

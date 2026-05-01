@@ -35,7 +35,7 @@
                     </div>
 
                     <label class="tg-bot-switch">
-                        <input type="checkbox" wire:model.live="enabled">
+                        <input type="checkbox" wire:model.live="enabled" @disabled($planStatusCode === \App\Models\TelegramIntervalReviewPlan::STATUS_COMPLETED)>
                         <span class="tg-bot-switch__track" aria-hidden="true"></span>
                     </label>
                 </div>
@@ -77,6 +77,19 @@
                         <span class="tg-bot-interval__status-badge {{ $enabled ? 'is-active' : 'is-paused' }}">
                             {{ $planStatusLabel }}
                         </span>
+                    </div>
+
+                    <div class="tg-bot-interval__schedule-card">
+                        <div class="tg-bot-interval__schedule-item">
+                            <span class="tg-bot-interval__schedule-label">{{ __('tg-bot.interval_review.plan_status.completed_sessions') }}</span>
+                            <span class="tg-bot-interval__schedule-date">{{ $completedSessionsCount }}/6</span>
+                        </div>
+                        <div class="tg-bot-interval__schedule-item">
+                            <span class="tg-bot-interval__schedule-label">{{ __('tg-bot.interval_review.plan_status.next_session') }}</span>
+                            <span class="tg-bot-interval__schedule-date">
+                                {{ $nextSessionLabel ?? __('tg-bot.interval_review.plan_status.no_next_session') }}
+                            </span>
+                        </div>
                     </div>
                 @endif
             </section>

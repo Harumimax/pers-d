@@ -634,6 +634,10 @@ class TelegramUpdateHandler
 
             $this->bot->sendMessage($chatId, $summaryText);
 
+            if (is_string($result['completion_message'] ?? null) && $result['completion_message'] !== '') {
+                $this->bot->sendMessage($chatId, $result['completion_message']);
+            }
+
             return;
         }
 

@@ -251,7 +251,14 @@
     - handles `start`, `cancel`, `begin quiz`, and answer submission for interval review runtime runs
     - updates both runtime-run state and the parent planned interval session state
     - stores `word_list_message_id` while the user is reviewing the word list
-    - finalizes one interval session with a simple per-session summary after the last answer
+    - delegates the last-answer completion flow to `TelegramIntervalReviewResultFinalizer`
+  - `TelegramIntervalReviewResultFinalizer`
+    - finalizes one completed interval review session
+    - persists `correct_answers` and `incorrect_answers` for the runtime run
+    - builds the per-session summary, including the mistakes block
+    - updates `words.remainder_had_mistake` for personal words through `RemainderMistakeFlagSyncService`
+    - updates `completed_sessions_count` and `completed_at` on the parent interval review plan
+    - marks the whole plan as `completed` after the sixth finished session
   - `TelegramProcessedUpdateService`
     - stores processed Telegram `update_id` / `callback_query_id` pairs in the database
     - prevents duplicate webhook delivery from re-running start, cancel, and answer side effects
@@ -1047,6 +1054,9 @@
   - one root `telegram_interval_review_plans` row
   - snapshot selected words in `telegram_interval_review_plan_words`
   - six precomputed future sessions in `telegram_interval_review_sessions`
+  - the root plan also stores:
+    - `completed_sessions_count`
+    - `completed_at`
 - Interval review runtime flow:
   - `routes/console.php` schedules `telegram:dispatch-interval-review-sessions` every minute with `withoutOverlapping()`
   - `TelegramIntervalReviewDueSessionLocator` finds due `telegram_interval_review_sessions` only for active plans
@@ -1067,13 +1077,23 @@
     - `Начать` moves the runtime run and planned session to `in_progress` and sends the full word list of the session
     - `Начать квиз` deletes the word-list message and opens the first unanswered question
     - answer callbacks reuse the shared `GameAnswerEvaluator::evaluateChoiceAnswer()` flow, send immediate feedback, and move to the next unanswered item
-    - after the last answer, the current interval runtime run and planned session move to `finished` and Telegram receives a per-session summary
+    - after the last answer, `TelegramIntervalReviewResultFinalizer`:
+      - moves the current runtime run and planned session to `finished`
+      - stores `correct_answers` and `incorrect_answers`
+      - sends a per-session summary with the mistakes block
+      - updates `words.remainder_had_mistake` for personal words
+      - increments the parent plan progress
+      - sends `Интервальное повторение выбранных слов завершено.` after the sixth completed session
     - `Отменить` cancels only the current interval session and leaves future sessions of the same plan untouched
+- `/tg-bot` now reloads and shows the current state of the persisted interval review plan:
+  - `active`
+  - `paused`
+  - `completed`
+  - completed sessions count (`X/6`)
+  - next upcoming session, if one still exists
 - At this stage the interval review Telegram runtime still does not yet:
-  - finish the full 6-session plan cycle as one product summary
-  - calculate final analytics for the whole interval plan
-  - synchronize `words.remainder_had_mistake`
   - add the dedicated reliability/cleanup layer for interval review
+  - provide advanced recovery or admin diagnostics beyond the existing scheduler/runtime flow
 - After Telegram authorization, the bot exposes a small reply-keyboard main menu:
   - `Словари`
   - `Выход`

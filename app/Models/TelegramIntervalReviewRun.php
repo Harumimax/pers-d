@@ -21,6 +21,8 @@ class TelegramIntervalReviewRun extends Model
         'telegram_interval_review_session_id',
         'session_number',
         'total_words',
+        'correct_answers',
+        'incorrect_answers',
         'status',
         'scheduled_for',
         'intro_message_sent_at',
@@ -41,6 +43,8 @@ class TelegramIntervalReviewRun extends Model
         return [
             'session_number' => 'integer',
             'total_words' => 'integer',
+            'correct_answers' => 'integer',
+            'incorrect_answers' => 'integer',
             'scheduled_for' => 'immutable_datetime',
             'intro_message_sent_at' => 'immutable_datetime',
             'word_list_message_id' => 'integer',

@@ -37,6 +37,8 @@ class TelegramIntervalReviewPlanService
                     'start_time' => $data->startTime,
                     'timezone' => $data->timezone,
                     'words_count' => count($data->selectedWords),
+                    'completed_sessions_count' => 0,
+                    'completed_at' => null,
                 ]
             );
 
@@ -84,6 +86,10 @@ class TelegramIntervalReviewPlanService
 
             if (! $plan instanceof TelegramIntervalReviewPlan) {
                 return null;
+            }
+
+            if ($plan->status === TelegramIntervalReviewPlan::STATUS_COMPLETED) {
+                return $plan;
             }
 
             $planStatus = $enabled

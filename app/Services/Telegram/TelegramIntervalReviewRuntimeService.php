@@ -6,6 +6,7 @@ use App\Models\TelegramIntervalReviewRun;
 use App\Models\TelegramIntervalReviewRunItem;
 use App\Models\TelegramIntervalReviewSession;
 use App\Services\Remainder\Core\GameAnswerEvaluator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -15,6 +16,7 @@ class TelegramIntervalReviewRuntimeService
         private readonly GameAnswerEvaluator $gameAnswerEvaluator,
         private readonly TelegramIntervalReviewWordListSender $wordListSender,
         private readonly TelegramIntervalReviewQuestionSender $questionSender,
+        private readonly TelegramIntervalReviewResultFinalizer $telegramIntervalReviewResultFinalizer,
     ) {
     }
 
@@ -156,7 +158,7 @@ class TelegramIntervalReviewRuntimeService
                 return [
                     'status' => 'finished_without_questions',
                     'run' => $finishedRun,
-                    'summary_text' => $this->buildSessionSummaryText($finishedRun),
+                    'summary_text' => 'Сессия завершена.',
                 ];
             }
 
@@ -181,7 +183,10 @@ class TelegramIntervalReviewRuntimeService
      *     is_correct?:bool,
      *     correct_answer?:string,
      *     next_item?:TelegramIntervalReviewRunItem|null,
-     *     summary_text?:string|null
+     *     summary_text?:string|null,
+     *     completion_message?:string|null,
+     *     plan_completed?:bool,
+     *     incorrect_items?:Collection<int, TelegramIntervalReviewRunItem>
      * }
      */
     public function submitAnswer(TelegramIntervalReviewRun $run, int $itemId, int $optionIndex): array
@@ -189,7 +194,7 @@ class TelegramIntervalReviewRuntimeService
         return DB::transaction(function () use ($run, $itemId, $optionIndex): array {
             /** @var TelegramIntervalReviewRun $lockedRun */
             $lockedRun = TelegramIntervalReviewRun::query()
-                ->with(['session', 'items', 'user'])
+                ->with(['session', 'items', 'user', 'plan.sessions'])
                 ->whereKey($run->id)
                 ->lockForUpdate()
                 ->firstOrFail();
@@ -265,12 +270,12 @@ class TelegramIntervalReviewRuntimeService
                 'last_interaction_at' => now(),
             ])->save();
 
-            $nextItem = $this->nextUnansweredItem($lockedRun->fresh(['items', 'session', 'user']));
+            $nextItem = $this->nextUnansweredItem($lockedRun->fresh(['items', 'session', 'user', 'plan.sessions']));
 
             if ($nextItem instanceof TelegramIntervalReviewRunItem) {
                 return [
                     'status' => 'answered',
-                    'run' => $lockedRun->fresh(['session', 'items', 'user']),
+                    'run' => $lockedRun->fresh(['session', 'items', 'user', 'plan.sessions']),
                     'item' => $item->fresh(),
                     'is_correct' => $isCorrect,
                     'correct_answer' => $item->correct_answer,
@@ -278,16 +283,19 @@ class TelegramIntervalReviewRuntimeService
                 ];
             }
 
-            $finishedRun = $this->finishRun($lockedRun);
+            $finalized = $this->telegramIntervalReviewResultFinalizer->finalize($lockedRun);
 
             return [
                 'status' => 'finished',
-                'run' => $finishedRun,
+                'run' => $finalized['run'],
                 'item' => $item->fresh(),
                 'is_correct' => $isCorrect,
                 'correct_answer' => $item->correct_answer,
                 'next_item' => null,
-                'summary_text' => $this->buildSessionSummaryText($finishedRun),
+                'summary_text' => $finalized['summary_text'],
+                'completion_message' => $finalized['completion_message'],
+                'plan_completed' => $finalized['plan_completed'],
+                'incorrect_items' => $finalized['incorrect_items'],
             ];
         });
     }
@@ -363,17 +371,5 @@ class TelegramIntervalReviewRuntimeService
         ])->save();
 
         return $finishedRun->fresh(['session', 'items', 'user']);
-    }
-
-    private function buildSessionSummaryText(TelegramIntervalReviewRun $run): string
-    {
-        $correctAnswers = $run->items->filter(static fn (TelegramIntervalReviewRunItem $item): bool => $item->is_correct === true)->count();
-        $incorrectAnswers = $run->items->filter(static fn (TelegramIntervalReviewRunItem $item): bool => $item->is_correct === false)->count();
-
-        return implode("\n", [
-            'Сессия завершена.',
-            "Правильных ответов: {$correctAnswers} из {$run->total_words}.",
-            "Ошибок: {$incorrectAnswers}.",
-        ]);
     }
 }
