@@ -239,10 +239,19 @@
     - sends the intro message for one interval review session
     - stores `intro_message_id` and moves the runtime session to `awaiting_start`
   - `TelegramIntervalReviewRunCallbackData`
-    - centralizes callback payload generation and parsing for interval review intro actions
+    - centralizes callback payload generation and parsing for interval review runtime actions
+    - supports intro actions, the `Начать квиз` transition, and numbered answer callbacks
+  - `TelegramIntervalReviewWordListSender`
+    - sends the full selected-word list for one interval review session
+    - adds the inline button `Начать квиз` for the transition into the question loop
+  - `TelegramIntervalReviewQuestionSender`
+    - sends one interval review question at a time
+    - prints all answer options in the message text and keeps inline buttons compact as `1..6`
   - `TelegramIntervalReviewRuntimeService`
-    - handles `start` and `cancel` actions for interval review runtime runs
+    - handles `start`, `cancel`, `begin quiz`, and answer submission for interval review runtime runs
     - updates both runtime-run state and the parent planned interval session state
+    - stores `word_list_message_id` while the user is reviewing the word list
+    - finalizes one interval session with a simple per-session summary after the last answer
   - `TelegramProcessedUpdateService`
     - stores processed Telegram `update_id` / `callback_query_id` pairs in the database
     - prevents duplicate webhook delivery from re-running start, cancel, and answer side effects
@@ -1038,7 +1047,7 @@
   - one root `telegram_interval_review_plans` row
   - snapshot selected words in `telegram_interval_review_plan_words`
   - six precomputed future sessions in `telegram_interval_review_sessions`
-- Interval review Stage 3 runtime flow:
+- Interval review runtime flow:
   - `routes/console.php` schedules `telegram:dispatch-interval-review-sessions` every minute with `withoutOverlapping()`
   - `TelegramIntervalReviewDueSessionLocator` finds due `telegram_interval_review_sessions` only for active plans
   - `CreateTelegramIntervalReviewRunService` creates one `telegram_interval_review_run` plus prepared `telegram_interval_review_run_items`
@@ -1049,15 +1058,22 @@
     - inline buttons:
       - `Начать`
       - `Отменить`
-  - `TelegramUpdateHandler` now also parses `interval_run:start:{id}` and `interval_run:cancel:{id}`
+  - `TelegramUpdateHandler` now also parses:
+    - `interval_run:start:{id}`
+    - `interval_run:cancel:{id}`
+    - `interval_run:begin_quiz:{id}`
+    - `interval_answer:{runId}:{itemId}:{optionIndex}`
   - `TelegramIntervalReviewRuntimeService` handles those callbacks:
-    - `Начать` moves the runtime run and planned session to `in_progress` and currently sends a stub message
+    - `Начать` moves the runtime run and planned session to `in_progress` and sends the full word list of the session
+    - `Начать квиз` deletes the word-list message and opens the first unanswered question
+    - answer callbacks reuse the shared `GameAnswerEvaluator::evaluateChoiceAnswer()` flow, send immediate feedback, and move to the next unanswered item
+    - after the last answer, the current interval runtime run and planned session move to `finished` and Telegram receives a per-session summary
     - `Отменить` cancels only the current interval session and leaves future sessions of the same plan untouched
-- At this stage the interval review Telegram runtime does not yet:
-  - show the selected words before gameplay
-  - ask the actual questions
-  - calculate final summaries
-  - finish the full 6-session plan cycle
+- At this stage the interval review Telegram runtime still does not yet:
+  - finish the full 6-session plan cycle as one product summary
+  - calculate final analytics for the whole interval plan
+  - synchronize `words.remainder_had_mistake`
+  - add the dedicated reliability/cleanup layer for interval review
 - After Telegram authorization, the bot exposes a small reply-keyboard main menu:
   - `Словари`
   - `Выход`

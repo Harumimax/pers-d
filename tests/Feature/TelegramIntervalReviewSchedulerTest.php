@@ -131,7 +131,7 @@ class TelegramIntervalReviewSchedulerTest extends TestCase
         ]);
     }
 
-    public function test_start_callback_marks_interval_run_as_in_progress_and_sends_stub_message(): void
+    public function test_start_callback_marks_interval_run_as_in_progress_and_sends_word_list_message(): void
     {
         Http::fake([
             'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => ['message_id' => 801]], 200),
@@ -152,10 +152,17 @@ class TelegramIntervalReviewSchedulerTest extends TestCase
         $this->assertSame(TelegramIntervalReviewRun::STATUS_IN_PROGRESS, $run->status);
         $this->assertNotNull($run->started_at);
         $this->assertSame(TelegramIntervalReviewSession::STATUS_IN_PROGRESS, $session->status);
+        $this->assertSame(801, $run->word_list_message_id);
 
         Http::assertSent(fn (\Illuminate\Http\Client\Request $request): bool => str_ends_with($request->url(), '/answerCallbackQuery'));
         Http::assertSent(fn (\Illuminate\Http\Client\Request $request): bool => str_ends_with($request->url(), '/editMessageReplyMarkup'));
-        Http::assertSent(fn (\Illuminate\Http\Client\Request $request): bool => str_ends_with($request->url(), '/sendMessage') && str_contains((string) $request['text'], 'Полный игровой поток будет подключён следующим этапом'));
+        Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
+            return str_ends_with($request->url(), '/sendMessage')
+                && str_contains((string) $request['text'], 'Слова этой сессии')
+                && str_contains((string) $request['text'], '1. apple')
+                && str_contains((string) $request['text'], 'Перевод: яблоко')
+                && data_get($request->data(), 'reply_markup.inline_keyboard.0.0.text') === 'Начать квиз';
+        });
     }
 
     /**

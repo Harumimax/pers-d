@@ -60,6 +60,14 @@ class TelegramBotService
         ], $extra));
     }
 
+    public function deleteMessage(string $chatId, int $messageId): array
+    {
+        return $this->post('deleteMessage', [
+            'chat_id' => $chatId,
+            'message_id' => $messageId,
+        ]);
+    }
+
     private function post(string $method, array $payload): array
     {
         $attempt = 0;

@@ -12,6 +12,7 @@ class TelegramIntervalReviewSession extends Model
     public const STATUS_AWAITING_START = 'awaiting_start';
     public const STATUS_IN_PROGRESS = 'in_progress';
     public const STATUS_CANCELLED = 'cancelled';
+    public const STATUS_FINISHED = 'finished';
     public const STATUS_FAILED = 'failed';
 
     protected $fillable = [

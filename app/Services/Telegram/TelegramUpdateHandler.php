@@ -437,13 +437,13 @@ class TelegramUpdateHandler
     }
 
     /**
-     * @param  array{action:string,run_id:int}  $payload
+     * @param  array<string, int|string>  $payload
      */
     private function handleIntervalReviewCallbackQuery(string $callbackQueryId, string $chatId, ?int $messageId, array $payload): void
     {
         /** @var TelegramIntervalReviewRun|null $run */
         $run = TelegramIntervalReviewRun::query()
-            ->with(['user', 'session'])
+            ->with(['user', 'session', 'items'])
             ->find($payload['run_id']);
 
         if (! $run instanceof TelegramIntervalReviewRun || (string) $run->user->tg_chat_id !== $chatId) {
@@ -452,7 +452,7 @@ class TelegramUpdateHandler
             return;
         }
 
-        if ($payload['action'] === TelegramIntervalReviewRunCallbackData::ACTION_CANCEL) {
+        if (($payload['type'] ?? null) === 'run_action' && ($payload['action'] ?? null) === TelegramIntervalReviewRunCallbackData::ACTION_CANCEL) {
             $result = $this->telegramIntervalReviewRuntimeService->cancelRun($run);
 
             if ($result['status'] === 'cancelled') {
@@ -479,7 +479,7 @@ class TelegramUpdateHandler
             return;
         }
 
-        if ($payload['action'] === TelegramIntervalReviewRunCallbackData::ACTION_START) {
+        if (($payload['type'] ?? null) === 'run_action' && ($payload['action'] ?? null) === TelegramIntervalReviewRunCallbackData::ACTION_START) {
             $result = $this->telegramIntervalReviewRuntimeService->startRun($run);
 
             if ($result['status'] === 'started') {
@@ -490,7 +490,15 @@ class TelegramUpdateHandler
 
                 $this->bot->answerCallbackQuery($callbackQueryId, 'Сессия запущена.');
                 $this->clearInlineKeyboard($chatId, $messageId);
-                $this->bot->sendMessage($chatId, 'Сессия интервального повторения подготовлена. Полный игровой поток будет подключён следующим этапом.');
+                $this->telegramIntervalReviewRuntimeService->sendWordList($result['run']);
+
+                return;
+            }
+
+            if ($result['status'] === 'finished_without_items') {
+                $this->bot->answerCallbackQuery($callbackQueryId, 'В этой сессии нет доступных слов.');
+                $this->clearInlineKeyboard($chatId, $messageId);
+                $this->bot->sendMessage($chatId, 'Сессия завершена: для неё не нашлось доступных слов.');
 
                 return;
             }
@@ -508,7 +516,128 @@ class TelegramUpdateHandler
             }
 
             $this->bot->answerCallbackQuery($callbackQueryId, 'Эту сессию уже нельзя запустить.');
+
+            return;
         }
+
+        if (($payload['type'] ?? null) === 'run_action' && ($payload['action'] ?? null) === TelegramIntervalReviewRunCallbackData::ACTION_BEGIN_QUIZ) {
+            $result = $this->telegramIntervalReviewRuntimeService->beginQuiz($run);
+
+            if ($result['status'] === 'quiz_started') {
+                Log::info('telegram.interval_review.quiz_started', [
+                    'telegram_interval_review_run_id' => $run->id,
+                    'user_id' => $run->user_id,
+                ]);
+
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Квиз начат.');
+
+                if ($messageId !== null) {
+                    $this->bot->deleteMessage($chatId, $messageId);
+                }
+
+                $this->telegramIntervalReviewRuntimeService->sendQuestion($result['run'], $result['next_item']);
+
+                return;
+            }
+
+            if ($result['status'] === 'finished_without_questions') {
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Сессия завершена.');
+
+                if ($messageId !== null) {
+                    $this->bot->deleteMessage($chatId, $messageId);
+                }
+
+                $this->bot->sendMessage($chatId, (string) ($result['summary_text'] ?? 'Сессия завершена.'));
+
+                return;
+            }
+
+            if ($result['status'] === 'quiz_already_started') {
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Квиз уже начат.');
+
+                return;
+            }
+
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Сессию сейчас нельзя перевести в режим квиза.');
+
+            return;
+        }
+
+        if (($payload['type'] ?? null) === TelegramIntervalReviewRunCallbackData::ACTION_ANSWER) {
+            $result = $this->telegramIntervalReviewRuntimeService->submitAnswer(
+                $run,
+                (int) $payload['item_id'],
+                (int) $payload['option_index'],
+            );
+
+            if ($result['status'] === 'run_not_in_progress') {
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Сессия сейчас не активна.');
+
+                return;
+            }
+
+            if ($result['status'] === 'item_not_found') {
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Вопрос не найден.');
+
+                return;
+            }
+
+            if ($result['status'] === 'already_answered') {
+                $this->bot->answerCallbackQuery($callbackQueryId, 'На этот вопрос уже ответили.');
+
+                return;
+            }
+
+            if ($result['status'] === 'wrong_item') {
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Сначала ответьте на текущий вопрос.');
+
+                return;
+            }
+
+            if ($result['status'] === 'invalid_option') {
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Такой вариант ответа недоступен.');
+
+                return;
+            }
+
+            Log::info('telegram.interval_review.answer_accepted', [
+                'telegram_interval_review_run_id' => $run->id,
+                'user_id' => $run->user_id,
+                'item_id' => (int) $payload['item_id'],
+                'option_index' => (int) $payload['option_index'],
+                'is_correct' => $result['is_correct'],
+            ]);
+
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Ответ принят.');
+            $this->clearInlineKeyboard($chatId, $messageId);
+
+            if (($result['is_correct'] ?? false) === true) {
+                $this->bot->sendMessage($chatId, 'Корректно.');
+            } else {
+                $this->bot->sendMessage($chatId, 'Некорректно. Правильный ответ: '.(string) $result['correct_answer']);
+            }
+
+            if (($result['next_item'] ?? null) !== null) {
+                $this->telegramIntervalReviewRuntimeService->sendQuestion($result['run'], $result['next_item']);
+
+                return;
+            }
+
+            $summaryText = is_string($result['summary_text'] ?? null) && $result['summary_text'] !== ''
+                ? $result['summary_text']
+                : 'Сессия завершена.';
+
+            Log::info('telegram.interval_review.run_finished', [
+                'telegram_interval_review_run_id' => $run->id,
+                'user_id' => $run->user_id,
+            ]);
+
+            $this->bot->sendMessage($chatId, $summaryText);
+
+            return;
+        }
+
+        $this->bot->answerCallbackQuery($callbackQueryId, 'Действие недоступно.');
     }
 
     private function handleEmailStep(string $chatId, string $text): void
