@@ -33,11 +33,19 @@
                             ->filter()
                             ->values()
                             ->all(),
+                        'ready_dictionary_language_filter' => 'all',
                     ];
                 })
                 ->values()
                 ->all(),
         ];
+        $readyDictionaryOptions = $readyDictionaries
+            ->map(fn ($dictionary) => [
+                'id' => (int) $dictionary->id,
+                'language' => (string) ($dictionary->language ?? ''),
+            ])
+            ->values()
+            ->all();
     @endphp
 
     <main class="tg-bot-main">
@@ -142,7 +150,7 @@
                                         partOfSpeechAllValue: @js(\App\Support\PartOfSpeechCatalog::ALL),
                                         maxSessions: 5,
                                         availableUserDictionaryIds: @js($userDictionaries->pluck('id')->map(fn ($id) => (int) $id)->values()->all()),
-                                        availableReadyDictionaryIds: @js($readyDictionaries->pluck('id')->map(fn ($id) => (int) $id)->values()->all()),
+                                        readyDictionaryOptions: @js($readyDictionaryOptions),
                                         sessions: @js($initialTelegramSettings['sessions']),
                                         async updateRandomWordsStatus(nextValue) {
                                             const previousValue = !nextValue;
@@ -190,6 +198,7 @@
                                                 part_of_speech: [this.partOfSpeechAllValue],
                                                 user_dictionary_ids: [],
                                                 ready_dictionary_ids: [],
+                                                ready_dictionary_language_filter: 'all',
                                             };
                                         },
                                         addSession() {
@@ -235,6 +244,14 @@
                                         },
                                         hasSelection(session, key, id) {
                                             return session[key].includes(id);
+                                        },
+                                        filteredReadyDictionaryIds(languageFilter) {
+                                            return this.readyDictionaryOptions
+                                                .filter(option => languageFilter === 'all' || option.language === languageFilter)
+                                                .map(option => option.id);
+                                        },
+                                        isReadyDictionaryVisible(dictionaryLanguage, languageFilter) {
+                                            return languageFilter === 'all' || dictionaryLanguage === languageFilter;
                                         },
                                         areAllSelected(session, key, availableIds) {
                                             return availableIds.length > 0 && availableIds.every(id => session[key].includes(id));
@@ -461,15 +478,26 @@
                                                             <span class="tg-bot-form__label">{{ __('tg-bot.form.sessions.fields.ready_dictionaries') }}</span>
 
                                                             @if ($readyDictionaries->isNotEmpty())
-                                                                <label class="tg-bot-select-all">
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        class="tg-bot-select-all__input"
-                                                                        :checked="areAllSelected(session, 'ready_dictionary_ids', availableReadyDictionaryIds)"
-                                                                        @change="toggleAllSelections(session, 'ready_dictionary_ids', availableReadyDictionaryIds)"
-                                                                    >
-                                                                    <span>{{ __('remainder.settings.dictionaries.select_all') }}</span>
-                                                                </label>
+                                                                <div class="tg-bot-select-toolbar">
+                                                                    <label class="tg-bot-select-all">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            class="tg-bot-select-all__input"
+                                                                            :checked="areAllSelected(session, 'ready_dictionary_ids', filteredReadyDictionaryIds(session.ready_dictionary_language_filter))"
+                                                                            @change="toggleAllSelections(session, 'ready_dictionary_ids', filteredReadyDictionaryIds(session.ready_dictionary_language_filter))"
+                                                                        >
+                                                                        <span>{{ __('remainder.settings.dictionaries.select_all') }}</span>
+                                                                    </label>
+
+                                                                    <label class="tg-bot-select-filter">
+                                                                        <span class="tg-bot-select-filter__label">{{ __('remainder.settings.dictionaries.language_filter.label') }}</span>
+                                                                        <select class="tg-bot-select-filter__control" x-model="session.ready_dictionary_language_filter">
+                                                                            <option value="all">{{ __('remainder.settings.dictionaries.language_filter.all') }}</option>
+                                                                            <option value="English">{{ __('dictionaries.index.languages.english') }}</option>
+                                                                            <option value="Spanish">{{ __('dictionaries.index.languages.spanish') }}</option>
+                                                                        </select>
+                                                                    </label>
+                                                                </div>
 
                                                                 <div class="tg-bot-select-list">
                                                                     @foreach ($readyDictionaries as $dictionary)
@@ -481,6 +509,7 @@
                                                                         <label
                                                                             class="tg-bot-select-card"
                                                                             :class="{ 'tg-bot-select-card--active': hasSelection(session, 'ready_dictionary_ids', {{ $dictionary->id }}) }"
+                                                                            x-show="isReadyDictionaryVisible(@js((string) ($dictionary->language ?? '')), session.ready_dictionary_language_filter)"
                                                                         >
                                                                             <input
                                                                                 type="checkbox"

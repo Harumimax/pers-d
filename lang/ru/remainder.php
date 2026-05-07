@@ -40,6 +40,10 @@ return [
             'ready_empty_title' => 'Готовых словарей пока нет.',
             'ready_empty_text' => 'Готовые словари появятся здесь, когда они будут добавлены.',
             'select_all' => 'Выбрать все словари',
+            'language_filter' => [
+                'label' => 'Язык словарей',
+                'all' => 'Все',
+            ],
             'words_count' => '{1} :count слово|[2,4] :count слова|[5,*] :count слов',
         ],
         'parts_of_speech' => [

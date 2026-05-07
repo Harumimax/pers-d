@@ -276,6 +276,44 @@
     gap: 12px;
 }
 
+.remainder-dictionary-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.remainder-dictionary-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+}
+
+.remainder-dictionary-filter__label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--muted-color);
+}
+
+.remainder-dictionary-filter__control {
+    min-width: 160px;
+    min-height: 42px;
+    padding: 0 12px;
+    border: 1px solid #c8ced9;
+    border-radius: 12px;
+    background: #fff;
+    color: var(--text-color);
+    font-size: 0.95rem;
+}
+
+.remainder-dictionary-filter__control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12);
+}
+
 .remainder-dictionary-column__title {
     margin: 0;
     font-size: 0.94rem;

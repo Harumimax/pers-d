@@ -25,6 +25,7 @@ class IntervalReviewConfigurator extends Component
     public string $selectedLanguage = 'English';
     public string $startTime = '09:00';
     public string $timezone = 'Europe/Moscow';
+    public string $readyDictionaryLanguageFilter = 'all';
     public bool $modalOpen = false;
     public string $modalSource = 'user';
     public ?int $modalDictionaryId = null;
@@ -52,6 +53,7 @@ class IntervalReviewConfigurator extends Component
     {
         return view('livewire.tg-bot.interval-review-configurator', [
             'languageOptions' => $this->languageOptions(),
+            'readyDictionaryLanguageOptions' => $this->readyDictionaryLanguageOptions(),
             'userDictionaries' => $this->userDictionaries(),
             'readyDictionaries' => $this->readyDictionaries(),
             'partOfSpeechOptions' => PartOfSpeechCatalog::dictionaryFilterLabels(),
@@ -94,6 +96,7 @@ class IntervalReviewConfigurator extends Component
             ->filter(fn (array $word): bool => ($word['language'] ?? null) === $this->selectedLanguage)
             ->all();
 
+        $this->readyDictionaryLanguageFilter = 'all';
         $this->closeDictionary();
         $this->hideFeedback();
         $this->showResetConfirmation = false;
@@ -105,6 +108,13 @@ class IntervalReviewConfigurator extends Component
         $this->hideFeedback();
         $this->showResetConfirmation = false;
         $this->resetPreview();
+    }
+
+    public function updatedReadyDictionaryLanguageFilter(): void
+    {
+        if ($this->modalSource === 'ready') {
+            $this->closeDictionary();
+        }
     }
 
     public function updatedEnabled(): void
@@ -357,6 +367,18 @@ class IntervalReviewConfigurator extends Component
     }
 
     /**
+     * @return array<int, array{value:string,label:string}>
+     */
+    private function readyDictionaryLanguageOptions(): array
+    {
+        return [
+            ['value' => 'all', 'label' => __('remainder.settings.dictionaries.language_filter.all')],
+            ['value' => 'English', 'label' => __('dictionaries.index.languages.english')],
+            ['value' => 'Spanish', 'label' => __('dictionaries.index.languages.spanish')],
+        ];
+    }
+
+    /**
      * @return \Illuminate\Support\Collection<int, UserDictionary>
      */
     private function userDictionaries()
@@ -377,11 +399,16 @@ class IntervalReviewConfigurator extends Component
      */
     private function readyDictionaries()
     {
-        return ReadyDictionary::query()
+        $query = ReadyDictionary::query()
             ->where('language', $this->selectedLanguage)
             ->withCount('words')
-            ->orderBy('name')
-            ->get();
+            ->orderBy('name');
+
+        if ($this->readyDictionaryLanguageFilter !== 'all') {
+            $query->where('language', $this->readyDictionaryLanguageFilter);
+        }
+
+        return $query->get();
     }
 
     private function modalDictionary(): UserDictionary|ReadyDictionary|null
@@ -400,9 +427,14 @@ class IntervalReviewConfigurator extends Component
                 ->find($this->modalDictionaryId);
         }
 
-        return ReadyDictionary::query()
-            ->where('language', $this->selectedLanguage)
-            ->find($this->modalDictionaryId);
+        $query = ReadyDictionary::query();
+        $query->where('language', $this->selectedLanguage);
+
+        if ($this->readyDictionaryLanguageFilter !== 'all') {
+            $query->where('language', $this->readyDictionaryLanguageFilter);
+        }
+
+        return $query->find($this->modalDictionaryId);
     }
 
     /**
@@ -483,9 +515,14 @@ class IntervalReviewConfigurator extends Component
             return $word instanceof Word ? $this->normalizeWord($word, $dictionary) : null;
         }
 
-        $dictionary = ReadyDictionary::query()
-            ->where('language', $this->selectedLanguage)
-            ->find($dictionaryId);
+        $query = ReadyDictionary::query();
+        $query->where('language', $this->selectedLanguage);
+
+        if ($this->readyDictionaryLanguageFilter !== 'all') {
+            $query->where('language', $this->readyDictionaryLanguageFilter);
+        }
+
+        $dictionary = $query->find($dictionaryId);
 
         if (! $dictionary instanceof ReadyDictionary) {
             return null;

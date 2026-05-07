@@ -40,6 +40,10 @@ return [
             'ready_empty_title' => 'No ready dictionaries yet.',
             'ready_empty_text' => 'Ready dictionaries will appear here when they are added.',
             'select_all' => 'Select all dictionaries',
+            'language_filter' => [
+                'label' => 'Dictionary language',
+                'all' => 'All',
+            ],
             'words_count' => '{1} :count word|[2,*] :count words',
         ],
         'parts_of_speech' => [

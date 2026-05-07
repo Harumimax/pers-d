@@ -24,6 +24,12 @@
             ->pluck('id')
             ->map(fn ($id) => (int) $id)
             ->values();
+        $readyDictionaryOptions = $remainderReadyDictionaries
+            ->map(fn ($dictionary) => [
+                'id' => (int) $dictionary->id,
+                'language' => (string) ($dictionary->language ?? ''),
+            ])
+            ->values();
         $initialPartsOfSpeech = collect(old('parts_of_speech', ['all']))
             ->map(fn ($value) => (string) $value)
             ->filter()
@@ -59,9 +65,10 @@
                     gameType: @js(old('mode', 'choice')),
                     direction: @js(old('direction', 'foreign_to_ru')),
                     dictionaryIds: @js($dictionaryIds->all()),
-                    readyDictionaryIds: @js($readyDictionaryIds->all()),
+                    readyDictionaryOptions: @js($readyDictionaryOptions->all()),
                     selectedDictionaries: @js($initialDictionaryIds->all()),
                     selectedReadyDictionaries: @js($initialReadyDictionaryIds->all()),
+                    readyDictionaryLanguageFilter: 'all',
                     selectedPartsOfSpeech: @js($initialPartsOfSpeech->all()),
                     wordsCount: @js((string) old('words_count', '10')),
                     toggleDictionary(id) {
@@ -97,16 +104,28 @@
                     isReadyDictionarySelected(id) {
                         return this.selectedReadyDictionaries.includes(id);
                     },
+                    filteredReadyDictionaryIds() {
+                        return this.readyDictionaryOptions
+                            .filter(option => this.readyDictionaryLanguageFilter === 'all' || option.language === this.readyDictionaryLanguageFilter)
+                            .map(option => option.id);
+                    },
+                    isReadyDictionaryVisible(language) {
+                        return this.readyDictionaryLanguageFilter === 'all' || language === this.readyDictionaryLanguageFilter;
+                    },
                     areAllReadyDictionariesSelected() {
-                        return this.readyDictionaryIds.length > 0 && this.readyDictionaryIds.every(id => this.selectedReadyDictionaries.includes(id));
+                        const filteredIds = this.filteredReadyDictionaryIds();
+
+                        return filteredIds.length > 0 && filteredIds.every(id => this.selectedReadyDictionaries.includes(id));
                     },
                     toggleAllReadyDictionaries() {
+                        const filteredIds = this.filteredReadyDictionaryIds();
+
                         if (this.areAllReadyDictionariesSelected()) {
-                            this.selectedReadyDictionaries = this.selectedReadyDictionaries.filter(id => !this.readyDictionaryIds.includes(id));
+                            this.selectedReadyDictionaries = this.selectedReadyDictionaries.filter(id => !filteredIds.includes(id));
                             return;
                         }
 
-                        this.selectedReadyDictionaries = [...new Set([...this.selectedReadyDictionaries, ...this.readyDictionaryIds])];
+                        this.selectedReadyDictionaries = [...new Set([...this.selectedReadyDictionaries, ...filteredIds])];
                     },
                     togglePartOfSpeech(value) {
                         if (value === 'all') {
@@ -308,15 +327,26 @@
                             <h4 class="remainder-dictionary-column__title">{{ __('remainder.settings.dictionaries.ready_title') }}</h4>
 
                             @if ($remainderReadyDictionaries->isNotEmpty())
-                                <label class="remainder-dictionary-select-all">
-                                    <input
-                                        type="checkbox"
-                                        class="remainder-dictionary-select-all__input"
-                                        :checked="areAllReadyDictionariesSelected()"
-                                        @change="toggleAllReadyDictionaries()"
-                                    >
-                                    <span>{{ __('remainder.settings.dictionaries.select_all') }}</span>
-                                </label>
+                                <div class="remainder-dictionary-toolbar">
+                                    <label class="remainder-dictionary-select-all">
+                                        <input
+                                            type="checkbox"
+                                            class="remainder-dictionary-select-all__input"
+                                            :checked="areAllReadyDictionariesSelected()"
+                                            @change="toggleAllReadyDictionaries()"
+                                        >
+                                        <span>{{ __('remainder.settings.dictionaries.select_all') }}</span>
+                                    </label>
+
+                                    <label class="remainder-dictionary-filter">
+                                        <span class="remainder-dictionary-filter__label">{{ __('remainder.settings.dictionaries.language_filter.label') }}</span>
+                                        <select class="remainder-dictionary-filter__control" x-model="readyDictionaryLanguageFilter">
+                                            <option value="all">{{ __('remainder.settings.dictionaries.language_filter.all') }}</option>
+                                            <option value="English">{{ __('dictionaries.index.languages.english') }}</option>
+                                            <option value="Spanish">{{ __('dictionaries.index.languages.spanish') }}</option>
+                                        </select>
+                                    </label>
+                                </div>
 
                                 <div class="remainder-dictionary-list" role="list" aria-label="{{ __('remainder.settings.dictionaries.ready_available_aria') }}">
                                     @foreach ($remainderReadyDictionaries as $dictionary)
@@ -329,6 +359,7 @@
                                             type="button"
                                             class="remainder-dictionary-item"
                                             :class="{ 'remainder-dictionary-item--active': isReadyDictionarySelected({{ $dictionary->id }}) }"
+                                            x-show="isReadyDictionaryVisible(@js((string) ($dictionary->language ?? '')))"
                                             @click="toggleReadyDictionary({{ $dictionary->id }})"
                                         >
                                             <span class="remainder-dictionary-item__main">

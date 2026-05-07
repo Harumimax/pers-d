@@ -52,6 +52,8 @@ class TgBotSettingsTest extends TestCase
             ->assertSee('Sessions per day')
             ->assertSee('Words per session')
             ->assertSee('Select all dictionaries')
+            ->assertSee('Dictionary language')
+            ->assertSee('All')
             ->assertSee('wire:id=', false)
             ->assertSee('/livewire-', false);
     }
@@ -343,7 +345,7 @@ class TgBotSettingsTest extends TestCase
         $this->actingAs($user)
             ->get('/profile')
             ->assertOk()
-            ->assertSee('@word_keeper')
+            ->assertSee('value="word_keeper"', false)
             ->assertSee('Telegram bot authorization:')
             ->assertSee('authorized')
             ->assertSee('Your Telegram profile is linked and available for bot features.')

@@ -132,7 +132,18 @@
                     </div>
 
                     <div class="tg-bot-interval__dictionary-column">
-                        <h4 class="tg-bot-interval__dictionary-title">{{ __('tg-bot.interval_review.dictionary_picker.ready_title') }}</h4>
+                        <div class="tg-bot-interval__dictionary-toolbar">
+                            <h4 class="tg-bot-interval__dictionary-title">{{ __('tg-bot.interval_review.dictionary_picker.ready_title') }}</h4>
+
+                            <label class="tg-bot-select-filter">
+                                <span class="tg-bot-select-filter__label">{{ __('remainder.settings.dictionaries.language_filter.label') }}</span>
+                                <select class="tg-bot-select-filter__control" wire:model.live="readyDictionaryLanguageFilter">
+                                    @foreach ($readyDictionaryLanguageOptions as $option)
+                                        <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
+                                    @endforeach
+                                </select>
+                            </label>
+                        </div>
 
                         @if ($readyDictionaries->isNotEmpty())
                             <div class="tg-bot-interval__dictionary-list">
