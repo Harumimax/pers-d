@@ -88,7 +88,7 @@
                         id="tg_login_display"
                         type="text"
                         class="profile-input profile-input--with-prefix"
-                        value="{{ '@' . $user->tg_login }}"
+                        value="{{ ltrim($user->tg_login, '@') }}"
                         readonly
                     >
                 </div>
