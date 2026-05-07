@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\AboutContactController;
+use App\Http\Controllers\GameController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReadyDictionariesController;
 use App\Http\Controllers\RemainderController;
@@ -35,6 +36,7 @@ Route::post('/interface-language', function (Request $request) {
 })->name('interface-language.update');
 
 Route::get('/ready-dictionaries', [ReadyDictionariesController::class, 'index'])->name('ready-dictionaries.index');
+Route::get('/game', [GameController::class, 'index'])->name('game');
 Route::get('/ready-dictionaries/{readyDictionary}', ReadyDictionaryShow::class)->name('ready-dictionaries.show');
 Route::get('/remainder', [RemainderController::class, 'index'])->name('remainder');
 Route::post('/remainder/sessions', [RemainderController::class, 'store'])->name('remainder.sessions.store');
