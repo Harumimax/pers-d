@@ -65,7 +65,7 @@ return [
         ],
         'timezone' => [
             'label' => 'Timezone for the future plan',
-            'hint' => 'The common Telegram timezone above will be used for interval review as well.',
+            'hint' => 'Choose the timezone that should be used for this interval review plan.',
         ],
         'dictionary_picker' => [
             'title' => 'Choose words for interval review',

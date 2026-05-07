@@ -61,8 +61,12 @@
                     </div>
 
                     <div class="tg-bot-form__field">
-                        <span class="tg-bot-form__label">{{ __('tg-bot.interval_review.timezone.label') }}</span>
-                        <div class="tg-bot-interval__timezone">{{ $timezone }}</div>
+                        <label for="interval-timezone" class="tg-bot-form__label">{{ __('tg-bot.interval_review.timezone.label') }}</label>
+                        <select id="interval-timezone" class="tg-bot-form__control" wire:model.live="timezone">
+                            @foreach ($timezoneOptions as $timezoneOption)
+                                <option value="{{ $timezoneOption['value'] }}">{{ $timezoneOption['label'] }}</option>
+                            @endforeach
+                        </select>
                         <p class="tg-bot-form__hint">{{ __('tg-bot.interval_review.timezone.hint') }}</p>
                     </div>
                 </div>

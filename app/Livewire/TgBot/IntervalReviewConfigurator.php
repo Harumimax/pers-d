@@ -12,6 +12,7 @@ use App\Models\Word;
 use App\Services\Telegram\TelegramIntervalReviewPlanService;
 use App\Services\Telegram\TelegramIntervalReviewSchedulePreviewService;
 use App\Support\PartOfSpeechCatalog;
+use App\Support\TimezoneOptions;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
@@ -53,6 +54,7 @@ class IntervalReviewConfigurator extends Component
     {
         return view('livewire.tg-bot.interval-review-configurator', [
             'languageOptions' => $this->languageOptions(),
+            'timezoneOptions' => TimezoneOptions::build(),
             'readyDictionaryLanguageOptions' => $this->readyDictionaryLanguageOptions(),
             'userDictionaries' => $this->userDictionaries(),
             'readyDictionaries' => $this->readyDictionaries(),
@@ -104,6 +106,13 @@ class IntervalReviewConfigurator extends Component
     }
 
     public function updatedStartTime(): void
+    {
+        $this->hideFeedback();
+        $this->showResetConfirmation = false;
+        $this->resetPreview();
+    }
+
+    public function updatedTimezone(): void
     {
         $this->hideFeedback();
         $this->showResetConfirmation = false;

@@ -9,11 +9,10 @@ use App\Models\ReadyDictionary;
 use App\Models\TelegramSetting;
 use App\Services\Telegram\SaveTelegramSettingsService;
 use App\Support\PartOfSpeechCatalog;
-use DateTimeZone;
+use App\Support\TimezoneOptions;
 use Illuminate\Http\RedirectResponse;
 use App\Services\Navigation\HeaderNavigationService;
 use App\Models\UserDictionary;
-use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -48,7 +47,7 @@ class TgBotController extends Controller
             'telegramBotUsername' => 'WordKeeperBot_bot',
             'telegramBotUrl' => 'https://t.me/WordKeeperBot_bot',
             'telegramConnected' => filled($user->tg_chat_id),
-            'timezoneOptions' => $this->buildTimezoneOptions(),
+            'timezoneOptions' => TimezoneOptions::build(),
             'directionOptions' => [
                 GameSession::DIRECTION_FOREIGN_TO_RU => __('tg-bot.form.directions.foreign_to_ru'),
                 GameSession::DIRECTION_RU_TO_FOREIGN => __('tg-bot.form.directions.ru_to_foreign'),
@@ -156,25 +155,4 @@ class TgBotController extends Controller
         return $values !== [] ? $values : [PartOfSpeechCatalog::ALL];
     }
 
-    /**
-     * @return array<int, array{value:string,label:string}>
-     */
-    private function buildTimezoneOptions(): array
-    {
-        $reference = CarbonImmutable::now('UTC');
-
-        return collect(DateTimeZone::listIdentifiers())
-            ->map(function (string $timezone) use ($reference): array {
-                $offsetSeconds = (new DateTimeZone($timezone))->getOffset($reference);
-                $sign = $offsetSeconds >= 0 ? '+' : '-';
-                $hours = intdiv(abs($offsetSeconds), 3600);
-                $minutes = intdiv(abs($offsetSeconds) % 3600, 60);
-
-                return [
-                    'value' => $timezone,
-                    'label' => sprintf('%s (UTC%s%02d:%02d)', $timezone, $sign, $hours, $minutes),
-                ];
-            })
-            ->all();
-    }
 }
