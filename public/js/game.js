@@ -33,6 +33,7 @@
 
     const state = {
         started: false,
+        finished: false,
         animationFrameId: null,
         lastFrameAt: 0,
         activeSlide: 1,
@@ -41,14 +42,48 @@
             right: false,
             up: false,
         },
+        level: createLevel(),
+        camera: {
+            x: 0,
+            y: 0,
+        },
         player: createPlayer(),
-        platforms: createPlatforms(),
     };
+
+    function createLevel() {
+        return {
+            width: 2480,
+            height: canvas.height,
+            spawn: {
+                x: 116,
+                y: canvas.height - FLOOR_HEIGHT - 68,
+            },
+            finishZone: {
+                x: 2320,
+                y: canvas.height - FLOOR_HEIGHT - 168,
+                width: 80,
+                height: 168,
+            },
+            platforms: [
+                { x: 0, y: canvas.height - FLOOR_HEIGHT, width: 2480, height: FLOOR_HEIGHT, type: 'floor' },
+                { x: 124, y: canvas.height - 188, width: 150, height: 16, type: 'platform' },
+                { x: 346, y: canvas.height - 272, width: 188, height: 16, type: 'platform' },
+                { x: 626, y: canvas.height - 220, width: 140, height: 16, type: 'platform' },
+                { x: 856, y: canvas.height - 154, width: 126, height: 16, type: 'platform' },
+                { x: 1022, y: canvas.height - 254, width: 174, height: 16, type: 'platform' },
+                { x: 1288, y: canvas.height - 322, width: 122, height: 16, type: 'platform' },
+                { x: 1468, y: canvas.height - 232, width: 168, height: 16, type: 'platform' },
+                { x: 1738, y: canvas.height - 286, width: 156, height: 16, type: 'platform' },
+                { x: 1988, y: canvas.height - 204, width: 134, height: 16, type: 'platform' },
+                { x: 2166, y: canvas.height - 146, width: 120, height: 16, type: 'platform' },
+            ],
+        };
+    }
 
     function createPlayer() {
         return {
-            x: 116,
-            y: canvas.height - FLOOR_HEIGHT - 68,
+            x: state.level.spawn.x,
+            y: state.level.spawn.y,
             width: 36,
             height: 58,
             vx: 0,
@@ -58,26 +93,17 @@
         };
     }
 
-    function createPlatforms() {
-        return [
-            { x: 0, y: canvas.height - FLOOR_HEIGHT, width: canvas.width, height: FLOOR_HEIGHT, type: 'floor' },
-            { x: 118, y: canvas.height - 186, width: 146, height: 16, type: 'platform' },
-            { x: 334, y: canvas.height - 266, width: 174, height: 16, type: 'platform' },
-            { x: 588, y: canvas.height - 226, width: 136, height: 16, type: 'platform' },
-            { x: 786, y: canvas.height - 154, width: 108, height: 16, type: 'platform' },
-        ];
-    }
-
     function resetPlayerPosition() {
-        const freshPlayer = createPlayer();
-        state.player.x = freshPlayer.x;
-        state.player.y = freshPlayer.y;
-        state.player.width = freshPlayer.width;
-        state.player.height = freshPlayer.height;
+        state.player.x = state.level.spawn.x;
+        state.player.y = state.level.spawn.y;
+        state.player.width = 36;
+        state.player.height = 58;
         state.player.vx = 0;
         state.player.vy = 0;
         state.player.onGround = false;
-        state.player.facing = freshPlayer.facing;
+        state.player.facing = 'right';
+        state.camera.x = 0;
+        state.finished = false;
     }
 
     function syncProgressUI() {
@@ -117,7 +143,7 @@
     function handleKeyDown(event) {
         preventGamePageScroll(event);
 
-        if (!state.started) {
+        if (!state.started || state.finished) {
             return;
         }
 
@@ -174,9 +200,9 @@
     }
 
     function resolveHorizontalCollisions(previousX) {
-        const { player, platforms } = state;
+        const { player, level } = state;
 
-        platforms.forEach((platform) => {
+        level.platforms.forEach((platform) => {
             if (!isIntersecting(player, platform)) {
                 return;
             }
@@ -188,15 +214,15 @@
             }
         });
 
-        player.x = Math.max(0, Math.min(player.x, canvas.width - player.width));
+        player.x = Math.max(0, Math.min(player.x, level.width - player.width));
     }
 
     function resolveVerticalCollisions(previousY) {
-        const { player, platforms } = state;
+        const { player, level } = state;
 
         player.onGround = false;
 
-        platforms.forEach((platform) => {
+        level.platforms.forEach((platform) => {
             if (!isIntersecting(player, platform)) {
                 return;
             }
@@ -211,8 +237,8 @@
             }
         });
 
-        if (player.y + player.height >= canvas.height) {
-            player.y = canvas.height - player.height;
+        if (player.y + player.height >= level.height) {
+            player.y = level.height - player.height;
             player.vy = 0;
             player.onGround = true;
         }
@@ -227,8 +253,46 @@
         );
     }
 
+    function updateCamera() {
+        const { camera, player, level } = state;
+        const targetX = player.x + player.width / 2 - canvas.width / 2;
+        camera.x = clamp(targetX, 0, level.width - canvas.width);
+    }
+
+    function clamp(value, min, max) {
+        return Math.max(min, Math.min(value, max));
+    }
+
+    function updateActiveSlide() {
+        const { player, level } = state;
+        const progress = clamp(player.x / (level.finishZone.x + level.finishZone.width), 0, 1);
+        state.activeSlide = Math.min(10, Math.max(1, Math.floor(progress * 10) + 1));
+    }
+
+    function checkFinishReached() {
+        if (state.finished) {
+            return;
+        }
+
+        if (isIntersecting(state.player, state.level.finishZone)) {
+            state.finished = true;
+            state.keys.left = false;
+            state.keys.right = false;
+            state.keys.up = false;
+            state.player.vx = 0;
+            state.player.vy = 0;
+            state.activeSlide = 10;
+        }
+    }
+
     function update() {
-        const { player } = state;
+        if (state.finished) {
+            updateCamera();
+            syncProgressUI();
+            return;
+        }
+
+        const { player, level } = state;
 
         updatePlayerHorizontalMovement();
         applyJumpIfNeeded();
@@ -243,9 +307,18 @@
         player.y += player.vy;
         resolveVerticalCollisions(previousY);
 
-        if (player.y > canvas.height + 120) {
+        if (player.y > level.height + 120) {
             resetPlayerPosition();
         }
+
+        updateCamera();
+        checkFinishReached();
+        updateActiveSlide();
+        syncProgressUI();
+    }
+
+    function worldToScreenX(worldX) {
+        return worldX - state.camera.x;
     }
 
     function drawScene() {
@@ -253,8 +326,13 @@
 
         drawBackground();
         drawPlatforms();
+        drawFinishZone();
         drawPlayer();
         drawControlsHint();
+
+        if (state.finished) {
+            drawFinishOverlay();
+        }
     }
 
     function drawBackground() {
@@ -266,53 +344,114 @@
         context.fillStyle = skyGradient;
         context.fillRect(0, 0, canvas.width, canvas.height);
 
-        context.fillStyle = '#dbe4ef';
-        context.fillRect(0, canvas.height - FLOOR_HEIGHT - 18, canvas.width, 18);
+        context.fillStyle = '#e2e8f0';
+
+        for (let index = 0; index < state.level.width; index += 220) {
+            const stripeX = worldToScreenX(index);
+            context.fillRect(stripeX, canvas.height - FLOOR_HEIGHT - 18, 120, 18);
+        }
     }
 
     function drawPlatforms() {
-        state.platforms.forEach((platform) => {
+        state.level.platforms.forEach((platform) => {
+            const screenX = worldToScreenX(platform.x);
+
+            if (screenX + platform.width < -40 || screenX > canvas.width + 40) {
+                return;
+            }
+
             const isFloor = platform.type === 'floor';
 
             context.fillStyle = isFloor ? '#111111' : '#1f2937';
-            context.fillRect(platform.x, platform.y, platform.width, platform.height);
+            context.fillRect(screenX, platform.y, platform.width, platform.height);
 
-            context.fillStyle = isFloor ? '#475569' : '#64748b';
-            context.fillRect(platform.x, platform.y, platform.width, 4);
+            context.fillStyle = isFloor ? '#475569' : '#94a3b8';
+            context.fillRect(screenX, platform.y, platform.width, 4);
         });
+    }
+
+    function drawFinishZone() {
+        const finish = state.level.finishZone;
+        const flagX = worldToScreenX(finish.x);
+        const poleTopY = finish.y;
+        const poleHeight = finish.height;
+
+        if (flagX + finish.width < -80 || flagX > canvas.width + 80) {
+            return;
+        }
+
+        context.fillStyle = '#0f172a';
+        context.fillRect(flagX + 18, poleTopY, 8, poleHeight);
+
+        const boardX = flagX + 26;
+        const boardY = poleTopY + 8;
+        const boardWidth = 44;
+        const boardHeight = 28;
+
+        context.fillStyle = '#f8fafc';
+        context.fillRect(boardX, boardY, boardWidth, boardHeight);
+
+        context.strokeStyle = '#94a3b8';
+        context.lineWidth = 3;
+        context.strokeRect(boardX, boardY, boardWidth, boardHeight);
+
+        context.fillStyle = '#cbd5e1';
+        context.beginPath();
+        context.moveTo(boardX + 6, boardY + 6);
+        context.lineTo(boardX + 34, boardY + 14);
+        context.lineTo(boardX + 6, boardY + 22);
+        context.closePath();
+        context.fill();
+
+        context.fillStyle = 'rgba(15, 23, 42, 0.6)';
+        context.fillRect(flagX - 6, poleTopY + poleHeight, 52, 10);
     }
 
     function drawPlayer() {
         const { player } = state;
+        const screenX = worldToScreenX(player.x);
         const bodyColor = '#0f172a';
         const accentColor = '#475569';
 
         context.fillStyle = bodyColor;
-        context.fillRect(player.x, player.y + 14, player.width, player.height - 14);
+        context.fillRect(screenX, player.y + 14, player.width, player.height - 14);
 
-        context.fillRect(player.x + 5, player.y + player.height - 2, 8, 12);
-        context.fillRect(player.x + player.width - 13, player.y + player.height - 2, 8, 12);
+        context.fillRect(screenX + 5, player.y + player.height - 2, 8, 12);
+        context.fillRect(screenX + player.width - 13, player.y + player.height - 2, 8, 12);
 
-        context.fillRect(player.x - 6, player.y + 18, 8, 24);
-        context.fillRect(player.x + player.width - 2, player.y + 18, 8, 24);
+        context.fillRect(screenX - 6, player.y + 18, 8, 24);
+        context.fillRect(screenX + player.width - 2, player.y + 18, 8, 24);
 
         context.beginPath();
-        context.arc(player.x + player.width / 2, player.y + 10, 12, 0, Math.PI * 2);
+        context.arc(screenX + player.width / 2, player.y + 10, 12, 0, Math.PI * 2);
         context.fill();
 
         context.fillStyle = accentColor;
-        const eyeX = player.facing === 'right' ? player.x + 23 : player.x + 11;
+        const eyeX = player.facing === 'right' ? screenX + 23 : screenX + 11;
         context.fillRect(eyeX, player.y + 8, 4, 4);
     }
 
     function drawControlsHint() {
         context.fillStyle = 'rgba(15, 23, 42, 0.78)';
         context.font = '600 16px Figtree, sans-serif';
-        context.fillText('Use left, right, and up arrows to move.', 28, 34);
+        context.fillText('Run to the white-gray finish marker on the far right.', 28, 34);
 
         context.fillStyle = 'rgba(71, 85, 105, 0.92)';
         context.font = '500 13px Figtree, sans-serif';
-        context.fillText('Stage 2: movement, jump, gravity, platforms, collisions.', 28, 56);
+        context.fillText('Stage 3: long level, follow camera, finish zone, level config.', 28, 56);
+    }
+
+    function drawFinishOverlay() {
+        context.fillStyle = 'rgba(255, 255, 255, 0.72)';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+
+        context.fillStyle = '#0f172a';
+        context.font = '700 34px Figtree, sans-serif';
+        context.fillText('Level complete', 332, 236);
+
+        context.fillStyle = '#475569';
+        context.font = '500 17px Figtree, sans-serif';
+        context.fillText('The side-scrolling level shell is ready for the next stage.', 216, 272);
     }
 
     function loop(timestamp) {
@@ -338,6 +477,7 @@
         state.lastFrameAt = 0;
         resetPlayerPosition();
         hideStartScreen();
+        updateActiveSlide();
         syncProgressUI();
         drawScene();
         state.animationFrameId = window.requestAnimationFrame(loop);
