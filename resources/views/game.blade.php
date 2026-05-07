@@ -7,14 +7,6 @@
 @section('content')
     <main class="game-page" data-game-page>
         <div class="container game-page__container">
-            <section class="game-hero">
-                <div class="game-hero__copy">
-                    <p class="game-hero__eyebrow">{{ __('game.hero.eyebrow') }}</p>
-                    <h1 class="game-hero__title">{{ __('game.hero.title') }}</h1>
-                    <p class="game-hero__description">{{ __('game.hero.description') }}</p>
-                </div>
-            </section>
-
             <section class="game-shell" aria-label="{{ __('game.canvas.aria') }}">
                 <div class="game-shell__stage">
                     <div class="game-canvas-frame">
