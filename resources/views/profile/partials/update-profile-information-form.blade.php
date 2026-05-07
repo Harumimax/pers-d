@@ -80,21 +80,27 @@
         </div>
 
         <div class="profile-field">
-            <label for="tg_login" class="profile-label">{{ __('profile.personal_information.tg_login') }}</label>
-            <div class="profile-input-prefix-wrap">
-                <span class="profile-input-prefix" aria-hidden="true">@</span>
+            <label for="tg_login_display" class="profile-label">{{ __('profile.personal_information.tg_login') }}</label>
+            @if (filled($user->tg_login))
+                <div class="profile-input-prefix-wrap">
+                    <span class="profile-input-prefix" aria-hidden="true">@</span>
+                    <input
+                        id="tg_login_display"
+                        type="text"
+                        class="profile-input profile-input--with-prefix"
+                        value="{{ '@' . $user->tg_login }}"
+                        readonly
+                    >
+                </div>
+            @else
                 <input
-                    id="tg_login"
-                    name="tg_login"
+                    id="tg_login_display"
                     type="text"
-                    class="profile-input profile-input--with-prefix"
-                    value="{{ old('tg_login', $user->tg_login) }}"
-                    inputmode="text"
-                    autocomplete="off"
-                    spellcheck="false"
+                    class="profile-input"
+                    value="{{ __('profile.personal_information.tg_login_empty') }}"
+                    readonly
                 >
-            </div>
-            <x-input-error class="profile-error" :messages="$errors->get('tg_login')" />
+            @endif
             <div class="profile-telegram-status">
                 <p class="profile-telegram-status__state">
                     <span class="profile-telegram-status__label">{{ __('profile.personal_information.tg_auth_status.label') }}</span>
@@ -102,12 +108,11 @@
                         {{ filled($user->tg_chat_id) ? __('profile.personal_information.tg_auth_status.connected') : __('profile.personal_information.tg_auth_status.not_connected') }}
                     </span>
                 </p>
-                <p class="profile-telegram-status__hint">
-                    @if (! filled($user->tg_chat_id))
-                        {{ __('profile.personal_information.tg_auth_status.hint') }}
-                        <a href="https://t.me/WordKeeperBot_bot" target="_blank" rel="noopener noreferrer" class="profile-inline-link">@WordKeeperBot_bot</a>.
-                    @endif
-                </p>
+                @if (filled($user->tg_chat_id))
+                    <p class="profile-telegram-status__hint">
+                        {{ __('profile.personal_information.tg_auth_status.connected_hint') }}
+                    </p>
+                @endif
             </div>
         </div>
 

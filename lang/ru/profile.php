@@ -40,11 +40,12 @@ return [
         'email' => 'Email',
         'preferred_locale' => 'Предпочитаемый язык',
         'tg_login' => 'Логин в Telegram',
+        'tg_login_empty' => 'Авторизуйтесь в ТГ-боте @WordKeeperBot_bot, чтобы появился дополнительный функционал.',
         'tg_auth_status' => [
             'label' => 'Авторизация в Telegram-боте:',
             'connected' => 'выполнена',
             'not_connected' => 'не выполнена',
-            'hint' => 'Чтобы открыть настройки TG bot, авторизуйтесь в боте',
+            'connected_hint' => 'Профиль Telegram подключён и доступен для Telegram-функций.',
         ],
         'locale_options' => [
             'ru' => 'Русский',

@@ -321,17 +321,16 @@ class TgBotSettingsTest extends TestCase
     public function test_profile_page_shows_telegram_authorization_state_and_hint(): void
     {
         $user = User::factory()->create([
-            'tg_login' => 'word_keeper',
+            'tg_login' => null,
             'tg_chat_id' => null,
         ]);
 
         $this->actingAs($user)
             ->get('/profile')
             ->assertOk()
+            ->assertSee('Authorize in the TG bot @WordKeeperBot_bot to unlock additional functionality.')
             ->assertSee('Telegram bot authorization:')
-            ->assertSee('not authorized')
-            ->assertSee('To access TG bot settings, authorize in the bot')
-            ->assertSee('@WordKeeperBot_bot');
+            ->assertSee('not authorized');
     }
 
     public function test_profile_page_hides_authorization_hint_when_telegram_is_connected(): void
@@ -344,9 +343,10 @@ class TgBotSettingsTest extends TestCase
         $this->actingAs($user)
             ->get('/profile')
             ->assertOk()
+            ->assertSee('@word_keeper')
             ->assertSee('Telegram bot authorization:')
             ->assertSee('authorized')
-            ->assertDontSee('To access TG bot settings, authorize in the bot')
-            ->assertDontSee('@WordKeeperBot_bot');
+            ->assertSee('Your Telegram profile is linked and available for bot features.')
+            ->assertDontSee('Authorize in the TG bot @WordKeeperBot_bot to unlock additional functionality.');
     }
 }
