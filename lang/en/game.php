@@ -10,7 +10,6 @@ return [
         'aria' => 'WordKeeper browser game canvas',
     ],
     'start' => [
-        'badge' => 'Stage 1',
         'title' => 'Ready to start the run',
         'description' => 'Jump into the monochrome level, avoid danger, and use your shots carefully. You have three lives before the run ends.',
         'controls_aria' => 'Game controls',
@@ -40,5 +39,9 @@ return [
     'progress' => [
         'title' => 'Journey to the finish',
         'preview_label' => 'Slide :number',
+    ],
+    'mobile' => [
+        'title' => 'This game works on desktop',
+        'description' => 'Open the page on a device with a keyboard to play the platformer comfortably.',
     ],
 ];

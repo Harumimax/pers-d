@@ -593,7 +593,6 @@
         drawEnemies();
         drawBullets();
         drawPlayer();
-        drawControlsHint();
     }
 
     function drawBackground() {
@@ -785,16 +784,6 @@
         context.fillStyle = accentColor;
         const eyeX = player.facing === 'right' ? screenX + 23 : screenX + 11;
         context.fillRect(eyeX, player.y + 8, 4, 4);
-    }
-
-    function drawControlsHint() {
-        context.fillStyle = 'rgba(15, 23, 42, 0.78)';
-        context.font = '600 16px Figtree, sans-serif';
-        context.fillText('Arrows move. Space shoots. Reach the finish on the far right.', 28, 34);
-
-        context.fillStyle = 'rgba(71, 85, 105, 0.92)';
-        context.font = '500 13px Figtree, sans-serif';
-        context.fillText('You have three lives. Restart from the overlays after win or loss.', 28, 56);
     }
 
     function loop(timestamp) {

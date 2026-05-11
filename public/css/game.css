@@ -19,6 +19,30 @@
     min-width: 0;
 }
 
+.game-mobile-placeholder {
+    display: none;
+    border: 1px solid rgba(15, 23, 42, 0.14);
+    border-radius: 28px;
+    padding: 24px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(241, 245, 249, 0.9));
+    box-shadow: 0 22px 45px -35px rgba(15, 23, 42, 0.45);
+}
+
+.game-mobile-placeholder__title {
+    margin: 0 0 10px;
+    font-size: 1.4rem;
+    line-height: 1.15;
+    color: #0f172a;
+}
+
+.game-mobile-placeholder__description {
+    margin: 0;
+    font-size: 0.96rem;
+    line-height: 1.65;
+    color: #475569;
+}
+
 .game-canvas-frame {
     position: relative;
     overflow: hidden;
@@ -93,15 +117,6 @@
     box-shadow: 0 24px 40px -34px rgba(15, 23, 42, 0.55);
 }
 
-.game-start-screen__eyebrow {
-    margin: 0 0 8px;
-    font-size: 0.78rem;
-    font-weight: 800;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: #475569;
-}
-
 .game-start-screen__title,
 .game-status-screen__title {
     margin: 0 0 12px;
@@ -144,6 +159,12 @@
 .game-start-screen__button,
 .game-status-screen__button {
     min-width: 180px;
+}
+
+.game-start-screen__button {
+    min-height: 50px;
+    padding: 12px 24px;
+    border-width: 2px;
 }
 
 .game-progress-panel__card {
@@ -191,12 +212,22 @@
     }
 }
 
+@media (max-width: 900px) {
+    .game-canvas-frame {
+        display: none;
+    }
+
+    .game-mobile-placeholder {
+        display: block;
+    }
+}
+
 @media (max-width: 720px) {
     .game-page {
         padding: 36px 0 56px;
     }
 
-    .game-canvas-frame,
+    .game-mobile-placeholder,
     .game-progress-panel__card {
         border-radius: 22px;
     }

@@ -9,6 +9,11 @@
         <div class="container game-page__container">
             <section class="game-shell" aria-label="{{ __('game.canvas.aria') }}">
                 <div class="game-shell__stage">
+                    <div class="game-mobile-placeholder">
+                        <h2 class="game-mobile-placeholder__title">{{ __('game.mobile.title') }}</h2>
+                        <p class="game-mobile-placeholder__description">{{ __('game.mobile.description') }}</p>
+                    </div>
+
                     <div class="game-canvas-frame">
                         <div class="game-hud">
                             <div class="game-hud__lives" data-game-lives data-label="{{ __('game.hud.lives') }}">
@@ -26,7 +31,6 @@
 
                         <div class="game-start-screen" data-game-start-screen>
                             <div class="game-start-screen__card">
-                                <p class="game-start-screen__eyebrow">{{ __('game.start.badge') }}</p>
                                 <h2 class="game-start-screen__title">{{ __('game.start.title') }}</h2>
                                 <p class="game-start-screen__description">{{ __('game.start.description') }}</p>
 
