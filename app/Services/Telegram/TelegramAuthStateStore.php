@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Cache;
 class TelegramAuthStateStore
 {
     public const STEP_AWAITING_EMAIL = 'awaiting_email';
-    public const STEP_AWAITING_PASSWORD = 'awaiting_password';
 
     private const TTL_MINUTES = 10;
 
@@ -16,14 +15,6 @@ class TelegramAuthStateStore
         $this->put($chatId, [
             'step' => self::STEP_AWAITING_EMAIL,
             'email' => null,
-        ]);
-    }
-
-    public function storeEmail(string $chatId, string $email): void
-    {
-        $this->put($chatId, [
-            'step' => self::STEP_AWAITING_PASSWORD,
-            'email' => $email,
         ]);
     }
 

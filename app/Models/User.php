@@ -47,6 +47,11 @@ class User extends Authenticatable
         return $this->hasOne(TelegramSetting::class);
     }
 
+    public function telegramLoginIntents(): HasMany
+    {
+        return $this->hasMany(TelegramLoginIntent::class);
+    }
+
     public function telegramIntervalReviewPlan(): HasOne
     {
         return $this->hasOne(TelegramIntervalReviewPlan::class);

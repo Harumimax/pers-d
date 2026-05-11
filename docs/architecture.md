@@ -1,4 +1,4 @@
-﻿# Project Architecture
+# Project Architecture
 
 ## Summary
 - Stack: Laravel 13 + Blade + Livewire 4 + PostgreSQL
@@ -18,6 +18,8 @@
   - `/` -> `welcome` view
   - `POST /interface-language` -> stores `ru|en` in session, also updates authenticated user's preferred locale when available, and redirects back
   - `POST /telegram/webhook/{secret}` -> `TelegramWebhookController`, accepts Telegram bot updates through a secretized webhook URL
+  - `GET /telegram-auth/{token}` -> `TelegramAuthLinkController@show`, renders the one-time Telegram login confirmation page
+  - `POST /telegram-auth/{token}` -> `TelegramAuthLinkController@store`, validates the password and confirms Telegram linking without creating a browser session
   - `/ready-dictionaries` -> `ReadyDictionariesController@index`, also used as the guest Prepared dictionaries demo entry page
   - `/ready-dictionaries/{readyDictionary}` -> `App\Livewire\ReadyDictionaries\Show`, readable by guests as part of demo mode
   - `/remainder` -> `RemainderController@index`, available to guests as demo Remainder using ready dictionaries only
@@ -202,12 +204,19 @@
     - retries temporary Telegram API failures (`429`, `5xx`, and connection problems) with a short bounded backoff
     - emits structured logs for retry attempts and terminal transport failures
   - `TelegramUpdateHandler`
-    - handles `/start`, `/login`, Telegram-side logout, and email/password linking against existing site users
+    - handles `/start`, `/login`, Telegram-side logout, and Telegram login intent creation against existing site users
     - serves the authenticated Telegram dictionary browsing flow (`Словари`)
     - handles callback queries for scheduled Telegram runs (`РќР°С‡Р°С‚СЊ` / `РћС‚РјРµРЅР°`)
     - deduplicates incoming webhook updates before business processing through `TelegramProcessedUpdateService`
-    - updates `users.tg_chat_id`, `users.tg_login`, and `users.tg_linked_at` on successful link
+    - `/login` now asks only for email in Telegram and sends a one-time website confirmation link for password entry
     - never persists or logs the submitted password
+  - `TelegramLoginIntentService`
+    - creates one-time Telegram login intents with a 15-minute TTL
+    - stores only a hashed token in the database and invalidates stale or consumed links
+    - consumes the token after website password confirmation and sends the final success notification back to Telegram
+  - `TelegramAccountLinkService`
+    - centralizes linking and unlinking of `users.tg_chat_id`, `users.tg_login`, and `users.tg_linked_at`
+    - keeps Telegram chat reassignment rules in one place for both webhook and website confirmation flows
   - `TelegramDictionaryCallbackData`
     - centralizes callback payload generation and parsing for Telegram dictionary browsing
   - `TelegramDictionaryMenuService`
@@ -270,7 +279,8 @@
     - keeps failed update attempts visible for diagnostics
   - `TelegramAuthStateStore`
     - stores the temporary login dialog state in cache for 10 minutes
-    - keeps the first Telegram auth slice simple without a full state machine subsystem
+    - now stores only the `/login -> awaiting email` step
+    - keeps the Telegram-side auth slice simple without a full state machine subsystem
   - `TelegramGameConfigFactory`
     - maps one configured Telegram random-word session into the shared `GameSessionConfigData`
     - passes per-session `words_count` from `/tg-bot` into the shared game core
@@ -619,6 +629,27 @@
   - `tg_linked_at` nullable timestamp
   - `password`
   - `email_verified_at`
+
+#### `telegram_login_intents`
+- Created in `2026_05_11_000046_create_telegram_login_intents_table.php`
+- Purpose: stores one-time Telegram login confirmation intents that move password entry from Telegram into the website
+- Fields:
+  - `id`
+  - `user_id` -> FK to `users.id`
+  - `chat_id`
+  - `telegram_username` nullable
+  - `email`
+  - `token_hash` unique
+  - `status`
+  - `expires_at`
+  - `consumed_at` nullable
+  - `created_at`
+  - `updated_at`
+- Status lifecycle:
+  - `pending`
+  - `consumed`
+  - `expired`
+  - `cancelled`
 
 #### `user_dictionaries`
 - Created in `2026_03_31_000003_create_user_dictionaries_table.php`
@@ -1228,6 +1259,8 @@
 - `app/Services/Telegram/TelegramGameRunNotifier.php`
 - `app/Services/Telegram/TelegramGameRunCallbackData.php`
 - `app/Services/Telegram/TelegramGameResultFinalizer.php`
+- `app/Services/Telegram/TelegramLoginIntentService.php`
+- `app/Services/Telegram/TelegramAccountLinkService.php`
 - `app/Services/Telegram/TelegramUpdateHandler.php`
 - `app/Livewire/TgBot/IntervalReviewConfigurator.php`
 - `app/Console/Commands/DispatchScheduledTelegramSessionsCommand.php`

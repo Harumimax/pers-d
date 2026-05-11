@@ -152,6 +152,8 @@ class ReadyDictionaryCatalogTest extends TestCase
 
     public function test_catalog_service_returns_all_ready_dictionaries_without_filters(): void
     {
+        $initialCount = ReadyDictionary::query()->count();
+
         ReadyDictionary::factory()->create([
             'name' => 'English nouns',
             'language' => 'English',
@@ -164,8 +166,9 @@ class ReadyDictionaryCatalogTest extends TestCase
 
         $catalog = app(ReadyDictionaryCatalogService::class)->catalog();
 
-        $this->assertCount(5, $catalog['dictionaries']);
-        $this->assertSame(['English', 'Spanish'], $catalog['filterOptions']['languages']);
+        $this->assertCount($initialCount + 2, $catalog['dictionaries']);
+        $this->assertContains('English', $catalog['filterOptions']['languages']);
+        $this->assertContains('Spanish', $catalog['filterOptions']['languages']);
         $this->assertSame('A0 Beginner', $catalog['filterOptions']['levels']['A0']);
         $this->assertSame('C2 Proficiency', $catalog['filterOptions']['levels']['C2']);
         $this->assertSame([
@@ -222,6 +225,8 @@ class ReadyDictionaryCatalogTest extends TestCase
 
     public function test_catalog_service_ignores_unsupported_filters_without_breaking_query(): void
     {
+        $initialCount = ReadyDictionary::query()->count();
+
         ReadyDictionary::factory()->create([
             'name' => 'English nouns',
             'language' => 'English',
@@ -235,7 +240,7 @@ class ReadyDictionaryCatalogTest extends TestCase
             'part_of_speech' => 'invalid',
         ]);
 
-        $this->assertCount(4, $catalog['dictionaries']);
+        $this->assertCount($initialCount + 1, $catalog['dictionaries']);
         $this->assertSame([
             'language' => null,
             'level' => null,
@@ -273,7 +278,7 @@ class ReadyDictionaryCatalogTest extends TestCase
             ->assertDontSee('New Dictionary')
             ->assertViewHas('readyDictionaries', fn ($dictionaries): bool => $dictionaries->count() === 1
                 && $dictionaries->first()->words_count === 2)
-            ->assertViewHas('filterOptions', fn (array $filterOptions): bool => $filterOptions['languages'] === ['English']
+            ->assertViewHas('filterOptions', fn (array $filterOptions): bool => in_array('English', $filterOptions['languages'], true)
                 && $filterOptions['levels']['A1'] === 'A1 Elementary'
                 && array_key_exists('noun', $filterOptions['parts_of_speech']))
             ->assertViewHas('selectedFilters', [

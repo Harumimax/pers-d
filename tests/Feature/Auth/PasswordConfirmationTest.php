@@ -30,7 +30,7 @@ class PasswordConfirmationTest extends TestCase
             ->withSession(['ui_locale' => 'ru'])
             ->get('/confirm-password')
             ->assertOk()
-            ->assertSee('Это защищенный раздел приложения')
+            ->assertSee('Это защищённый раздел приложения')
             ->assertSee('Пароль')
             ->assertSee('Подтвердить');
     }
@@ -74,3 +74,4 @@ class PasswordConfirmationTest extends TestCase
             ]);
     }
 }
+

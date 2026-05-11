@@ -50,4 +50,14 @@ return [
         'password' => 'Password',
         'submit' => 'Confirm',
     ],
+    'telegram_link' => [
+        'title' => 'Confirm Telegram bot login',
+        'description' => 'To confirm authorization in the WordKeeper Telegram bot, enter the password for your site account.',
+        'account_label' => 'Account email:',
+        'success_title' => 'Telegram bot connected',
+        'success_message' => 'You have successfully confirmed authorization in the WordKeeper Telegram bot.',
+        'invalid_title' => 'Link expired',
+        'invalid_message' => 'This Telegram authorization link is invalid or has already expired. Please start again from the bot with /login.',
+        'back_to_site' => 'Back to the site',
+    ],
 ];

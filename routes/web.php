@@ -6,6 +6,7 @@ use App\Http\Controllers\GameController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReadyDictionariesController;
 use App\Http\Controllers\RemainderController;
+use App\Http\Controllers\TelegramAuthLinkController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\TgBotController;
 use App\Livewire\Dictionaries\Index;
@@ -43,6 +44,8 @@ Route::post('/remainder/sessions', [RemainderController::class, 'store'])->name(
 Route::get('/remainder/sessions/{gameSession}', [RemainderController::class, 'showSession'])->name('remainder.sessions.show');
 Route::get('/about', [AboutController::class, 'index'])->name('about');
 Route::post('/telegram/webhook/{secret}', TelegramWebhookController::class)->name('telegram.webhook');
+Route::get('/telegram-auth/{token}', [TelegramAuthLinkController::class, 'show'])->name('telegram-auth.show');
+Route::post('/telegram-auth/{token}', [TelegramAuthLinkController::class, 'store'])->name('telegram-auth.store');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', fn () => redirect()->route('dictionaries.index'))

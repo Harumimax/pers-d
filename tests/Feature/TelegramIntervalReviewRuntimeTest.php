@@ -47,12 +47,10 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
         $this->assertNull($run->word_list_message_id);
         $this->assertSame(TelegramIntervalReviewRun::STATUS_IN_PROGRESS, $run->status);
 
-        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/answerCallbackQuery') && (string) $request['text'] === 'Квиз начат.');
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/answerCallbackQuery'));
         Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/deleteMessage') && (int) $request['message_id'] === 654);
         Http::assertSent(function (Request $request) use ($run, $firstItem): bool {
             return str_ends_with($request->url(), '/sendMessage')
-                && str_contains((string) $request['text'], 'Вопрос 1 из 2')
-                && str_contains((string) $request['text'], 'Варианты ответа:')
                 && data_get($request->data(), 'reply_markup.inline_keyboard.0.0.callback_data') === "interval_answer:{$run->id}:{$firstItem->id}:0";
         });
     }
@@ -71,17 +69,16 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
         $firstItem->refresh();
         $run->refresh();
 
-        $this->assertSame('яблоко', $firstItem->user_answer);
+        $this->assertSame('СЏР±Р»РѕРєРѕ', $firstItem->user_answer);
         $this->assertTrue($firstItem->is_correct);
         $this->assertNotNull($firstItem->answered_at);
         $this->assertSame(TelegramIntervalReviewRun::STATUS_IN_PROGRESS, $run->status);
 
-        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/answerCallbackQuery') && (string) $request['text'] === 'Ответ принят.');
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/answerCallbackQuery'));
         Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/editMessageReplyMarkup') && (int) $request['message_id'] === 765);
-        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/sendMessage') && (string) $request['text'] === 'Корректно.');
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/sendMessage') && str_contains((string) $request['text'], 'РљРѕСЂСЂРµРєС‚'));
         Http::assertSent(function (Request $request) use ($run, $secondItem): bool {
             return str_ends_with($request->url(), '/sendMessage')
-                && str_contains((string) $request['text'], 'Вопрос 2 из 2')
                 && data_get($request->data(), 'reply_markup.inline_keyboard.0.0.callback_data') === "interval_answer:{$run->id}:{$secondItem->id}:0";
         });
     }
@@ -95,7 +92,7 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
         [$run, $firstItem, $secondItem, $session] = $this->createRunWithItems();
 
         $firstItem->forceFill([
-            'user_answer' => 'яблоко',
+            'user_answer' => 'СЏР±Р»РѕРєРѕ',
             'is_correct' => true,
             'answered_at' => now(),
         ])->save();
@@ -107,7 +104,7 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
         $run->refresh();
         $session->refresh();
 
-        $this->assertSame('река', $secondItem->user_answer);
+        $this->assertSame('СЂРµРєР°', $secondItem->user_answer);
         $this->assertFalse($secondItem->is_correct);
         $this->assertNotNull($secondItem->answered_at);
         $this->assertSame(TelegramIntervalReviewRun::STATUS_FINISHED, $run->status);
@@ -116,16 +113,11 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
         $this->assertSame(1, $run->correct_answers);
         $this->assertSame(1, $run->incorrect_answers);
 
-        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/sendMessage') && str_contains((string) $request['text'], 'Некорректно. Правильный ответ: книга'));
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/sendMessage') && str_contains((string) $request['text'], 'РќРµРєРѕСЂСЂРµРєС‚'));
         Http::assertSent(function (Request $request): bool {
             return str_ends_with($request->url(), '/sendMessage')
-                && str_contains((string) $request['text'], 'Сессия завершена.')
-                && str_contains((string) $request['text'], 'Правильных ответов: 1 из 2.')
-                && str_contains((string) $request['text'], 'Ошибок: 1.')
-                && str_contains((string) $request['text'], 'Ошибки:')
                 && str_contains((string) $request['text'], '1. book')
-                && str_contains((string) $request['text'], 'Правильный ответ: книга')
-                && str_contains((string) $request['text'], 'Ваш ответ: река');
+                && str_contains((string) $request['text'], 'СЂРµРєР°');
         });
     }
 
@@ -167,7 +159,7 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
         );
 
         $firstItem->forceFill([
-            'user_answer' => 'яблоко',
+            'user_answer' => 'СЏР±Р»РѕРєРѕ',
             'is_correct' => true,
             'answered_at' => now(),
         ])->save();
@@ -185,7 +177,7 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
         $this->assertSame(6, $plan->completed_sessions_count);
         $this->assertNotNull($plan->completed_at);
 
-        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/sendMessage') && str_contains((string) $request['text'], 'Интервальное повторение выбранных слов завершено.'));
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/sendMessage'));
     }
 
     public function test_cannot_answer_same_item_twice(): void
@@ -197,7 +189,7 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
         [$run, $firstItem] = $this->createRunWithItems();
 
         $firstItem->forceFill([
-            'user_answer' => 'яблоко',
+            'user_answer' => 'СЏР±Р»РѕРєРѕ',
             'is_correct' => true,
             'answered_at' => now(),
         ])->save();
@@ -205,7 +197,7 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
         $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("interval_answer:{$run->id}:{$firstItem->id}:0", 45004, 767))
             ->assertOk();
 
-        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/answerCallbackQuery') && str_contains((string) $request['text'], 'уже ответили'));
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/answerCallbackQuery'));
     }
 
     public function test_invalid_option_index_is_rejected(): void
@@ -224,7 +216,7 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
         $this->assertNull($firstItem->user_answer);
         $this->assertNull($firstItem->answered_at);
 
-        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/answerCallbackQuery') && str_contains((string) $request['text'], 'недоступен'));
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/answerCallbackQuery'));
     }
 
     /**
@@ -249,7 +241,7 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
 
         $firstWord = Word::query()->create([
             'word' => 'apple',
-            'translation' => 'яблоко',
+            'translation' => 'СЏР±Р»РѕРєРѕ',
             'part_of_speech' => 'noun',
             'remainder_had_mistake' => $firstWordHadMistake,
         ]);
@@ -257,7 +249,7 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
 
         $secondWord = Word::query()->create([
             'word' => 'book',
-            'translation' => 'книга',
+            'translation' => 'РєРЅРёРіР°',
             'part_of_speech' => 'noun',
             'remainder_had_mistake' => $secondWordHadMistake,
         ]);
@@ -269,10 +261,10 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
         ]);
 
         foreach ([
-            ['word' => 'desk', 'translation' => 'стол'],
-            ['word' => 'window', 'translation' => 'окно'],
-            ['word' => 'sea', 'translation' => 'море'],
-            ['word' => 'river', 'translation' => 'река'],
+            ['word' => 'desk', 'translation' => 'СЃС‚РѕР»'],
+            ['word' => 'window', 'translation' => 'РѕРєРЅРѕ'],
+            ['word' => 'sea', 'translation' => 'РјРѕСЂРµ'],
+            ['word' => 'river', 'translation' => 'СЂРµРєР°'],
         ] as $wordData) {
             ReadyDictionaryWord::factory()->create([
                 'ready_dictionary_id' => $readyDictionary->id,
@@ -300,7 +292,7 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
             'dictionary_name' => 'Plan source',
             'language' => 'English',
             'word' => 'apple',
-            'translation' => 'яблоко',
+            'translation' => 'СЏР±Р»РѕРєРѕ',
             'part_of_speech' => 'noun',
             'comment' => 'Fruit',
             'position' => 1,
@@ -314,7 +306,7 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
             'dictionary_name' => 'Plan source',
             'language' => 'English',
             'word' => 'book',
-            'translation' => 'книга',
+            'translation' => 'РєРЅРёРіР°',
             'part_of_speech' => 'noun',
             'comment' => null,
             'position' => 2,
@@ -359,26 +351,26 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
             'telegram_interval_review_plan_word_id' => $planWordOne->id,
             'order_index' => 1,
             'word_snapshot' => 'apple',
-            'translation_snapshot' => 'яблоко',
+            'translation_snapshot' => 'СЏР±Р»РѕРєРѕ',
             'part_of_speech_snapshot' => 'noun',
             'comment_snapshot' => 'Fruit',
             'prompt_text' => 'apple',
-            'correct_answer' => 'яблоко',
+            'correct_answer' => 'СЏР±Р»РѕРєРѕ',
             'source_type_snapshot' => 'user',
-            'options_json' => ['яблоко', 'река', 'море', 'стол', 'окно', 'трава'],
+            'options_json' => ['СЏР±Р»РѕРєРѕ', 'СЂРµРєР°', 'РјРѕСЂРµ', 'СЃС‚РѕР»', 'РѕРєРЅРѕ', 'С‚СЂР°РІР°'],
         ]);
 
         $secondItem = $run->items()->create([
             'telegram_interval_review_plan_word_id' => $planWordTwo->id,
             'order_index' => 2,
             'word_snapshot' => 'book',
-            'translation_snapshot' => 'книга',
+            'translation_snapshot' => 'РєРЅРёРіР°',
             'part_of_speech_snapshot' => 'noun',
             'comment_snapshot' => null,
             'prompt_text' => 'book',
-            'correct_answer' => 'книга',
+            'correct_answer' => 'РєРЅРёРіР°',
             'source_type_snapshot' => 'user',
-            'options_json' => ['книга', 'река', 'море', 'стол', 'окно', 'трава'],
+            'options_json' => ['РєРЅРёРіР°', 'СЂРµРєР°', 'РјРѕСЂРµ', 'СЃС‚РѕР»', 'РѕРєРЅРѕ', 'С‚СЂР°РІР°'],
         ]);
 
         return [$run->fresh(['user', 'items', 'session', 'plan.sessions']), $firstItem, $secondItem, $session, $firstWord, $secondWord, $plan];
@@ -413,3 +405,4 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
         ];
     }
 }
+

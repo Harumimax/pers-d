@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\TelegramLoginIntent;
 use App\Models\User;
 use App\Services\Telegram\TelegramAuthStateStore;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -67,77 +67,45 @@ class TelegramWebhookTest extends TestCase
         Http::assertSent(fn (\Illuminate\Http\Client\Request $request): bool => str_contains((string) $request['text'], 'email'));
     }
 
-    public function test_successful_authorization_saves_telegram_chat_id_and_username(): void
+    public function test_email_step_creates_one_time_link_for_existing_account(): void
     {
         Http::fake([
             'https://api.telegram.org/*' => Http::response(['ok' => true], 200),
         ]);
 
-        $user = User::factory()->create([
+        User::factory()->create([
             'email' => 'tester@example.com',
-            'password' => Hash::make('secret-password'),
         ]);
 
         $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('/login', 'wordkeeper_user', 10001));
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('tester@example.com', 'wordkeeper_user', 10002));
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('secret-password', 'new_tg_login', 10003));
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('tester@example.com', 'wordkeeper_user', 10002))
+            ->assertOk();
 
-        $user->refresh();
+        $intent = TelegramLoginIntent::query()->first();
 
-        $this->assertSame('1001', $user->tg_chat_id);
-        $this->assertSame('new_tg_login', $user->tg_login);
-        $this->assertNotNull($user->tg_linked_at);
+        $this->assertNotNull($intent);
+        $this->assertSame('1001', $intent->chat_id);
+        $this->assertSame('tester@example.com', $intent->email);
+        $this->assertSame(TelegramLoginIntent::STATUS_PENDING, $intent->status);
         $this->assertNull(app(TelegramAuthStateStore::class)->get('1001'));
 
-        Http::assertSent(fn (\Illuminate\Http\Client\Request $request): bool => str_contains((string) $request['text'], 'Telegram'));
+        Http::assertSent(fn (\Illuminate\Http\Client\Request $request): bool => str_contains((string) $request['text'], '/telegram-auth/'));
     }
 
-    public function test_repeat_authorization_updates_telegram_username(): void
+    public function test_email_step_reports_missing_account_and_suggests_registration(): void
     {
         Http::fake([
             'https://api.telegram.org/*' => Http::response(['ok' => true], 200),
-        ]);
-
-        $user = User::factory()->create([
-            'email' => 'tester@example.com',
-            'password' => Hash::make('secret-password'),
-            'tg_login' => 'old_login',
-            'tg_chat_id' => '9999',
-            'tg_linked_at' => now()->subDay(),
-        ]);
-
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('/login', 'fresh_login', 10001));
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('tester@example.com', 'fresh_login', 10002));
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('secret-password', 'fresh_login', 10003));
-
-        $user->refresh();
-
-        $this->assertSame('1001', $user->tg_chat_id);
-        $this->assertSame('fresh_login', $user->tg_login);
-    }
-
-    public function test_invalid_password_does_not_link_telegram_to_user(): void
-    {
-        Http::fake([
-            'https://api.telegram.org/*' => Http::response(['ok' => true], 200),
-        ]);
-
-        $user = User::factory()->create([
-            'email' => 'tester@example.com',
-            'password' => Hash::make('secret-password'),
         ]);
 
         $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('/login', 'wordkeeper_user', 10001));
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('tester@example.com', 'wordkeeper_user', 10002));
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('wrong-password', 'wordkeeper_user', 10003));
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('missing@example.com', 'wordkeeper_user', 10002))
+            ->assertOk();
 
-        $user->refresh();
-
-        $this->assertNull($user->tg_chat_id);
-        $this->assertNull($user->tg_linked_at);
+        $this->assertDatabaseCount('telegram_login_intents', 0);
         $this->assertNull(app(TelegramAuthStateStore::class)->get('1001'));
 
-        Http::assertSent(fn (\Illuminate\Http\Client\Request $request): bool => str_contains((string) $request['text'], '/login'));
+        Http::assertSent(fn (\Illuminate\Http\Client\Request $request): bool => str_contains((string) $request['text'], '/register'));
     }
 
     /**
