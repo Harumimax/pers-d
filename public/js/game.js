@@ -30,6 +30,10 @@
         moveSpeed: 4.6,
         jumpForce: 13.8,
     };
+    const WEAPON = {
+        bulletSpeed: 9.5,
+        cooldownMs: 220,
+    };
 
     const level = createLevel();
 
@@ -50,6 +54,11 @@
             y: 0,
         },
         player: createPlayer(level),
+        bullets: [],
+        enemies: createEnemyRuntime(level.enemyConfigs),
+        breakableObstacles: createBreakableRuntime(level.breakableConfigs),
+        hazards: createHazardRuntime(level.hazardConfigs),
+        lastShotAt: -WEAPON.cooldownMs,
     };
 
     function createLevel() {
@@ -79,6 +88,22 @@
                 { x: 1988, y: canvas.height - 204, width: 134, height: 16, type: 'platform' },
                 { x: 2166, y: canvas.height - 146, width: 120, height: 16, type: 'platform' },
             ],
+            enemyConfigs: [
+                { type: 'static', x: 694, y: canvas.height - FLOOR_HEIGHT - 42, width: 34, height: 42 },
+                { type: 'patrol', x: 1086, y: canvas.height - 254 - 42, width: 34, height: 42, patrolMinX: 1036, patrolMaxX: 1158, speed: 1.25 },
+                { type: 'static', x: 1526, y: canvas.height - 232 - 42, width: 34, height: 42 },
+                { type: 'patrol', x: 2018, y: canvas.height - 204 - 42, width: 34, height: 42, patrolMinX: 1996, patrolMaxX: 2078, speed: 1.1 },
+            ],
+            breakableConfigs: [
+                { x: 540, y: canvas.height - FLOOR_HEIGHT - 42, width: 34, height: 34 },
+                { x: 931, y: canvas.height - FLOOR_HEIGHT - 42, width: 34, height: 34 },
+                { x: 1838, y: canvas.height - FLOOR_HEIGHT - 42, width: 34, height: 34 },
+            ],
+            hazardConfigs: [
+                { x: 780, y: canvas.height - FLOOR_HEIGHT - 18, width: 58, height: 18 },
+                { x: 1378, y: canvas.height - FLOOR_HEIGHT - 18, width: 64, height: 18 },
+                { x: 2092, y: canvas.height - FLOOR_HEIGHT - 18, width: 64, height: 18 },
+            ],
         };
     }
 
@@ -95,6 +120,31 @@
         };
     }
 
+    function createEnemyRuntime(configs) {
+        return configs.map((config, index) => ({
+            id: `enemy-${index + 1}`,
+            ...config,
+            alive: true,
+            direction: config.type === 'patrol' ? 1 : 0,
+            originX: config.x,
+        }));
+    }
+
+    function createBreakableRuntime(configs) {
+        return configs.map((config, index) => ({
+            id: `breakable-${index + 1}`,
+            ...config,
+            active: true,
+        }));
+    }
+
+    function createHazardRuntime(configs) {
+        return configs.map((config, index) => ({
+            id: `hazard-${index + 1}`,
+            ...config,
+        }));
+    }
+
     function resetPlayerPosition() {
         state.player.x = state.level.spawn.x;
         state.player.y = state.level.spawn.y;
@@ -106,6 +156,17 @@
         state.player.facing = 'right';
         state.camera.x = 0;
         state.finished = false;
+    }
+
+    function resetLevelRuntime() {
+        resetPlayerPosition();
+        state.bullets = [];
+        state.enemies = createEnemyRuntime(state.level.enemyConfigs);
+        state.breakableObstacles = createBreakableRuntime(state.level.breakableConfigs);
+        state.hazards = createHazardRuntime(state.level.hazardConfigs);
+        state.lastShotAt = -WEAPON.cooldownMs;
+        state.activeSlide = 1;
+        syncProgressUI();
     }
 
     function syncProgressUI() {
@@ -160,6 +221,10 @@
         if (event.code === 'ArrowUp') {
             state.keys.up = true;
         }
+
+        if (event.code === 'Space') {
+            tryShoot(event.timeStamp);
+        }
     }
 
     function handleKeyUp(event) {
@@ -174,6 +239,28 @@
         if (event.code === 'ArrowUp') {
             state.keys.up = false;
         }
+    }
+
+    function tryShoot(timestamp) {
+        if (timestamp - state.lastShotAt < WEAPON.cooldownMs) {
+            return;
+        }
+
+        state.lastShotAt = timestamp;
+
+        const direction = state.player.facing === 'right' ? 1 : -1;
+        const bulletWidth = 12;
+        const bulletHeight = 6;
+        const muzzleOffsetX = direction === 1 ? state.player.width + 2 : -bulletWidth - 2;
+
+        state.bullets.push({
+            x: state.player.x + muzzleOffsetX,
+            y: state.player.y + 24,
+            width: bulletWidth,
+            height: bulletHeight,
+            vx: direction * WEAPON.bulletSpeed,
+            active: true,
+        });
     }
 
     function updatePlayerHorizontalMovement() {
@@ -201,10 +288,14 @@
         }
     }
 
+    function getSolidBodies() {
+        return state.level.platforms.concat(state.breakableObstacles.filter((obstacle) => obstacle.active));
+    }
+
     function resolveHorizontalCollisions(previousX) {
         const { player, level } = state;
 
-        level.platforms.forEach((platform) => {
+        getSolidBodies().forEach((platform) => {
             if (!isIntersecting(player, platform)) {
                 return;
             }
@@ -224,7 +315,7 @@
 
         player.onGround = false;
 
-        level.platforms.forEach((platform) => {
+        getSolidBodies().forEach((platform) => {
             if (!isIntersecting(player, platform)) {
                 return;
             }
@@ -287,6 +378,76 @@
         }
     }
 
+    function updateEnemies() {
+        state.enemies.forEach((enemy) => {
+            if (!enemy.alive || enemy.type !== 'patrol') {
+                return;
+            }
+
+            enemy.x += enemy.speed * enemy.direction;
+
+            if (enemy.x <= enemy.patrolMinX) {
+                enemy.x = enemy.patrolMinX;
+                enemy.direction = 1;
+            }
+
+            if (enemy.x + enemy.width >= enemy.patrolMaxX) {
+                enemy.x = enemy.patrolMaxX - enemy.width;
+                enemy.direction = -1;
+            }
+        });
+    }
+
+    function updateBullets() {
+        const solidBodies = getSolidBodies();
+
+        state.bullets.forEach((bullet) => {
+            if (!bullet.active) {
+                return;
+            }
+
+            bullet.x += bullet.vx;
+
+            if (bullet.x > state.level.width + 40 || bullet.x + bullet.width < -40) {
+                bullet.active = false;
+                return;
+            }
+
+            const enemyHit = state.enemies.find((enemy) => enemy.alive && isIntersecting(bullet, enemy));
+
+            if (enemyHit) {
+                enemyHit.alive = false;
+                bullet.active = false;
+                return;
+            }
+
+            const obstacleHit = state.breakableObstacles.find((obstacle) => obstacle.active && isIntersecting(bullet, obstacle));
+
+            if (obstacleHit) {
+                obstacleHit.active = false;
+                bullet.active = false;
+                return;
+            }
+
+            const solidHit = solidBodies.some((body) => isIntersecting(bullet, body));
+
+            if (solidHit) {
+                bullet.active = false;
+            }
+        });
+
+        state.bullets = state.bullets.filter((bullet) => bullet.active);
+    }
+
+    function checkPlayerDangerCollisions() {
+        const enemyCollision = state.enemies.some((enemy) => enemy.alive && isIntersecting(state.player, enemy));
+        const hazardCollision = state.hazards.some((hazard) => isIntersecting(state.player, hazard));
+
+        if (enemyCollision || hazardCollision) {
+            resetLevelRuntime();
+        }
+    }
+
     function update() {
         if (state.finished) {
             updateCamera();
@@ -310,9 +471,13 @@
         resolveVerticalCollisions(previousY);
 
         if (player.y > level.height + 120) {
-            resetPlayerPosition();
+            resetLevelRuntime();
+            return;
         }
 
+        updateEnemies();
+        updateBullets();
+        checkPlayerDangerCollisions();
         updateCamera();
         checkFinishReached();
         updateActiveSlide();
@@ -328,7 +493,11 @@
 
         drawBackground();
         drawPlatforms();
+        drawBreakableObstacles();
+        drawHazards();
         drawFinishZone();
+        drawEnemies();
+        drawBullets();
         drawPlayer();
         drawControlsHint();
 
@@ -372,6 +541,60 @@
         });
     }
 
+    function drawBreakableObstacles() {
+        state.breakableObstacles.forEach((obstacle) => {
+            if (!obstacle.active) {
+                return;
+            }
+
+            const screenX = worldToScreenX(obstacle.x);
+
+            if (screenX + obstacle.width < -40 || screenX > canvas.width + 40) {
+                return;
+            }
+
+            context.fillStyle = '#334155';
+            context.fillRect(screenX, obstacle.y, obstacle.width, obstacle.height);
+
+            context.strokeStyle = '#cbd5e1';
+            context.lineWidth = 2;
+            context.strokeRect(screenX + 1, obstacle.y + 1, obstacle.width - 2, obstacle.height - 2);
+
+            context.beginPath();
+            context.moveTo(screenX + 7, obstacle.y + 7);
+            context.lineTo(screenX + obstacle.width - 7, obstacle.y + obstacle.height - 7);
+            context.moveTo(screenX + obstacle.width - 7, obstacle.y + 7);
+            context.lineTo(screenX + 7, obstacle.y + obstacle.height - 7);
+            context.stroke();
+        });
+    }
+
+    function drawHazards() {
+        state.hazards.forEach((hazard) => {
+            const screenX = worldToScreenX(hazard.x);
+
+            if (screenX + hazard.width < -40 || screenX > canvas.width + 40) {
+                return;
+            }
+
+            const spikeCount = Math.max(3, Math.floor(hazard.width / 12));
+            const spikeWidth = hazard.width / spikeCount;
+
+            context.fillStyle = '#0f172a';
+
+            for (let index = 0; index < spikeCount; index += 1) {
+                const spikeX = screenX + index * spikeWidth;
+
+                context.beginPath();
+                context.moveTo(spikeX, hazard.y + hazard.height);
+                context.lineTo(spikeX + spikeWidth / 2, hazard.y);
+                context.lineTo(spikeX + spikeWidth, hazard.y + hazard.height);
+                context.closePath();
+                context.fill();
+            }
+        });
+    }
+
     function drawFinishZone() {
         const finish = state.level.finishZone;
         const flagX = worldToScreenX(finish.x);
@@ -409,6 +632,47 @@
         context.fillRect(flagX - 6, poleTopY + poleHeight, 52, 10);
     }
 
+    function drawEnemies() {
+        state.enemies.forEach((enemy) => {
+            if (!enemy.alive) {
+                return;
+            }
+
+            const screenX = worldToScreenX(enemy.x);
+
+            if (screenX + enemy.width < -40 || screenX > canvas.width + 40) {
+                return;
+            }
+
+            context.fillStyle = enemy.type === 'patrol' ? '#111827' : '#1f2937';
+            context.fillRect(screenX, enemy.y + 10, enemy.width, enemy.height - 10);
+
+            context.beginPath();
+            context.arc(screenX + enemy.width / 2, enemy.y + 10, 11, 0, Math.PI * 2);
+            context.fill();
+
+            context.fillStyle = '#f8fafc';
+            const eyeBaseX = enemy.type === 'patrol' && enemy.direction === -1 ? screenX + 8 : screenX + enemy.width - 14;
+            context.fillRect(eyeBaseX, enemy.y + 8, 4, 4);
+        });
+    }
+
+    function drawBullets() {
+        state.bullets.forEach((bullet) => {
+            const screenX = worldToScreenX(bullet.x);
+
+            if (screenX + bullet.width < -20 || screenX > canvas.width + 20) {
+                return;
+            }
+
+            context.fillStyle = '#0f172a';
+            context.fillRect(screenX, bullet.y, bullet.width, bullet.height);
+
+            context.fillStyle = '#94a3b8';
+            context.fillRect(screenX + 2, bullet.y + 1, bullet.width - 4, bullet.height - 2);
+        });
+    }
+
     function drawPlayer() {
         const { player } = state;
         const screenX = worldToScreenX(player.x);
@@ -436,11 +700,11 @@
     function drawControlsHint() {
         context.fillStyle = 'rgba(15, 23, 42, 0.78)';
         context.font = '600 16px Figtree, sans-serif';
-        context.fillText('Run to the white-gray finish marker on the far right.', 28, 34);
+        context.fillText('Arrows move. Space shoots. Reach the finish on the far right.', 28, 34);
 
         context.fillStyle = 'rgba(71, 85, 105, 0.92)';
         context.font = '500 13px Figtree, sans-serif';
-        context.fillText('Stage 3: long level, follow camera, finish zone, level config.', 28, 56);
+        context.fillText('Shoot enemies, break crates, and avoid spikes.', 28, 56);
     }
 
     function drawFinishOverlay() {
@@ -453,7 +717,7 @@
 
         context.fillStyle = '#475569';
         context.font = '500 17px Figtree, sans-serif';
-        context.fillText('The side-scrolling level shell is ready for the next stage.', 216, 272);
+        context.fillText('The run-jump-shoot loop is ready for the next stage.', 232, 272);
     }
 
     function loop(timestamp) {
@@ -477,7 +741,7 @@
 
         state.started = true;
         state.lastFrameAt = 0;
-        resetPlayerPosition();
+        resetLevelRuntime();
         hideStartScreen();
         updateActiveSlide();
         syncProgressUI();
