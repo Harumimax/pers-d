@@ -17,6 +17,9 @@ class GamePageTest extends TestCase
             ->assertOk()
             ->assertSee('platformer-canvas', false)
             ->assertSee('data-game-start-button', false)
-            ->assertSee('data-game-progress-preview', false);
+            ->assertSee('data-game-progress-preview', false)
+            ->assertSee('data-game-win-screen', false)
+            ->assertSee('data-game-lose-screen', false)
+            ->assertSee('data-game-lives', false);
     }
 }

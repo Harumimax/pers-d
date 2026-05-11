@@ -12,7 +12,7 @@ return [
     'start' => [
         'badge' => 'Stage 1',
         'title' => 'Ready to start the run',
-        'description' => 'For now this screen prepares the canvas shell, controls, and progress area. The actual movement, jump, and shooting mechanics will arrive in the next stage.',
+        'description' => 'Jump into the monochrome level, avoid danger, and use your shots carefully. You have three lives before the run ends.',
         'controls_aria' => 'Game controls',
         'controls' => [
             'left_right_keys' => '← →',
@@ -24,12 +24,21 @@ return [
         ],
         'action' => 'Start',
     ],
+    'hud' => [
+        'lives' => 'Lives',
+    ],
+    'win' => [
+        'title' => 'Level complete',
+        'description' => 'You reached the finish. The mini-game is now a full start-to-finish run.',
+        'action' => 'Play again',
+    ],
+    'lose' => [
+        'title' => 'Game over',
+        'description' => 'All lives are gone. Restart the level and try another run.',
+        'action' => 'Restart level',
+    ],
     'progress' => [
-        'eyebrow' => 'Progress',
         'title' => 'Journey to the finish',
-        'description' => 'The picture in this panel will change as the runner gets closer to the level finish. For now the panel shows the static first slide.',
         'preview_label' => 'Slide :number',
-        'slide_caption' => 'Slide :current of :total',
-        'preview_hint' => 'In the complete game this panel will update automatically while you advance through the level.',
     ],
 ];

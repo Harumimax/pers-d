@@ -10,6 +10,12 @@
             <section class="game-shell" aria-label="{{ __('game.canvas.aria') }}">
                 <div class="game-shell__stage">
                     <div class="game-canvas-frame">
+                        <div class="game-hud">
+                            <div class="game-hud__lives" data-game-lives data-label="{{ __('game.hud.lives') }}">
+                                {{ __('game.hud.lives') }}: 3
+                            </div>
+                        </div>
+
                         <canvas
                             id="platformer-canvas"
                             class="game-canvas"
@@ -25,13 +31,35 @@
                                 <p class="game-start-screen__description">{{ __('game.start.description') }}</p>
 
                                 <ul class="game-start-screen__controls" aria-label="{{ __('game.start.controls_aria') }}">
-                                    <li><strong>{{ __('game.start.controls.left_right_keys') }}</strong> — {{ __('game.start.controls.left_right') }}</li>
-                                    <li><strong>{{ __('game.start.controls.jump_key') }}</strong> — {{ __('game.start.controls.jump') }}</li>
-                                    <li><strong>{{ __('game.start.controls.shoot_key') }}</strong> — {{ __('game.start.controls.shoot') }}</li>
+                                    <li><strong>{{ __('game.start.controls.left_right_keys') }}</strong> - {{ __('game.start.controls.left_right') }}</li>
+                                    <li><strong>{{ __('game.start.controls.jump_key') }}</strong> - {{ __('game.start.controls.jump') }}</li>
+                                    <li><strong>{{ __('game.start.controls.shoot_key') }}</strong> - {{ __('game.start.controls.shoot') }}</li>
                                 </ul>
 
                                 <button type="button" class="btn btn-primary game-start-screen__button" data-game-start-button>
                                     {{ __('game.start.action') }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="game-status-screen is-hidden" data-game-win-screen aria-hidden="true">
+                            <div class="game-status-screen__card">
+                                <h2 class="game-status-screen__title">{{ __('game.win.title') }}</h2>
+                                <p class="game-status-screen__description">{{ __('game.win.description') }}</p>
+
+                                <button type="button" class="btn btn-primary game-status-screen__button" data-game-win-restart-button>
+                                    {{ __('game.win.action') }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="game-status-screen is-hidden" data-game-lose-screen aria-hidden="true">
+                            <div class="game-status-screen__card">
+                                <h2 class="game-status-screen__title">{{ __('game.lose.title') }}</h2>
+                                <p class="game-status-screen__description">{{ __('game.lose.description') }}</p>
+
+                                <button type="button" class="btn btn-primary game-status-screen__button" data-game-lose-restart-button>
+                                    {{ __('game.lose.action') }}
                                 </button>
                             </div>
                         </div>

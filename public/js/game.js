@@ -8,6 +8,11 @@
     const canvas = document.getElementById('platformer-canvas');
     const startScreen = page.querySelector('[data-game-start-screen]');
     const startButton = page.querySelector('[data-game-start-button]');
+    const winScreen = page.querySelector('[data-game-win-screen]');
+    const loseScreen = page.querySelector('[data-game-lose-screen]');
+    const winRestartButton = page.querySelector('[data-game-win-restart-button]');
+    const loseRestartButton = page.querySelector('[data-game-lose-restart-button]');
+    const livesBadge = page.querySelector('[data-game-lives]');
     const progressPreview = page.querySelector('[data-game-progress-preview]');
 
     if (!(canvas instanceof HTMLCanvasElement)) {
@@ -37,10 +42,12 @@
 
     const state = {
         started: false,
-        finished: false,
+        gameStatus: 'idle',
         animationFrameId: null,
         lastFrameAt: 0,
         activeSlide: 1,
+        maxLives: 3,
+        lives: 3,
         keys: {
             left: false,
             right: false,
@@ -124,7 +131,6 @@
             ...config,
             alive: true,
             direction: config.type === 'patrol' ? 1 : 0,
-            originX: config.x,
         }));
     }
 
@@ -143,28 +149,40 @@
         }));
     }
 
-    function resetPlayerPosition() {
-        state.player.x = state.level.spawn.x;
-        state.player.y = state.level.spawn.y;
-        state.player.width = 36;
-        state.player.height = 58;
-        state.player.vx = 0;
-        state.player.vy = 0;
-        state.player.onGround = false;
-        state.player.facing = 'right';
-        state.camera.x = 0;
-        state.finished = false;
+    function setGameStatus(status) {
+        state.gameStatus = status;
     }
 
-    function resetLevelRuntime() {
-        resetPlayerPosition();
-        state.bullets = [];
-        state.enemies = createEnemyRuntime(state.level.enemyConfigs);
-        state.breakableObstacles = createBreakableRuntime(state.level.breakableConfigs);
-        state.hazards = createHazardRuntime(state.level.hazardConfigs);
-        state.lastShotAt = -WEAPON.cooldownMs;
-        state.activeSlide = 1;
-        syncProgressUI();
+    function hideScreen(screen) {
+        if (!screen) {
+            return;
+        }
+
+        screen.classList.add('is-hidden');
+        screen.setAttribute('aria-hidden', 'true');
+    }
+
+    function showScreen(screen) {
+        if (!screen) {
+            return;
+        }
+
+        screen.classList.remove('is-hidden');
+        screen.setAttribute('aria-hidden', 'false');
+    }
+
+    function hideEndScreens() {
+        hideScreen(winScreen);
+        hideScreen(loseScreen);
+    }
+
+    function syncLivesUI() {
+        if (!livesBadge) {
+            return;
+        }
+
+        const label = livesBadge.getAttribute('data-label') || 'Lives';
+        livesBadge.textContent = `${label}: ${state.lives}`;
     }
 
     function syncProgressUI() {
@@ -186,6 +204,95 @@
         startScreen.setAttribute('aria-hidden', 'true');
     }
 
+    function resetPlayerPosition() {
+        state.player.x = state.level.spawn.x;
+        state.player.y = state.level.spawn.y;
+        state.player.width = 36;
+        state.player.height = 58;
+        state.player.vx = 0;
+        state.player.vy = 0;
+        state.player.onGround = false;
+        state.player.facing = 'right';
+        state.camera.x = 0;
+    }
+
+    function resetRuntimeWorld() {
+        resetPlayerPosition();
+        state.bullets = [];
+        state.enemies = createEnemyRuntime(state.level.enemyConfigs);
+        state.breakableObstacles = createBreakableRuntime(state.level.breakableConfigs);
+        state.hazards = createHazardRuntime(state.level.hazardConfigs);
+        state.lastShotAt = -WEAPON.cooldownMs;
+        state.activeSlide = 1;
+        syncProgressUI();
+    }
+
+    function respawnAfterHit() {
+        resetRuntimeWorld();
+        drawScene();
+    }
+
+    function restartGame() {
+        state.started = true;
+        state.lives = state.maxLives;
+        setGameStatus('running');
+        hideStartScreen();
+        hideEndScreens();
+        resetRuntimeWorld();
+        syncLivesUI();
+        updateActiveSlide();
+        syncProgressUI();
+        drawScene();
+
+        if (state.animationFrameId === null) {
+            state.animationFrameId = window.requestAnimationFrame(loop);
+        }
+    }
+
+    function showWinScreen() {
+        hideScreen(loseScreen);
+        showScreen(winScreen);
+    }
+
+    function showLoseScreen() {
+        hideScreen(winScreen);
+        showScreen(loseScreen);
+    }
+
+    function completeLevel() {
+        setGameStatus('won');
+        state.keys.left = false;
+        state.keys.right = false;
+        state.keys.up = false;
+        state.player.vx = 0;
+        state.player.vy = 0;
+        state.activeSlide = 10;
+        syncProgressUI();
+        showWinScreen();
+    }
+
+    function loseLife() {
+        if (state.gameStatus !== 'running') {
+            return;
+        }
+
+        state.lives = Math.max(0, state.lives - 1);
+        syncLivesUI();
+
+        if (state.lives === 0) {
+            setGameStatus('lost');
+            state.keys.left = false;
+            state.keys.right = false;
+            state.keys.up = false;
+            state.player.vx = 0;
+            state.player.vy = 0;
+            showLoseScreen();
+            return;
+        }
+
+        respawnAfterHit();
+    }
+
     function preventGamePageScroll(event) {
         if (state.started && INPUT_KEYS.has(event.code)) {
             event.preventDefault();
@@ -195,7 +302,7 @@
     function handleKeyDown(event) {
         preventGamePageScroll(event);
 
-        if (!state.started || state.finished) {
+        if (state.gameStatus !== 'running') {
             return;
         }
 
@@ -352,18 +459,12 @@
     }
 
     function checkFinishReached() {
-        if (state.finished) {
+        if (state.gameStatus !== 'running') {
             return;
         }
 
         if (isIntersecting(state.player, state.level.finishZone)) {
-            state.finished = true;
-            state.keys.left = false;
-            state.keys.right = false;
-            state.keys.up = false;
-            state.player.vx = 0;
-            state.player.vy = 0;
-            state.activeSlide = 10;
+            completeLevel();
         }
     }
 
@@ -432,15 +533,13 @@
         const enemyCollision = state.enemies.some((enemy) => enemy.alive && isIntersecting(state.player, enemy));
         const hazardCollision = state.hazards.some((hazard) => isIntersecting(state.player, hazard));
 
-        if (enemyCollision || hazardCollision) {
-            resetLevelRuntime();
-        }
+        return enemyCollision || hazardCollision;
     }
 
     function update() {
-        if (state.finished) {
-            updateCamera();
+        if (state.gameStatus !== 'running') {
             syncProgressUI();
+            syncLivesUI();
             return;
         }
 
@@ -460,17 +559,23 @@
         resolveVerticalCollisions(previousY);
 
         if (player.y > level.height + 120) {
-            resetLevelRuntime();
+            loseLife();
             return;
         }
 
         updateEnemies();
         updateBullets();
-        checkPlayerDangerCollisions();
+
+        if (checkPlayerDangerCollisions()) {
+            loseLife();
+            return;
+        }
+
         updateCamera();
-        checkFinishReached();
         updateActiveSlide();
+        checkFinishReached();
         syncProgressUI();
+        syncLivesUI();
     }
 
     function worldToScreenX(worldX) {
@@ -489,10 +594,6 @@
         drawBullets();
         drawPlayer();
         drawControlsHint();
-
-        if (state.finished) {
-            drawFinishOverlay();
-        }
     }
 
     function drawBackground() {
@@ -693,20 +794,7 @@
 
         context.fillStyle = 'rgba(71, 85, 105, 0.92)';
         context.font = '500 13px Figtree, sans-serif';
-        context.fillText('Shoot enemies, break crates, and avoid spikes.', 28, 56);
-    }
-
-    function drawFinishOverlay() {
-        context.fillStyle = 'rgba(255, 255, 255, 0.72)';
-        context.fillRect(0, 0, canvas.width, canvas.height);
-
-        context.fillStyle = '#0f172a';
-        context.font = '700 34px Figtree, sans-serif';
-        context.fillText('Level complete', 332, 236);
-
-        context.fillStyle = '#475569';
-        context.font = '500 17px Figtree, sans-serif';
-        context.fillText('The run-jump-shoot loop is ready for the next stage.', 232, 272);
+        context.fillText('You have three lives. Restart from the overlays after win or loss.', 28, 56);
     }
 
     function loop(timestamp) {
@@ -728,14 +816,7 @@
             return;
         }
 
-        state.started = true;
-        state.lastFrameAt = 0;
-        resetLevelRuntime();
-        hideStartScreen();
-        updateActiveSlide();
-        syncProgressUI();
-        drawScene();
-        state.animationFrameId = window.requestAnimationFrame(loop);
+        restartGame();
     }
 
     window.addEventListener('keydown', handleKeyDown);
@@ -745,6 +826,15 @@
         startGame();
     });
 
-    drawScene();
+    winRestartButton?.addEventListener('click', function () {
+        restartGame();
+    });
+
+    loseRestartButton?.addEventListener('click', function () {
+        restartGame();
+    });
+
+    syncLivesUI();
     syncProgressUI();
+    drawScene();
 })();
