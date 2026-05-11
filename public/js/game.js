@@ -31,6 +31,8 @@
         jumpForce: 13.8,
     };
 
+    const level = createLevel();
+
     const state = {
         started: false,
         finished: false,
@@ -42,12 +44,12 @@
             right: false,
             up: false,
         },
-        level: createLevel(),
+        level,
         camera: {
             x: 0,
             y: 0,
         },
-        player: createPlayer(),
+        player: createPlayer(level),
     };
 
     function createLevel() {
@@ -80,10 +82,10 @@
         };
     }
 
-    function createPlayer() {
+    function createPlayer(levelConfig) {
         return {
-            x: state.level.spawn.x,
-            y: state.level.spawn.y,
+            x: levelConfig.spawn.x,
+            y: levelConfig.spawn.y,
             width: 36,
             height: 58,
             vx: 0,
