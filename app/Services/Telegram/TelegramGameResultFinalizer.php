@@ -80,7 +80,7 @@ class TelegramGameResultFinalizer
         $lines = [
             'Сессия завершена.',
             "Правильных ответов: {$correctAnswers} из {$totalWords}.",
-            "Неправильных ответов: {$incorrectAnswers}.",
+            "Ошибок: {$incorrectAnswers}.",
         ];
 
         if ($incorrectAnswers === 0) {

@@ -4,6 +4,7 @@ namespace App\Services\Telegram;
 
 use App\Models\User;
 use App\Models\UserDictionary;
+use App\Support\PartOfSpeechCatalog;
 
 class TelegramDictionaryViewService
 {
@@ -68,8 +69,9 @@ class TelegramDictionaryViewService
                 $number = $offset + $index + 1;
                 $lines[] = "{$number}. {$word->word}";
 
-                if (filled($word->part_of_speech)) {
-                    $lines[] = "Часть речи: {$word->part_of_speech}";
+                $partOfSpeechLabel = PartOfSpeechCatalog::label($word->part_of_speech);
+                if ($partOfSpeechLabel !== null) {
+                    $lines[] = "Часть речи: {$partOfSpeechLabel}";
                 }
 
                 $lines[] = "Перевод: {$word->translation}";

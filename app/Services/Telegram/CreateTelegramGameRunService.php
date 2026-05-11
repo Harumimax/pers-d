@@ -33,7 +33,7 @@ class CreateTelegramGameRunService
 
         if ($availableWords->isEmpty()) {
             throw ValidationException::withMessages([
-                'telegram' => 'Не удалось подготовить Telegram-сессию: для выбранных словарей и фильтров нет слов.',
+                'telegram' => 'Не удалось подготовить Telegram-сессию: нет доступных слов в выбранных настройках.',
             ]);
         }
 

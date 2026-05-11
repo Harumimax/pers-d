@@ -54,11 +54,12 @@ class TelegramDictionaryBrowserTest extends TestCase
             'language' => 'German',
         ]);
 
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('РЎР»РѕРІР°СЂРё', 30001))
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('Словари', 30001))
             ->assertOk();
 
         Http::assertSent(function (Request $request): bool {
             return str_ends_with($request->url(), '/sendMessage')
+                && str_contains((string) $request['text'], 'Ваши словари:')
                 && str_contains((string) $request['text'], 'Travel English')
                 && str_contains((string) $request['text'], 'Spanish verbs')
                 && ! str_contains((string) $request['text'], 'Hidden dictionary')
@@ -77,10 +78,11 @@ class TelegramDictionaryBrowserTest extends TestCase
             'tg_linked_at' => now(),
         ]);
 
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('РЎР»РѕРІР°СЂРё', 30001))
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('Словари', 30001))
             ->assertOk();
 
         Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/sendMessage')
+            && str_contains((string) $request['text'], 'У вас пока нет созданных словарей')
             && str_contains((string) $request['text'], 'https://wordkeeper.space'));
     }
 

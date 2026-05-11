@@ -76,7 +76,7 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
 
         Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/answerCallbackQuery'));
         Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/editMessageReplyMarkup') && (int) $request['message_id'] === 765);
-        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/sendMessage') && str_contains((string) $request['text'], 'РљРѕСЂСЂРµРєС‚'));
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/sendMessage') && str_contains((string) $request['text'], 'Корректно'));
         Http::assertSent(function (Request $request) use ($run, $secondItem): bool {
             return str_ends_with($request->url(), '/sendMessage')
                 && data_get($request->data(), 'reply_markup.inline_keyboard.0.0.callback_data') === "interval_answer:{$run->id}:{$secondItem->id}:0";
@@ -113,7 +113,7 @@ class TelegramIntervalReviewRuntimeTest extends TestCase
         $this->assertSame(1, $run->correct_answers);
         $this->assertSame(1, $run->incorrect_answers);
 
-        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/sendMessage') && str_contains((string) $request['text'], 'РќРµРєРѕСЂСЂРµРєС‚'));
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/sendMessage') && str_contains((string) $request['text'], 'Некорректно'));
         Http::assertSent(function (Request $request): bool {
             return str_ends_with($request->url(), '/sendMessage')
                 && str_contains((string) $request['text'], '1. book')
