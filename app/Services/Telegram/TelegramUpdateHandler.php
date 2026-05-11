@@ -80,13 +80,13 @@ class TelegramUpdateHandler
 
             if ($text === '/login') {
                 $this->stateStore->start($chatId);
-                $this->bot->sendMessage($chatId, 'Р’РІРµРґРёС‚Рµ email РѕС‚ Р°РєРєР°СѓРЅС‚Р° WordKeeper.');
+                $this->bot->sendMessage($chatId, 'Введите email от аккаунта WordKeeper.');
                 $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
 
                 return;
             }
 
-            if (in_array($text, ['Выход', 'Р’С‹С…РѕРґ', '/logout'], true)) {
+            if (in_array($text, ['Р вЂ™РЎвЂ№РЎвЂ¦Р С•Р Т‘', 'Р В РІР‚в„ўР РЋРІР‚в„–Р РЋРІР‚В¦Р В РЎвЂўР В РўвЂ', '/logout'], true)) {
                 $this->stateStore->clear($chatId);
                 $this->handleLogout($chatId);
                 $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
@@ -94,9 +94,9 @@ class TelegramUpdateHandler
                 return;
             }
 
-            if (in_array($text, ['Словари', 'РЎР»РѕРІР°СЂРё'], true)) {
+            if (in_array($text, ['Р РЋР В»Р С•Р Р†Р В°РЎР‚Р С‘', 'Р В Р Р‹Р В Р’В»Р В РЎвЂўР В Р вЂ Р В Р’В°Р РЋР вЂљР В РЎвЂ'], true)) {
                 if (! $linkedUser instanceof User) {
-                    $this->bot->sendMessage($chatId, 'РЎРЅР°С‡Р°Р»Р° Р°РІС‚РѕСЂРёР·СѓР№С‚РµСЃСЊ РІ Р±РѕС‚Рµ С‡РµСЂРµР· /login.');
+                    $this->bot->sendMessage($chatId, 'Р В Р Р‹Р В Р вЂ¦Р В Р’В°Р РЋРІР‚РЋР В Р’В°Р В Р’В»Р В Р’В° Р В Р’В°Р В Р вЂ Р РЋРІР‚С™Р В РЎвЂўР РЋР вЂљР В РЎвЂР В Р’В·Р РЋРЎвЂњР В РІвЂћвЂ“Р РЋРІР‚С™Р В Р’ВµР РЋР С“Р РЋР Р‰ Р В Р вЂ  Р В Р’В±Р В РЎвЂўР РЋРІР‚С™Р В Р’Вµ Р РЋРІР‚РЋР В Р’ВµР РЋР вЂљР В Р’ВµР В Р’В· /login.');
                     $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
 
                     return;
@@ -111,7 +111,7 @@ class TelegramUpdateHandler
             $state = $this->stateStore->get($chatId);
 
             if ($state === null) {
-                $this->bot->sendMessage($chatId, 'РћС‚РїСЂР°РІСЊС‚Рµ /start, С‡С‚РѕР±С‹ СѓРІРёРґРµС‚СЊ РґРѕСЃС‚СѓРїРЅС‹Рµ РєРѕРјР°РЅРґС‹.');
+                $this->bot->sendMessage($chatId, 'Р В РЎвЂєР РЋРІР‚С™Р В РЎвЂ”Р РЋР вЂљР В Р’В°Р В Р вЂ Р РЋР Р‰Р РЋРІР‚С™Р В Р’Вµ /start, Р РЋРІР‚РЋР РЋРІР‚С™Р В РЎвЂўР В Р’В±Р РЋРІР‚в„– Р РЋРЎвЂњР В Р вЂ Р В РЎвЂР В РўвЂР В Р’ВµР РЋРІР‚С™Р РЋР Р‰ Р В РўвЂР В РЎвЂўР РЋР С“Р РЋРІР‚С™Р РЋРЎвЂњР В РЎвЂ”Р В Р вЂ¦Р РЋРІР‚в„–Р В Р’Вµ Р В РЎвЂќР В РЎвЂўР В РЎВР В Р’В°Р В Р вЂ¦Р В РўвЂР РЋРІР‚в„–.');
                 $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
 
                 return;
@@ -124,7 +124,7 @@ class TelegramUpdateHandler
                 return;
             }
 
-            $this->bot->sendMessage($chatId, 'РћС‚РїСЂР°РІСЊС‚Рµ /start, С‡С‚РѕР±С‹ СѓРІРёРґРµС‚СЊ РґРѕСЃС‚СѓРїРЅС‹Рµ РєРѕРјР°РЅРґС‹.');
+            $this->bot->sendMessage($chatId, 'Р В РЎвЂєР РЋРІР‚С™Р В РЎвЂ”Р РЋР вЂљР В Р’В°Р В Р вЂ Р РЋР Р‰Р РЋРІР‚С™Р В Р’Вµ /start, Р РЋРІР‚РЋР РЋРІР‚С™Р В РЎвЂўР В Р’В±Р РЋРІР‚в„– Р РЋРЎвЂњР В Р вЂ Р В РЎвЂР В РўвЂР В Р’ВµР РЋРІР‚С™Р РЋР Р‰ Р В РўвЂР В РЎвЂўР РЋР С“Р РЋРІР‚С™Р РЋРЎвЂњР В РЎвЂ”Р В Р вЂ¦Р РЋРІР‚в„–Р В Р’Вµ Р В РЎвЂќР В РЎвЂўР В РЎВР В Р’В°Р В Р вЂ¦Р В РўвЂР РЋРІР‚в„–.');
             $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
         } catch (Throwable $exception) {
             $this->telegramProcessedUpdateService->markFailed($processedUpdate, $exception->getMessage());
@@ -153,7 +153,7 @@ class TelegramUpdateHandler
 
         if ($callbackQueryId === '' || $chatId === null) {
             if ($callbackQueryId !== '') {
-                $this->bot->answerCallbackQuery($callbackQueryId, 'Р”РµР№СЃС‚РІРёРµ РЅРµРґРѕСЃС‚СѓРїРЅРѕ.');
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Р В РІР‚СњР В Р’ВµР В РІвЂћвЂ“Р РЋР С“Р РЋРІР‚С™Р В Р вЂ Р В РЎвЂР В Р’Вµ Р В Р вЂ¦Р В Р’ВµР В РўвЂР В РЎвЂўР РЋР С“Р РЋРІР‚С™Р РЋРЎвЂњР В РЎвЂ”Р В Р вЂ¦Р В РЎвЂў.');
             }
 
             return;
@@ -172,7 +172,7 @@ class TelegramUpdateHandler
         }
 
         if ($gamePayload === null) {
-            $this->bot->answerCallbackQuery($callbackQueryId, 'Р”РµР№СЃС‚РІРёРµ РЅРµРґРѕСЃС‚СѓРїРЅРѕ.');
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Р В РІР‚СњР В Р’ВµР В РІвЂћвЂ“Р РЋР С“Р РЋРІР‚С™Р В Р вЂ Р В РЎвЂР В Р’Вµ Р В Р вЂ¦Р В Р’ВµР В РўвЂР В РЎвЂўР РЋР С“Р РЋРІР‚С™Р РЋРЎвЂњР В РЎвЂ”Р В Р вЂ¦Р В РЎвЂў.');
 
             return;
         }
@@ -183,7 +183,7 @@ class TelegramUpdateHandler
             ->find($gamePayload['run_id']);
 
         if (! $run instanceof TelegramGameRun || (string) $run->user->tg_chat_id !== $chatId) {
-            $this->bot->answerCallbackQuery($callbackQueryId, 'РЎРµСЃСЃРёСЏ РЅРµ РЅР°Р№РґРµРЅР°.');
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р Р‹Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р В Р вЂ¦Р В Р’Вµ Р В Р вЂ¦Р В Р’В°Р В РІвЂћвЂ“Р В РўвЂР В Р’ВµР В Р вЂ¦Р В Р’В°.');
 
             return;
         }
@@ -213,7 +213,7 @@ class TelegramUpdateHandler
         $linkedUser = $this->findLinkedUserByChatId($chatId);
 
         if (! $linkedUser instanceof User) {
-            $this->bot->answerCallbackQuery($callbackQueryId, 'РЎРЅР°С‡Р°Р»Р° Р°РІС‚РѕСЂРёР·СѓР№С‚РµСЃСЊ РІ Р±РѕС‚Рµ С‡РµСЂРµР· /login.');
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р Р‹Р В Р вЂ¦Р В Р’В°Р РЋРІР‚РЋР В Р’В°Р В Р’В»Р В Р’В° Р В Р’В°Р В Р вЂ Р РЋРІР‚С™Р В РЎвЂўР РЋР вЂљР В РЎвЂР В Р’В·Р РЋРЎвЂњР В РІвЂћвЂ“Р РЋРІР‚С™Р В Р’ВµР РЋР С“Р РЋР Р‰ Р В Р вЂ  Р В Р’В±Р В РЎвЂўР РЋРІР‚С™Р В Р’Вµ Р РЋРІР‚РЋР В Р’ВµР РЋР вЂљР В Р’ВµР В Р’В· /login.');
 
             return;
         }
@@ -239,7 +239,7 @@ class TelegramUpdateHandler
         }
 
         if ($messageId === null) {
-            $this->bot->answerCallbackQuery($callbackQueryId, 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ СЃР»РѕРІР°СЂСЊ.');
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Р В РЎСљР В Р’Вµ Р РЋРЎвЂњР В РўвЂР В Р’В°Р В Р’В»Р В РЎвЂўР РЋР С“Р РЋР Р‰ Р В РЎвЂўР РЋРІР‚С™Р В РЎвЂќР РЋР вЂљР РЋРІР‚в„–Р РЋРІР‚С™Р РЋР Р‰ Р РЋР С“Р В Р’В»Р В РЎвЂўР В Р вЂ Р В Р’В°Р РЋР вЂљР РЋР Р‰.');
 
             return;
         }
@@ -253,7 +253,7 @@ class TelegramUpdateHandler
         );
 
         if ($result['status'] === 'not_found') {
-            $this->bot->answerCallbackQuery($callbackQueryId, 'РЎР»РѕРІР°СЂСЊ РЅРµ РЅР°Р№РґРµРЅ.');
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р Р‹Р В Р’В»Р В РЎвЂўР В Р вЂ Р В Р’В°Р РЋР вЂљР РЋР Р‰ Р В Р вЂ¦Р В Р’Вµ Р В Р вЂ¦Р В Р’В°Р В РІвЂћвЂ“Р В РўвЂР В Р’ВµР В Р вЂ¦.');
 
             return;
         }
@@ -297,14 +297,14 @@ class TelegramUpdateHandler
                 'user_id' => $freshRun->user_id,
             ]);
 
-            $this->bot->answerCallbackQuery($callbackQueryId, 'РЎРµСЃСЃРёСЏ РѕС‚РјРµРЅРµРЅР°.');
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р Р‹Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р В РЎвЂўР РЋРІР‚С™Р В РЎВР В Р’ВµР В Р вЂ¦Р В Р’ВµР В Р вЂ¦Р В Р’В°.');
             $this->clearInlineKeyboard($chatId, $messageId);
-            $this->bot->sendMessage($chatId, 'РўРµРєСѓС‰Р°СЏ Telegram-СЃРµСЃСЃРёСЏ РѕС‚РјРµРЅРµРЅР°.');
+            $this->bot->sendMessage($chatId, 'Р В РЎС›Р В Р’ВµР В РЎвЂќР РЋРЎвЂњР РЋРІР‚В°Р В Р’В°Р РЋР РЏ Telegram-Р РЋР С“Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р В РЎвЂўР РЋРІР‚С™Р В РЎВР В Р’ВµР В Р вЂ¦Р В Р’ВµР В Р вЂ¦Р В Р’В°.');
 
             return;
         }
 
-        $this->bot->answerCallbackQuery($callbackQueryId, 'Р­С‚Сѓ СЃРµСЃСЃРёСЋ СѓР¶Рµ РЅРµР»СЊР·СЏ РѕС‚РјРµРЅРёС‚СЊ.');
+        $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р’В­Р РЋРІР‚С™Р РЋРЎвЂњ Р РЋР С“Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР вЂ№ Р РЋРЎвЂњР В Р’В¶Р В Р’Вµ Р В Р вЂ¦Р В Р’ВµР В Р’В»Р РЋР Р‰Р В Р’В·Р РЋР РЏ Р В РЎвЂўР РЋРІР‚С™Р В РЎВР В Р’ВµР В Р вЂ¦Р В РЎвЂР РЋРІР‚С™Р РЋР Р‰.');
     }
 
     private function startRun(TelegramGameRun $run, string $callbackQueryId, string $chatId, ?int $messageId): void
@@ -312,27 +312,27 @@ class TelegramUpdateHandler
         $result = $this->telegramGameRuntimeService->startRun($run);
 
         if ($result['status'] === 'cancelled') {
-            $this->bot->answerCallbackQuery($callbackQueryId, 'РЎРµСЃСЃРёСЏ СѓР¶Рµ РѕС‚РјРµРЅРµРЅР°.');
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р Р‹Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р РЋРЎвЂњР В Р’В¶Р В Р’Вµ Р В РЎвЂўР РЋРІР‚С™Р В РЎВР В Р’ВµР В Р вЂ¦Р В Р’ВµР В Р вЂ¦Р В Р’В°.');
 
             return;
         }
 
         if ($result['status'] === 'not_startable') {
-            $this->bot->answerCallbackQuery($callbackQueryId, 'Р­С‚Сѓ СЃРµСЃСЃРёСЋ СѓР¶Рµ РЅРµР»СЊР·СЏ Р·Р°РїСѓСЃС‚РёС‚СЊ.');
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р’В­Р РЋРІР‚С™Р РЋРЎвЂњ Р РЋР С“Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР вЂ№ Р РЋРЎвЂњР В Р’В¶Р В Р’Вµ Р В Р вЂ¦Р В Р’ВµР В Р’В»Р РЋР Р‰Р В Р’В·Р РЋР РЏ Р В Р’В·Р В Р’В°Р В РЎвЂ”Р РЋРЎвЂњР РЋР С“Р РЋРІР‚С™Р В РЎвЂР РЋРІР‚С™Р РЋР Р‰.');
 
             return;
         }
 
         if ($result['status'] === 'finished_without_items') {
-            $this->bot->answerCallbackQuery($callbackQueryId, 'Р’ СЌС‚РѕР№ СЃРµСЃСЃРёРё РЅРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… РІРѕРїСЂРѕСЃРѕРІ.');
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Р В РІР‚в„ў Р РЋР РЉР РЋРІР‚С™Р В РЎвЂўР В РІвЂћвЂ“ Р РЋР С“Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР В РЎвЂ Р В Р вЂ¦Р В Р’ВµР РЋРІР‚С™ Р В РўвЂР В РЎвЂўР РЋР С“Р РЋРІР‚С™Р РЋРЎвЂњР В РЎвЂ”Р В Р вЂ¦Р РЋРІР‚в„–Р РЋРІР‚В¦ Р В Р вЂ Р В РЎвЂўР В РЎвЂ”Р РЋР вЂљР В РЎвЂўР РЋР С“Р В РЎвЂўР В Р вЂ .');
             $this->clearInlineKeyboard($chatId, $messageId);
-            $this->bot->sendMessage($chatId, 'РЎРµСЃСЃРёСЏ Р·Р°РІРµСЂС€РµРЅР°: РґР»СЏ РЅРµС‘ РЅРµ РЅР°С€Р»РѕСЃСЊ РґРѕСЃС‚СѓРїРЅС‹С… РІРѕРїСЂРѕСЃРѕРІ.');
+            $this->bot->sendMessage($chatId, 'Р В Р Р‹Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р В Р’В·Р В Р’В°Р В Р вЂ Р В Р’ВµР РЋР вЂљР РЋРІвЂљВ¬Р В Р’ВµР В Р вЂ¦Р В Р’В°: Р В РўвЂР В Р’В»Р РЋР РЏ Р В Р вЂ¦Р В Р’ВµР РЋРІР‚В Р В Р вЂ¦Р В Р’Вµ Р В Р вЂ¦Р В Р’В°Р РЋРІвЂљВ¬Р В Р’В»Р В РЎвЂўР РЋР С“Р РЋР Р‰ Р В РўвЂР В РЎвЂўР РЋР С“Р РЋРІР‚С™Р РЋРЎвЂњР В РЎвЂ”Р В Р вЂ¦Р РЋРІР‚в„–Р РЋРІР‚В¦ Р В Р вЂ Р В РЎвЂўР В РЎвЂ”Р РЋР вЂљР В РЎвЂўР РЋР С“Р В РЎвЂўР В Р вЂ .');
 
             return;
         }
 
         if ($result['status'] === 'already_started') {
-            $this->bot->answerCallbackQuery($callbackQueryId, 'РЎРµСЃСЃРёСЏ СѓР¶Рµ Р·Р°РїСѓС‰РµРЅР°.');
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р Р‹Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р РЋРЎвЂњР В Р’В¶Р В Р’Вµ Р В Р’В·Р В Р’В°Р В РЎвЂ”Р РЋРЎвЂњР РЋРІР‚В°Р В Р’ВµР В Р вЂ¦Р В Р’В°.');
 
             return;
         }
@@ -342,7 +342,7 @@ class TelegramUpdateHandler
             'user_id' => $run->user_id,
         ]);
 
-        $this->bot->answerCallbackQuery($callbackQueryId, 'РЎРµСЃСЃРёСЏ Р·Р°РїСѓС‰РµРЅР°.');
+        $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р Р‹Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р В Р’В·Р В Р’В°Р В РЎвЂ”Р РЋРЎвЂњР РЋРІР‚В°Р В Р’ВµР В Р вЂ¦Р В Р’В°.');
         $this->clearInlineKeyboard($chatId, $messageId);
 
         if (isset($result['first_item']) && $result['first_item'] !== null) {
@@ -351,7 +351,7 @@ class TelegramUpdateHandler
             return;
         }
 
-        $this->bot->sendMessage($chatId, 'РЎРµСЃСЃРёСЏ Р·Р°РїСѓС‰РµРЅР°, РЅРѕ Р°РєС‚РёРІРЅС‹Р№ РІРѕРїСЂРѕСЃ РЅРµ РЅР°Р№РґРµРЅ.');
+        $this->bot->sendMessage($chatId, 'Р В Р Р‹Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р В Р’В·Р В Р’В°Р В РЎвЂ”Р РЋРЎвЂњР РЋРІР‚В°Р В Р’ВµР В Р вЂ¦Р В Р’В°, Р В Р вЂ¦Р В РЎвЂў Р В Р’В°Р В РЎвЂќР РЋРІР‚С™Р В РЎвЂР В Р вЂ Р В Р вЂ¦Р РЋРІР‚в„–Р В РІвЂћвЂ“ Р В Р вЂ Р В РЎвЂўР В РЎвЂ”Р РЋР вЂљР В РЎвЂўР РЋР С“ Р В Р вЂ¦Р В Р’Вµ Р В Р вЂ¦Р В Р’В°Р В РІвЂћвЂ“Р В РўвЂР В Р’ВµР В Р вЂ¦.');
     }
 
     private function submitRunAnswer(
@@ -365,31 +365,31 @@ class TelegramUpdateHandler
         $result = $this->telegramGameRuntimeService->submitAnswer($run, $itemId, $optionIndex);
 
         if ($result['status'] === 'run_not_in_progress') {
-            $this->bot->answerCallbackQuery($callbackQueryId, 'РЎРµСЃСЃРёСЏ СЃРµР№С‡Р°СЃ РЅРµ Р°РєС‚РёРІРЅР°.');
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р Р‹Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р РЋР С“Р В Р’ВµР В РІвЂћвЂ“Р РЋРІР‚РЋР В Р’В°Р РЋР С“ Р В Р вЂ¦Р В Р’Вµ Р В Р’В°Р В РЎвЂќР РЋРІР‚С™Р В РЎвЂР В Р вЂ Р В Р вЂ¦Р В Р’В°.');
 
             return;
         }
 
         if ($result['status'] === 'item_not_found') {
-            $this->bot->answerCallbackQuery($callbackQueryId, 'Р’РѕРїСЂРѕСЃ РЅРµ РЅР°Р№РґРµРЅ.');
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Р В РІР‚в„ўР В РЎвЂўР В РЎвЂ”Р РЋР вЂљР В РЎвЂўР РЋР С“ Р В Р вЂ¦Р В Р’Вµ Р В Р вЂ¦Р В Р’В°Р В РІвЂћвЂ“Р В РўвЂР В Р’ВµР В Р вЂ¦.');
 
             return;
         }
 
         if ($result['status'] === 'already_answered') {
-            $this->bot->answerCallbackQuery($callbackQueryId, 'РќР° СЌС‚РѕС‚ РІРѕРїСЂРѕСЃ СѓР¶Рµ РѕС‚РІРµС‚РёР»Рё.');
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Р В РЎСљР В Р’В° Р РЋР РЉР РЋРІР‚С™Р В РЎвЂўР РЋРІР‚С™ Р В Р вЂ Р В РЎвЂўР В РЎвЂ”Р РЋР вЂљР В РЎвЂўР РЋР С“ Р РЋРЎвЂњР В Р’В¶Р В Р’Вµ Р В РЎвЂўР РЋРІР‚С™Р В Р вЂ Р В Р’ВµР РЋРІР‚С™Р В РЎвЂР В Р’В»Р В РЎвЂ.');
 
             return;
         }
 
         if ($result['status'] === 'wrong_item') {
-            $this->bot->answerCallbackQuery($callbackQueryId, 'РЎРЅР°С‡Р°Р»Р° РѕС‚РІРµС‚СЊС‚Рµ РЅР° С‚РµРєСѓС‰РёР№ РІРѕРїСЂРѕСЃ.');
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р Р‹Р В Р вЂ¦Р В Р’В°Р РЋРІР‚РЋР В Р’В°Р В Р’В»Р В Р’В° Р В РЎвЂўР РЋРІР‚С™Р В Р вЂ Р В Р’ВµР РЋРІР‚С™Р РЋР Р‰Р РЋРІР‚С™Р В Р’Вµ Р В Р вЂ¦Р В Р’В° Р РЋРІР‚С™Р В Р’ВµР В РЎвЂќР РЋРЎвЂњР РЋРІР‚В°Р В РЎвЂР В РІвЂћвЂ“ Р В Р вЂ Р В РЎвЂўР В РЎвЂ”Р РЋР вЂљР В РЎвЂўР РЋР С“.');
 
             return;
         }
 
         if ($result['status'] === 'invalid_option') {
-            $this->bot->answerCallbackQuery($callbackQueryId, 'РўР°РєРѕР№ РІР°СЂРёР°РЅС‚ РѕС‚РІРµС‚Р° РЅРµРґРѕСЃС‚СѓРїРµРЅ.');
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Р В РЎС›Р В Р’В°Р В РЎвЂќР В РЎвЂўР В РІвЂћвЂ“ Р В Р вЂ Р В Р’В°Р РЋР вЂљР В РЎвЂР В Р’В°Р В Р вЂ¦Р РЋРІР‚С™ Р В РЎвЂўР РЋРІР‚С™Р В Р вЂ Р В Р’ВµР РЋРІР‚С™Р В Р’В° Р В Р вЂ¦Р В Р’ВµР В РўвЂР В РЎвЂўР РЋР С“Р РЋРІР‚С™Р РЋРЎвЂњР В РЎвЂ”Р В Р’ВµР В Р вЂ¦.');
 
             return;
         }
@@ -402,14 +402,14 @@ class TelegramUpdateHandler
             'is_correct' => $result['is_correct'],
         ]);
 
-        $this->bot->answerCallbackQuery($callbackQueryId, 'РћС‚РІРµС‚ РїСЂРёРЅСЏС‚.');
+        $this->bot->answerCallbackQuery($callbackQueryId, 'Р В РЎвЂєР РЋРІР‚С™Р В Р вЂ Р В Р’ВµР РЋРІР‚С™ Р В РЎвЂ”Р РЋР вЂљР В РЎвЂР В Р вЂ¦Р РЋР РЏР РЋРІР‚С™.');
         $this->clearInlineKeyboard($chatId, $messageId);
 
         if ($result['is_correct'] === true) {
-            $this->bot->sendMessage($chatId, 'РљРѕСЂСЂРµРєС‚РЅРѕ.');
+            $this->bot->sendMessage($chatId, 'Р В РЎв„ўР В РЎвЂўР РЋР вЂљР РЋР вЂљР В Р’ВµР В РЎвЂќР РЋРІР‚С™Р В Р вЂ¦Р В РЎвЂў.');
         } else {
             $correctAnswer = (string) $result['correct_answer'];
-            $this->bot->sendMessage($chatId, "РќРµРєРѕСЂСЂРµРєС‚РЅРѕ. РџСЂР°РІРёР»СЊРЅС‹Р№ РѕС‚РІРµС‚: {$correctAnswer}");
+            $this->bot->sendMessage($chatId, "Р В РЎСљР В Р’ВµР В РЎвЂќР В РЎвЂўР РЋР вЂљР РЋР вЂљР В Р’ВµР В РЎвЂќР РЋРІР‚С™Р В Р вЂ¦Р В РЎвЂў. Р В РЎСџР РЋР вЂљР В Р’В°Р В Р вЂ Р В РЎвЂР В Р’В»Р РЋР Р‰Р В Р вЂ¦Р РЋРІР‚в„–Р В РІвЂћвЂ“ Р В РЎвЂўР РЋРІР‚С™Р В Р вЂ Р В Р’ВµР РЋРІР‚С™: {$correctAnswer}");
         }
 
         /** @var TelegramGameRun $freshRun */
@@ -423,7 +423,7 @@ class TelegramUpdateHandler
 
         $summaryText = is_string($result['summary_text'] ?? null) && $result['summary_text'] !== ''
             ? $result['summary_text']
-            : 'РЎРµСЃСЃРёСЏ Р·Р°РІРµСЂС€РµРЅР°.';
+            : 'Р В Р Р‹Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р В Р’В·Р В Р’В°Р В Р вЂ Р В Р’ВµР РЋР вЂљР РЋРІвЂљВ¬Р В Р’ВµР В Р вЂ¦Р В Р’В°.';
 
         Log::info('telegram.runtime.run_finished', [
             'telegram_game_run_id' => $freshRun->id,
@@ -446,7 +446,7 @@ class TelegramUpdateHandler
             ->find($payload['run_id']);
 
         if (! $run instanceof TelegramIntervalReviewRun || (string) $run->user->tg_chat_id !== $chatId) {
-            $this->bot->answerCallbackQuery($callbackQueryId, 'РЎРµСЃСЃРёСЏ РЅРµ РЅР°Р№РґРµРЅР°.');
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р Р‹Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р В Р вЂ¦Р В Р’Вµ Р В Р вЂ¦Р В Р’В°Р В РІвЂћвЂ“Р В РўвЂР В Р’ВµР В Р вЂ¦Р В Р’В°.');
 
             return;
         }
@@ -460,20 +460,20 @@ class TelegramUpdateHandler
                     'user_id' => $run->user_id,
                 ]);
 
-                $this->bot->answerCallbackQuery($callbackQueryId, 'РЎРµСЃСЃРёСЏ РѕС‚РјРµРЅРµРЅР°.');
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р Р‹Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р В РЎвЂўР РЋРІР‚С™Р В РЎВР В Р’ВµР В Р вЂ¦Р В Р’ВµР В Р вЂ¦Р В Р’В°.');
                 $this->clearInlineKeyboard($chatId, $messageId);
-                $this->bot->sendMessage($chatId, 'Р­С‚Р° СЃРµСЃСЃРёСЏ РёРЅС‚РµСЂРІР°Р»СЊРЅРѕРіРѕ РїРѕРІС‚РѕСЂРµРЅРёСЏ РѕС‚РјРµРЅРµРЅР°. РЎР»РµРґСѓСЋС‰РёРµ СЃРµСЃСЃРёРё РїР»Р°РЅР° РїСЂРѕРґРѕР»Р¶Р°С‚ СЂР°Р±РѕС‚Р°С‚СЊ РїРѕ СЂР°СЃРїРёСЃР°РЅРёСЋ.');
+                $this->bot->sendMessage($chatId, 'Р В Р’В­Р РЋРІР‚С™Р В Р’В° Р РЋР С“Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р В РЎвЂР В Р вЂ¦Р РЋРІР‚С™Р В Р’ВµР РЋР вЂљР В Р вЂ Р В Р’В°Р В Р’В»Р РЋР Р‰Р В Р вЂ¦Р В РЎвЂўР В РЎвЂ“Р В РЎвЂў Р В РЎвЂ”Р В РЎвЂўР В Р вЂ Р РЋРІР‚С™Р В РЎвЂўР РЋР вЂљР В Р’ВµР В Р вЂ¦Р В РЎвЂР РЋР РЏ Р В РЎвЂўР РЋРІР‚С™Р В РЎВР В Р’ВµР В Р вЂ¦Р В Р’ВµР В Р вЂ¦Р В Р’В°. Р В Р Р‹Р В Р’В»Р В Р’ВµР В РўвЂР РЋРЎвЂњР РЋР вЂ№Р РЋРІР‚В°Р В РЎвЂР В Р’Вµ Р РЋР С“Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР В РЎвЂ Р В РЎвЂ”Р В Р’В»Р В Р’В°Р В Р вЂ¦Р В Р’В° Р В РЎвЂ”Р РЋР вЂљР В РЎвЂўР В РўвЂР В РЎвЂўР В Р’В»Р В Р’В¶Р В Р’В°Р РЋРІР‚С™ Р РЋР вЂљР В Р’В°Р В Р’В±Р В РЎвЂўР РЋРІР‚С™Р В Р’В°Р РЋРІР‚С™Р РЋР Р‰ Р В РЎвЂ”Р В РЎвЂў Р РЋР вЂљР В Р’В°Р РЋР С“Р В РЎвЂ”Р В РЎвЂР РЋР С“Р В Р’В°Р В Р вЂ¦Р В РЎвЂР РЋР вЂ№.');
 
                 return;
             }
 
             if ($result['status'] === 'already_cancelled') {
-                $this->bot->answerCallbackQuery($callbackQueryId, 'РЎРµСЃСЃРёСЏ СѓР¶Рµ РѕС‚РјРµРЅРµРЅР°.');
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р Р‹Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р РЋРЎвЂњР В Р’В¶Р В Р’Вµ Р В РЎвЂўР РЋРІР‚С™Р В РЎВР В Р’ВµР В Р вЂ¦Р В Р’ВµР В Р вЂ¦Р В Р’В°.');
 
                 return;
             }
 
-            $this->bot->answerCallbackQuery($callbackQueryId, 'Р­С‚Сѓ СЃРµСЃСЃРёСЋ СѓР¶Рµ РЅРµР»СЊР·СЏ РѕС‚РјРµРЅРёС‚СЊ.');
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р’В­Р РЋРІР‚С™Р РЋРЎвЂњ Р РЋР С“Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР вЂ№ Р РЋРЎвЂњР В Р’В¶Р В Р’Вµ Р В Р вЂ¦Р В Р’ВµР В Р’В»Р РЋР Р‰Р В Р’В·Р РЋР РЏ Р В РЎвЂўР РЋРІР‚С™Р В РЎВР В Р’ВµР В Р вЂ¦Р В РЎвЂР РЋРІР‚С™Р РЋР Р‰.');
 
             return;
         }
@@ -487,7 +487,7 @@ class TelegramUpdateHandler
                     'user_id' => $run->user_id,
                 ]);
 
-                $this->bot->answerCallbackQuery($callbackQueryId, 'РЎРµСЃСЃРёСЏ Р·Р°РїСѓС‰РµРЅР°.');
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р Р‹Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р В Р’В·Р В Р’В°Р В РЎвЂ”Р РЋРЎвЂњР РЋРІР‚В°Р В Р’ВµР В Р вЂ¦Р В Р’В°.');
                 $this->clearInlineKeyboard($chatId, $messageId);
                 $this->telegramIntervalReviewRuntimeService->sendWordList($result['run']);
 
@@ -495,26 +495,26 @@ class TelegramUpdateHandler
             }
 
             if ($result['status'] === 'finished_without_items') {
-                $this->bot->answerCallbackQuery($callbackQueryId, 'Р’ СЌС‚РѕР№ СЃРµСЃСЃРёРё РЅРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… СЃР»РѕРІ.');
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Р В РІР‚в„ў Р РЋР РЉР РЋРІР‚С™Р В РЎвЂўР В РІвЂћвЂ“ Р РЋР С“Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР В РЎвЂ Р В Р вЂ¦Р В Р’ВµР РЋРІР‚С™ Р В РўвЂР В РЎвЂўР РЋР С“Р РЋРІР‚С™Р РЋРЎвЂњР В РЎвЂ”Р В Р вЂ¦Р РЋРІР‚в„–Р РЋРІР‚В¦ Р РЋР С“Р В Р’В»Р В РЎвЂўР В Р вЂ .');
                 $this->clearInlineKeyboard($chatId, $messageId);
-                $this->bot->sendMessage($chatId, 'РЎРµСЃСЃРёСЏ Р·Р°РІРµСЂС€РµРЅР°: РґР»СЏ РЅРµС‘ РЅРµ РЅР°С€Р»РѕСЃСЊ РґРѕСЃС‚СѓРїРЅС‹С… СЃР»РѕРІ.');
+                $this->bot->sendMessage($chatId, 'Р В Р Р‹Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р В Р’В·Р В Р’В°Р В Р вЂ Р В Р’ВµР РЋР вЂљР РЋРІвЂљВ¬Р В Р’ВµР В Р вЂ¦Р В Р’В°: Р В РўвЂР В Р’В»Р РЋР РЏ Р В Р вЂ¦Р В Р’ВµР РЋРІР‚В Р В Р вЂ¦Р В Р’Вµ Р В Р вЂ¦Р В Р’В°Р РЋРІвЂљВ¬Р В Р’В»Р В РЎвЂўР РЋР С“Р РЋР Р‰ Р В РўвЂР В РЎвЂўР РЋР С“Р РЋРІР‚С™Р РЋРЎвЂњР В РЎвЂ”Р В Р вЂ¦Р РЋРІР‚в„–Р РЋРІР‚В¦ Р РЋР С“Р В Р’В»Р В РЎвЂўР В Р вЂ .');
 
                 return;
             }
 
             if ($result['status'] === 'already_started') {
-                $this->bot->answerCallbackQuery($callbackQueryId, 'РЎРµСЃСЃРёСЏ СѓР¶Рµ Р·Р°РїСѓС‰РµРЅР°.');
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р Р‹Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р РЋРЎвЂњР В Р’В¶Р В Р’Вµ Р В Р’В·Р В Р’В°Р В РЎвЂ”Р РЋРЎвЂњР РЋРІР‚В°Р В Р’ВµР В Р вЂ¦Р В Р’В°.');
 
                 return;
             }
 
             if ($result['status'] === 'cancelled') {
-                $this->bot->answerCallbackQuery($callbackQueryId, 'РЎРµСЃСЃРёСЏ СѓР¶Рµ РѕС‚РјРµРЅРµРЅР°.');
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р Р‹Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р РЋРЎвЂњР В Р’В¶Р В Р’Вµ Р В РЎвЂўР РЋРІР‚С™Р В РЎВР В Р’ВµР В Р вЂ¦Р В Р’ВµР В Р вЂ¦Р В Р’В°.');
 
                 return;
             }
 
-            $this->bot->answerCallbackQuery($callbackQueryId, 'Р­С‚Сѓ СЃРµСЃСЃРёСЋ СѓР¶Рµ РЅРµР»СЊР·СЏ Р·Р°РїСѓСЃС‚РёС‚СЊ.');
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р’В­Р РЋРІР‚С™Р РЋРЎвЂњ Р РЋР С“Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР вЂ№ Р РЋРЎвЂњР В Р’В¶Р В Р’Вµ Р В Р вЂ¦Р В Р’ВµР В Р’В»Р РЋР Р‰Р В Р’В·Р РЋР РЏ Р В Р’В·Р В Р’В°Р В РЎвЂ”Р РЋРЎвЂњР РЋР С“Р РЋРІР‚С™Р В РЎвЂР РЋРІР‚С™Р РЋР Р‰.');
 
             return;
         }
@@ -528,7 +528,7 @@ class TelegramUpdateHandler
                     'user_id' => $run->user_id,
                 ]);
 
-                $this->bot->answerCallbackQuery($callbackQueryId, 'РљРІРёР· РЅР°С‡Р°С‚.');
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Р В РЎв„ўР В Р вЂ Р В РЎвЂР В Р’В· Р В Р вЂ¦Р В Р’В°Р РЋРІР‚РЋР В Р’В°Р РЋРІР‚С™.');
 
                 if ($messageId !== null) {
                     $this->bot->deleteMessage($chatId, $messageId);
@@ -540,24 +540,24 @@ class TelegramUpdateHandler
             }
 
             if ($result['status'] === 'finished_without_questions') {
-                $this->bot->answerCallbackQuery($callbackQueryId, 'РЎРµСЃСЃРёСЏ Р·Р°РІРµСЂС€РµРЅР°.');
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р Р‹Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р В Р’В·Р В Р’В°Р В Р вЂ Р В Р’ВµР РЋР вЂљР РЋРІвЂљВ¬Р В Р’ВµР В Р вЂ¦Р В Р’В°.');
 
                 if ($messageId !== null) {
                     $this->bot->deleteMessage($chatId, $messageId);
                 }
 
-                $this->bot->sendMessage($chatId, (string) ($result['summary_text'] ?? 'РЎРµСЃСЃРёСЏ Р·Р°РІРµСЂС€РµРЅР°.'));
+                $this->bot->sendMessage($chatId, (string) ($result['summary_text'] ?? 'Р В Р Р‹Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р В Р’В·Р В Р’В°Р В Р вЂ Р В Р’ВµР РЋР вЂљР РЋРІвЂљВ¬Р В Р’ВµР В Р вЂ¦Р В Р’В°.'));
 
                 return;
             }
 
             if ($result['status'] === 'quiz_already_started') {
-                $this->bot->answerCallbackQuery($callbackQueryId, 'РљРІРёР· СѓР¶Рµ РЅР°С‡Р°С‚.');
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Р В РЎв„ўР В Р вЂ Р В РЎвЂР В Р’В· Р РЋРЎвЂњР В Р’В¶Р В Р’Вµ Р В Р вЂ¦Р В Р’В°Р РЋРІР‚РЋР В Р’В°Р РЋРІР‚С™.');
 
                 return;
             }
 
-            $this->bot->answerCallbackQuery($callbackQueryId, 'РЎРµСЃСЃРёСЋ СЃРµР№С‡Р°СЃ РЅРµР»СЊР·СЏ РїРµСЂРµРІРµСЃС‚Рё РІ СЂРµР¶РёРј РєРІРёР·Р°.');
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р Р‹Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР вЂ№ Р РЋР С“Р В Р’ВµР В РІвЂћвЂ“Р РЋРІР‚РЋР В Р’В°Р РЋР С“ Р В Р вЂ¦Р В Р’ВµР В Р’В»Р РЋР Р‰Р В Р’В·Р РЋР РЏ Р В РЎвЂ”Р В Р’ВµР РЋР вЂљР В Р’ВµР В Р вЂ Р В Р’ВµР РЋР С“Р РЋРІР‚С™Р В РЎвЂ Р В Р вЂ  Р РЋР вЂљР В Р’ВµР В Р’В¶Р В РЎвЂР В РЎВ Р В РЎвЂќР В Р вЂ Р В РЎвЂР В Р’В·Р В Р’В°.');
 
             return;
         }
@@ -570,31 +570,31 @@ class TelegramUpdateHandler
             );
 
             if ($result['status'] === 'run_not_in_progress') {
-                $this->bot->answerCallbackQuery($callbackQueryId, 'РЎРµСЃСЃРёСЏ СЃРµР№С‡Р°СЃ РЅРµ Р°РєС‚РёРІРЅР°.');
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р Р‹Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р РЋР С“Р В Р’ВµР В РІвЂћвЂ“Р РЋРІР‚РЋР В Р’В°Р РЋР С“ Р В Р вЂ¦Р В Р’Вµ Р В Р’В°Р В РЎвЂќР РЋРІР‚С™Р В РЎвЂР В Р вЂ Р В Р вЂ¦Р В Р’В°.');
 
                 return;
             }
 
             if ($result['status'] === 'item_not_found') {
-                $this->bot->answerCallbackQuery($callbackQueryId, 'Р’РѕРїСЂРѕСЃ РЅРµ РЅР°Р№РґРµРЅ.');
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Р В РІР‚в„ўР В РЎвЂўР В РЎвЂ”Р РЋР вЂљР В РЎвЂўР РЋР С“ Р В Р вЂ¦Р В Р’Вµ Р В Р вЂ¦Р В Р’В°Р В РІвЂћвЂ“Р В РўвЂР В Р’ВµР В Р вЂ¦.');
 
                 return;
             }
 
             if ($result['status'] === 'already_answered') {
-                $this->bot->answerCallbackQuery($callbackQueryId, 'РќР° СЌС‚РѕС‚ РІРѕРїСЂРѕСЃ СѓР¶Рµ РѕС‚РІРµС‚РёР»Рё.');
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Р В РЎСљР В Р’В° Р РЋР РЉР РЋРІР‚С™Р В РЎвЂўР РЋРІР‚С™ Р В Р вЂ Р В РЎвЂўР В РЎвЂ”Р РЋР вЂљР В РЎвЂўР РЋР С“ Р РЋРЎвЂњР В Р’В¶Р В Р’Вµ Р В РЎвЂўР РЋРІР‚С™Р В Р вЂ Р В Р’ВµР РЋРІР‚С™Р В РЎвЂР В Р’В»Р В РЎвЂ.');
 
                 return;
             }
 
             if ($result['status'] === 'wrong_item') {
-                $this->bot->answerCallbackQuery($callbackQueryId, 'РЎРЅР°С‡Р°Р»Р° РѕС‚РІРµС‚СЊС‚Рµ РЅР° С‚РµРєСѓС‰РёР№ РІРѕРїСЂРѕСЃ.');
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Р В Р Р‹Р В Р вЂ¦Р В Р’В°Р РЋРІР‚РЋР В Р’В°Р В Р’В»Р В Р’В° Р В РЎвЂўР РЋРІР‚С™Р В Р вЂ Р В Р’ВµР РЋРІР‚С™Р РЋР Р‰Р РЋРІР‚С™Р В Р’Вµ Р В Р вЂ¦Р В Р’В° Р РЋРІР‚С™Р В Р’ВµР В РЎвЂќР РЋРЎвЂњР РЋРІР‚В°Р В РЎвЂР В РІвЂћвЂ“ Р В Р вЂ Р В РЎвЂўР В РЎвЂ”Р РЋР вЂљР В РЎвЂўР РЋР С“.');
 
                 return;
             }
 
             if ($result['status'] === 'invalid_option') {
-                $this->bot->answerCallbackQuery($callbackQueryId, 'РўР°РєРѕР№ РІР°СЂРёР°РЅС‚ РѕС‚РІРµС‚Р° РЅРµРґРѕСЃС‚СѓРїРµРЅ.');
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Р В РЎС›Р В Р’В°Р В РЎвЂќР В РЎвЂўР В РІвЂћвЂ“ Р В Р вЂ Р В Р’В°Р РЋР вЂљР В РЎвЂР В Р’В°Р В Р вЂ¦Р РЋРІР‚С™ Р В РЎвЂўР РЋРІР‚С™Р В Р вЂ Р В Р’ВµР РЋРІР‚С™Р В Р’В° Р В Р вЂ¦Р В Р’ВµР В РўвЂР В РЎвЂўР РЋР С“Р РЋРІР‚С™Р РЋРЎвЂњР В РЎвЂ”Р В Р’ВµР В Р вЂ¦.');
 
                 return;
             }
@@ -607,13 +607,13 @@ class TelegramUpdateHandler
                 'is_correct' => $result['is_correct'],
             ]);
 
-            $this->bot->answerCallbackQuery($callbackQueryId, 'РћС‚РІРµС‚ РїСЂРёРЅСЏС‚.');
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Р В РЎвЂєР РЋРІР‚С™Р В Р вЂ Р В Р’ВµР РЋРІР‚С™ Р В РЎвЂ”Р РЋР вЂљР В РЎвЂР В Р вЂ¦Р РЋР РЏР РЋРІР‚С™.');
             $this->clearInlineKeyboard($chatId, $messageId);
 
             if (($result['is_correct'] ?? false) === true) {
-                $this->bot->sendMessage($chatId, 'РљРѕСЂСЂРµРєС‚РЅРѕ.');
+                $this->bot->sendMessage($chatId, 'Р В РЎв„ўР В РЎвЂўР РЋР вЂљР РЋР вЂљР В Р’ВµР В РЎвЂќР РЋРІР‚С™Р В Р вЂ¦Р В РЎвЂў.');
             } else {
-                $this->bot->sendMessage($chatId, 'РќРµРєРѕСЂСЂРµРєС‚РЅРѕ. РџСЂР°РІРёР»СЊРЅС‹Р№ РѕС‚РІРµС‚: '.(string) $result['correct_answer']);
+                $this->bot->sendMessage($chatId, 'Р В РЎСљР В Р’ВµР В РЎвЂќР В РЎвЂўР РЋР вЂљР РЋР вЂљР В Р’ВµР В РЎвЂќР РЋРІР‚С™Р В Р вЂ¦Р В РЎвЂў. Р В РЎСџР РЋР вЂљР В Р’В°Р В Р вЂ Р В РЎвЂР В Р’В»Р РЋР Р‰Р В Р вЂ¦Р РЋРІР‚в„–Р В РІвЂћвЂ“ Р В РЎвЂўР РЋРІР‚С™Р В Р вЂ Р В Р’ВµР РЋРІР‚С™: '.(string) $result['correct_answer']);
             }
 
             if (($result['next_item'] ?? null) !== null) {
@@ -624,7 +624,7 @@ class TelegramUpdateHandler
 
             $summaryText = is_string($result['summary_text'] ?? null) && $result['summary_text'] !== ''
                 ? $result['summary_text']
-                : 'РЎРµСЃСЃРёСЏ Р·Р°РІРµСЂС€РµРЅР°.';
+                : 'Р В Р Р‹Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р В Р’В·Р В Р’В°Р В Р вЂ Р В Р’ВµР РЋР вЂљР РЋРІвЂљВ¬Р В Р’ВµР В Р вЂ¦Р В Р’В°.';
 
             Log::info('telegram.interval_review.run_finished', [
                 'telegram_interval_review_run_id' => $run->id,
@@ -640,7 +640,7 @@ class TelegramUpdateHandler
             return;
         }
 
-        $this->bot->answerCallbackQuery($callbackQueryId, 'Р”РµР№СЃС‚РІРёРµ РЅРµРґРѕСЃС‚СѓРїРЅРѕ.');
+        $this->bot->answerCallbackQuery($callbackQueryId, 'Р В РІР‚СњР В Р’ВµР В РІвЂћвЂ“Р РЋР С“Р РЋРІР‚С™Р В Р вЂ Р В РЎвЂР В Р’Вµ Р В Р вЂ¦Р В Р’ВµР В РўвЂР В РЎвЂўР РЋР С“Р РЋРІР‚С™Р РЋРЎвЂњР В РЎвЂ”Р В Р вЂ¦Р В РЎвЂў.');
     }
 
     private function handleEmailStep(string $chatId, string $text, ?string $username): void
@@ -648,7 +648,7 @@ class TelegramUpdateHandler
         $email = mb_strtolower(trim($text));
 
         if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $this->bot->sendMessage($chatId, 'Нужен корректный email. Попробуйте ещё раз.');
+            $this->bot->sendMessage($chatId, 'Р СњРЎС“Р В¶Р ВµР Р… Р С”Р С•РЎР‚РЎР‚Р ВµР С”РЎвЂљР Р…РЎвЂ№Р в„– email. Р СџР С•Р С—РЎР‚Р С•Р В±РЎС“Р в„–РЎвЂљР Вµ Р ВµРЎвЂ°РЎвЂ РЎР‚Р В°Р В·.');
 
             return;
         }
@@ -658,7 +658,7 @@ class TelegramUpdateHandler
         $result = $this->telegramLoginIntentService->startForEmail($chatId, $username, $email);
 
         if ($result['status'] === 'user_not_found') {
-            $this->bot->sendMessage($chatId, 'Аккаунт с таким email не найден. Зарегистрируйтесь на сайте: '.route('register'));
+            $this->bot->sendMessage($chatId, 'Р С’Р С”Р С”Р В°РЎС“Р Р…РЎвЂљ РЎРѓ РЎвЂљР В°Р С”Р С‘Р С email Р Р…Р Вµ Р Р…Р В°Р в„–Р Т‘Р ВµР Р…. Р вЂ”Р В°РЎР‚Р ВµР С–Р С‘РЎРѓРЎвЂљРЎР‚Р С‘РЎР‚РЎС“Р в„–РЎвЂљР ВµРЎРѓРЎРЉ Р Р…Р В° РЎРѓР В°Р в„–РЎвЂљР Вµ: '.route('register'));
 
             return;
         }
@@ -666,7 +666,7 @@ class TelegramUpdateHandler
         $this->bot->sendMessage(
             $chatId,
             implode("\n\n", [
-                'Аккаунт найден. Для подтверждения авторизуйтесь на сайте.',
+                'Р С’Р С”Р С”Р В°РЎС“Р Р…РЎвЂљ Р Р…Р В°Р в„–Р Т‘Р ВµР Р…. Р вЂќР В»РЎРЏ Р С—Р С•Р Т‘РЎвЂљР Р†Р ВµРЎР‚Р В¶Р Т‘Р ВµР Р…Р С‘РЎРЏ Р В°Р Р†РЎвЂљР С•РЎР‚Р С‘Р В·РЎС“Р в„–РЎвЂљР ВµРЎРѓРЎРЉ Р Р…Р В° РЎРѓР В°Р в„–РЎвЂљР Вµ.',
                 $result['url'],
             ]),
         );
@@ -678,7 +678,7 @@ class TelegramUpdateHandler
 
         $this->bot->sendMessage(
             $chatId,
-            'Telegram-аккаунт отключён. Для повторной привязки отправьте /login.',
+            'Telegram-Р В°Р С”Р С”Р В°РЎС“Р Р…РЎвЂљ Р С•РЎвЂљР С”Р В»РЎР‹РЎвЂЎРЎвЂР Р…. Р вЂќР В»РЎРЏ Р С—Р С•Р Р†РЎвЂљР С•РЎР‚Р Р…Р С•Р в„– Р С—РЎР‚Р С‘Р Р†РЎРЏР В·Р С”Р С‘ Р С•РЎвЂљР С—РЎР‚Р В°Р Р†РЎРЉРЎвЂљР Вµ /login.',
             [
                 'reply_markup' => [
                     'remove_keyboard' => true,
@@ -693,9 +693,9 @@ class TelegramUpdateHandler
             $this->bot->sendMessage(
                 $chatId,
                 implode("\n\n", [
-                    'Р­С‚Рѕ Telegram-Р±РѕС‚ WordKeeper.',
-                    'Р’С‹ СѓР¶Рµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅС‹ Рё РјРѕР¶РµС‚Рµ РїСЂРѕСЃРјР°С‚СЂРёРІР°С‚СЊ СЃРІРѕРё СЃР»РѕРІР°СЂРё РїСЂСЏРјРѕ РёР· Telegram.',
-                    'РќР°Р¶РјРёС‚Рµ В«РЎР»РѕРІР°СЂРёВ», С‡С‚РѕР±С‹ РѕС‚РєСЂС‹С‚СЊ СЃРїРёСЃРѕРє РІР°С€РёС… СЃР»РѕРІР°СЂРµР№.',
+                    'Р В Р’В­Р РЋРІР‚С™Р В РЎвЂў Telegram-Р В Р’В±Р В РЎвЂўР РЋРІР‚С™ WordKeeper.',
+                    'Р В РІР‚в„ўР РЋРІР‚в„– Р РЋРЎвЂњР В Р’В¶Р В Р’Вµ Р В Р’В°Р В Р вЂ Р РЋРІР‚С™Р В РЎвЂўР РЋР вЂљР В РЎвЂР В Р’В·Р В РЎвЂўР В Р вЂ Р В Р’В°Р В Р вЂ¦Р РЋРІР‚в„– Р В РЎвЂ Р В РЎВР В РЎвЂўР В Р’В¶Р В Р’ВµР РЋРІР‚С™Р В Р’Вµ Р В РЎвЂ”Р РЋР вЂљР В РЎвЂўР РЋР С“Р В РЎВР В Р’В°Р РЋРІР‚С™Р РЋР вЂљР В РЎвЂР В Р вЂ Р В Р’В°Р РЋРІР‚С™Р РЋР Р‰ Р РЋР С“Р В Р вЂ Р В РЎвЂўР В РЎвЂ Р РЋР С“Р В Р’В»Р В РЎвЂўР В Р вЂ Р В Р’В°Р РЋР вЂљР В РЎвЂ Р В РЎвЂ”Р РЋР вЂљР РЋР РЏР В РЎВР В РЎвЂў Р В РЎвЂР В Р’В· Telegram.',
+                    'Р В РЎСљР В Р’В°Р В Р’В¶Р В РЎВР В РЎвЂР РЋРІР‚С™Р В Р’Вµ Р вЂ™Р’В«Р В Р Р‹Р В Р’В»Р В РЎвЂўР В Р вЂ Р В Р’В°Р РЋР вЂљР В РЎвЂР вЂ™Р’В», Р РЋРІР‚РЋР РЋРІР‚С™Р В РЎвЂўР В Р’В±Р РЋРІР‚в„– Р В РЎвЂўР РЋРІР‚С™Р В РЎвЂќР РЋР вЂљР РЋРІР‚в„–Р РЋРІР‚С™Р РЋР Р‰ Р РЋР С“Р В РЎвЂ”Р В РЎвЂР РЋР С“Р В РЎвЂўР В РЎвЂќ Р В Р вЂ Р В Р’В°Р РЋРІвЂљВ¬Р В РЎвЂР РЋРІР‚В¦ Р РЋР С“Р В Р’В»Р В РЎвЂўР В Р вЂ Р В Р’В°Р РЋР вЂљР В Р’ВµР В РІвЂћвЂ“.',
                 ]),
                 $this->mainMenuReplyMarkup(),
             );
@@ -706,9 +706,9 @@ class TelegramUpdateHandler
         $this->bot->sendMessage(
             $chatId,
             implode("\n\n", [
-                'Р­С‚Рѕ Telegram-Р±РѕС‚ WordKeeper.',
-                'РћРЅ РЅСѓР¶РµРЅ РґР»СЏ СЂР°Р±РѕС‚С‹ СЃРѕ СЃР»РѕРІР°СЂСЏРјРё Рё С‚СЂРµРЅРёСЂРѕРІРєР°РјРё РїСЂСЏРјРѕ РёР· Telegram.',
-                'Р§С‚РѕР±С‹ РїРѕРґРєР»СЋС‡РёС‚СЊ Р±РѕС‚Р° Рє РІР°С€РµРјСѓ Р°РєРєР°СѓРЅС‚Сѓ СЃР°Р№С‚Р°, РѕС‚РїСЂР°РІСЊС‚Рµ /login.',
+                'Р В Р’В­Р РЋРІР‚С™Р В РЎвЂў Telegram-Р В Р’В±Р В РЎвЂўР РЋРІР‚С™ WordKeeper.',
+                'Р В РЎвЂєР В Р вЂ¦ Р В Р вЂ¦Р РЋРЎвЂњР В Р’В¶Р В Р’ВµР В Р вЂ¦ Р В РўвЂР В Р’В»Р РЋР РЏ Р РЋР вЂљР В Р’В°Р В Р’В±Р В РЎвЂўР РЋРІР‚С™Р РЋРІР‚в„– Р РЋР С“Р В РЎвЂў Р РЋР С“Р В Р’В»Р В РЎвЂўР В Р вЂ Р В Р’В°Р РЋР вЂљР РЋР РЏР В РЎВР В РЎвЂ Р В РЎвЂ Р РЋРІР‚С™Р РЋР вЂљР В Р’ВµР В Р вЂ¦Р В РЎвЂР РЋР вЂљР В РЎвЂўР В Р вЂ Р В РЎвЂќР В Р’В°Р В РЎВР В РЎвЂ Р В РЎвЂ”Р РЋР вЂљР РЋР РЏР В РЎВР В РЎвЂў Р В РЎвЂР В Р’В· Telegram.',
+                'Р В Р’В§Р РЋРІР‚С™Р В РЎвЂўР В Р’В±Р РЋРІР‚в„– Р В РЎвЂ”Р В РЎвЂўР В РўвЂР В РЎвЂќР В Р’В»Р РЋР вЂ№Р РЋРІР‚РЋР В РЎвЂР РЋРІР‚С™Р РЋР Р‰ Р В Р’В±Р В РЎвЂўР РЋРІР‚С™Р В Р’В° Р В РЎвЂќ Р В Р вЂ Р В Р’В°Р РЋРІвЂљВ¬Р В Р’ВµР В РЎВР РЋРЎвЂњ Р В Р’В°Р В РЎвЂќР В РЎвЂќР В Р’В°Р РЋРЎвЂњР В Р вЂ¦Р РЋРІР‚С™Р РЋРЎвЂњ Р РЋР С“Р В Р’В°Р В РІвЂћвЂ“Р РЋРІР‚С™Р В Р’В°, Р В РЎвЂўР РЋРІР‚С™Р В РЎвЂ”Р РЋР вЂљР В Р’В°Р В Р вЂ Р РЋР Р‰Р РЋРІР‚С™Р В Р’Вµ /login.',
             ])
         );
     }
@@ -763,8 +763,8 @@ class TelegramUpdateHandler
         return [
             'reply_markup' => [
                 'keyboard' => [
-                    [['text' => 'РЎР»РѕРІР°СЂРё']],
-                    [['text' => 'Р’С‹С…РѕРґ']],
+                    [['text' => 'Р В Р Р‹Р В Р’В»Р В РЎвЂўР В Р вЂ Р В Р’В°Р РЋР вЂљР В РЎвЂ']],
+                    [['text' => 'Р В РІР‚в„ўР РЋРІР‚в„–Р РЋРІР‚В¦Р В РЎвЂўР В РўвЂ']],
                 ],
                 'resize_keyboard' => true,
             ],
