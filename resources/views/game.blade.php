@@ -40,34 +40,13 @@
 
                 <aside class="game-progress-panel" aria-label="{{ __('game.progress.title') }}">
                     <div class="game-progress-panel__card">
-                        <div>
-                            <p class="game-progress-panel__eyebrow">{{ __('game.progress.eyebrow') }}</p>
-                            <h2 class="game-progress-panel__title">{{ __('game.progress.title') }}</h2>
-                            <p class="game-progress-panel__description">{{ __('game.progress.description') }}</p>
-                        </div>
+                        <h2 class="game-progress-panel__title">{{ __('game.progress.title') }}</h2>
 
                         <div class="game-progress-panel__preview" data-game-progress-preview>
                             <div class="game-progress-panel__preview-image">
                                 <span>{{ __('game.progress.preview_label', ['number' => 1]) }}</span>
                             </div>
-                            <div class="game-progress-panel__preview-meta">
-                                <strong data-game-progress-caption>{{ __('game.progress.slide_caption', ['current' => 1, 'total' => 10]) }}</strong>
-                                <span>{{ __('game.progress.preview_hint') }}</span>
-                            </div>
                         </div>
-
-                        <ol class="game-progress-panel__steps">
-                            @foreach ($progressSlides as $slideNumber)
-                                <li
-                                    class="game-progress-panel__step {{ $slideNumber === 1 ? 'is-active' : '' }}"
-                                    data-game-progress-step
-                                    data-slide-number="{{ $slideNumber }}"
-                                >
-                                    <span class="game-progress-panel__step-index">{{ str_pad((string) $slideNumber, 2, '0', STR_PAD_LEFT) }}</span>
-                                    <span class="game-progress-panel__step-label">{{ __('game.progress.preview_label', ['number' => $slideNumber]) }}</span>
-                                </li>
-                            @endforeach
-                        </ol>
                     </div>
                 </aside>
             </section>

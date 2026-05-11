@@ -9,8 +9,6 @@
     const startScreen = page.querySelector('[data-game-start-screen]');
     const startButton = page.querySelector('[data-game-start-button]');
     const progressPreview = page.querySelector('[data-game-progress-preview]');
-    const progressCaption = page.querySelector('[data-game-progress-caption]');
-    const progressSteps = Array.from(page.querySelectorAll('[data-game-progress-step]'));
 
     if (!(canvas instanceof HTMLCanvasElement)) {
         return;
@@ -170,21 +168,12 @@
     }
 
     function syncProgressUI() {
-        progressSteps.forEach((step) => {
-            const isActive = Number(step.getAttribute('data-slide-number')) === state.activeSlide;
-            step.classList.toggle('is-active', isActive);
-        });
-
         if (progressPreview) {
             const previewCard = progressPreview.querySelector('.game-progress-panel__preview-image span');
 
             if (previewCard) {
                 previewCard.textContent = `Slide ${state.activeSlide}`;
             }
-        }
-
-        if (progressCaption) {
-            progressCaption.textContent = `Slide ${state.activeSlide} of 10`;
         }
     }
 
