@@ -37,6 +37,11 @@
         bulletSpeed: 9.5,
         cooldownMs: 220,
     };
+    const ENEMY_WEAPON = {
+        bulletSpeed: 5.6,
+        cooldownMinMs: 1100,
+        cooldownMaxMs: 2400,
+    };
 
     const level = createLevel();
 
@@ -60,28 +65,34 @@
         },
         player: createPlayer(level),
         bullets: [],
+        enemyBullets: [],
         enemies: createEnemyRuntime(level.enemyConfigs),
         breakableObstacles: createBreakableRuntime(level.breakableConfigs),
         hazards: createHazardRuntime(level.hazardConfigs),
         lastShotAt: -WEAPON.cooldownMs,
+        elapsedMs: 0,
     };
 
     function createLevel() {
         return {
-            width: 2480,
+            width: 4960,
             height: canvas.height,
             spawn: {
                 x: 116,
                 y: canvas.height - FLOOR_HEIGHT - 68,
             },
             finishZone: {
-                x: 2320,
+                x: 4780,
                 y: canvas.height - FLOOR_HEIGHT - 168,
                 width: 80,
                 height: 168,
             },
             platforms: [
-                { x: 0, y: canvas.height - FLOOR_HEIGHT, width: 2480, height: FLOOR_HEIGHT, type: 'floor' },
+                { x: 0, y: canvas.height - FLOOR_HEIGHT, width: 920, height: FLOOR_HEIGHT, type: 'floor' },
+                { x: 1110, y: canvas.height - FLOOR_HEIGHT, width: 980, height: FLOOR_HEIGHT, type: 'floor' },
+                { x: 2310, y: canvas.height - FLOOR_HEIGHT, width: 830, height: FLOOR_HEIGHT, type: 'floor' },
+                { x: 3370, y: canvas.height - FLOOR_HEIGHT, width: 870, height: FLOOR_HEIGHT, type: 'floor' },
+                { x: 4445, y: canvas.height - FLOOR_HEIGHT, width: 515, height: FLOOR_HEIGHT, type: 'floor' },
                 { x: 124, y: canvas.height - 188, width: 150, height: 16, type: 'platform' },
                 { x: 346, y: canvas.height - 272, width: 188, height: 16, type: 'platform' },
                 { x: 626, y: canvas.height - 220, width: 140, height: 16, type: 'platform' },
@@ -92,22 +103,40 @@
                 { x: 1738, y: canvas.height - 286, width: 156, height: 16, type: 'platform' },
                 { x: 1988, y: canvas.height - 204, width: 134, height: 16, type: 'platform' },
                 { x: 2166, y: canvas.height - 146, width: 120, height: 16, type: 'platform' },
+                { x: 2440, y: canvas.height - 242, width: 186, height: 16, type: 'platform' },
+                { x: 2690, y: canvas.height - 316, width: 128, height: 16, type: 'platform' },
+                { x: 2890, y: canvas.height - 214, width: 168, height: 16, type: 'platform' },
+                { x: 3190, y: canvas.height - 160, width: 132, height: 16, type: 'platform' },
+                { x: 3490, y: canvas.height - 246, width: 174, height: 16, type: 'platform' },
+                { x: 3750, y: canvas.height - 330, width: 132, height: 16, type: 'platform' },
+                { x: 3965, y: canvas.height - 212, width: 160, height: 16, type: 'platform' },
+                { x: 4270, y: canvas.height - 286, width: 152, height: 16, type: 'platform' },
+                { x: 4540, y: canvas.height - 190, width: 142, height: 16, type: 'platform' },
             ],
             enemyConfigs: [
                 { type: 'static', x: 694, y: canvas.height - FLOOR_HEIGHT - 42, width: 34, height: 42 },
                 { type: 'patrol', x: 1086, y: canvas.height - 254 - 42, width: 34, height: 42, patrolMinX: 1036, patrolMaxX: 1158, speed: 1.25 },
                 { type: 'static', x: 1526, y: canvas.height - 232 - 42, width: 34, height: 42 },
                 { type: 'patrol', x: 2018, y: canvas.height - 204 - 42, width: 34, height: 42, patrolMinX: 1996, patrolMaxX: 2078, speed: 1.1 },
+                { type: 'static', x: 2544, y: canvas.height - 242 - 42, width: 34, height: 42 },
+                { type: 'patrol', x: 2942, y: canvas.height - 214 - 42, width: 34, height: 42, patrolMinX: 2910, patrolMaxX: 3028, speed: 1.2 },
+                { type: 'static', x: 3558, y: canvas.height - 246 - 42, width: 34, height: 42 },
+                { type: 'patrol', x: 4328, y: canvas.height - 286 - 42, width: 34, height: 42, patrolMinX: 4290, patrolMaxX: 4392, speed: 1.15 },
             ],
             breakableConfigs: [
                 { x: 540, y: canvas.height - FLOOR_HEIGHT - 42, width: 34, height: 34 },
                 { x: 931, y: canvas.height - FLOOR_HEIGHT - 42, width: 34, height: 34 },
                 { x: 1838, y: canvas.height - FLOOR_HEIGHT - 42, width: 34, height: 34 },
+                { x: 2404, y: canvas.height - FLOOR_HEIGHT - 42, width: 34, height: 34 },
+                { x: 3270, y: canvas.height - FLOOR_HEIGHT - 42, width: 34, height: 34 },
+                { x: 4526, y: canvas.height - FLOOR_HEIGHT - 42, width: 34, height: 34 },
             ],
             hazardConfigs: [
                 { x: 780, y: canvas.height - FLOOR_HEIGHT - 18, width: 58, height: 18 },
                 { x: 1378, y: canvas.height - FLOOR_HEIGHT - 18, width: 64, height: 18 },
                 { x: 2092, y: canvas.height - FLOOR_HEIGHT - 18, width: 64, height: 18 },
+                { x: 2830, y: canvas.height - FLOOR_HEIGHT - 18, width: 64, height: 18 },
+                { x: 4080, y: canvas.height - FLOOR_HEIGHT - 18, width: 74, height: 18 },
             ],
         };
     }
@@ -131,6 +160,7 @@
             ...config,
             alive: true,
             direction: config.type === 'patrol' ? 1 : 0,
+            nextShotAt: randomBetween(ENEMY_WEAPON.cooldownMinMs, ENEMY_WEAPON.cooldownMaxMs),
         }));
     }
 
@@ -219,11 +249,13 @@
     function resetRuntimeWorld() {
         resetPlayerPosition();
         state.bullets = [];
+        state.enemyBullets = [];
         state.enemies = createEnemyRuntime(state.level.enemyConfigs);
         state.breakableObstacles = createBreakableRuntime(state.level.breakableConfigs);
         state.hazards = createHazardRuntime(state.level.hazardConfigs);
         state.lastShotAt = -WEAPON.cooldownMs;
         state.activeSlide = 1;
+        state.elapsedMs = 0;
         syncProgressUI();
     }
 
@@ -470,21 +502,45 @@
 
     function updateEnemies() {
         state.enemies.forEach((enemy) => {
-            if (!enemy.alive || enemy.type !== 'patrol') {
+            if (!enemy.alive) {
                 return;
             }
 
-            enemy.x += enemy.speed * enemy.direction;
+            if (enemy.type === 'patrol') {
+                enemy.x += enemy.speed * enemy.direction;
 
-            if (enemy.x <= enemy.patrolMinX) {
-                enemy.x = enemy.patrolMinX;
-                enemy.direction = 1;
+                if (enemy.x <= enemy.patrolMinX) {
+                    enemy.x = enemy.patrolMinX;
+                    enemy.direction = 1;
+                }
+
+                if (enemy.x + enemy.width >= enemy.patrolMaxX) {
+                    enemy.x = enemy.patrolMaxX - enemy.width;
+                    enemy.direction = -1;
+                }
             }
 
-            if (enemy.x + enemy.width >= enemy.patrolMaxX) {
-                enemy.x = enemy.patrolMaxX - enemy.width;
-                enemy.direction = -1;
+            if (state.elapsedMs >= enemy.nextShotAt) {
+                shootEnemyBullet(enemy);
+                enemy.nextShotAt = state.elapsedMs + randomBetween(ENEMY_WEAPON.cooldownMinMs, ENEMY_WEAPON.cooldownMaxMs);
             }
+        });
+    }
+
+    function shootEnemyBullet(enemy) {
+        const playerCenterX = state.player.x + state.player.width / 2;
+        const enemyCenterX = enemy.x + enemy.width / 2;
+        const direction = playerCenterX >= enemyCenterX ? 1 : -1;
+        const bulletWidth = 10;
+        const bulletHeight = 6;
+
+        state.enemyBullets.push({
+            x: enemyCenterX + (direction === 1 ? 6 : -bulletWidth - 6),
+            y: enemy.y + 18,
+            width: bulletWidth,
+            height: bulletHeight,
+            vx: direction * ENEMY_WEAPON.bulletSpeed,
+            active: true,
         });
     }
 
@@ -529,11 +585,46 @@
         state.bullets = state.bullets.filter((bullet) => bullet.active);
     }
 
+    function updateEnemyBullets() {
+        const solidBodies = getSolidBodies();
+        let hitPlayer = false;
+
+        state.enemyBullets.forEach((bullet) => {
+            if (!bullet.active) {
+                return;
+            }
+
+            bullet.x += bullet.vx;
+
+            if (bullet.x > state.level.width + 40 || bullet.x + bullet.width < -40) {
+                bullet.active = false;
+                return;
+            }
+
+            if (isIntersecting(bullet, state.player)) {
+                bullet.active = false;
+                hitPlayer = true;
+                return;
+            }
+
+            const solidHit = solidBodies.some((body) => isIntersecting(bullet, body));
+
+            if (solidHit) {
+                bullet.active = false;
+            }
+        });
+
+        state.enemyBullets = state.enemyBullets.filter((bullet) => bullet.active);
+
+        return hitPlayer;
+    }
+
     function checkPlayerDangerCollisions() {
         const enemyCollision = state.enemies.some((enemy) => enemy.alive && isIntersecting(state.player, enemy));
         const hazardCollision = state.hazards.some((hazard) => isIntersecting(state.player, hazard));
+        const enemyBulletCollision = state.enemyBullets.some((bullet) => isIntersecting(state.player, bullet));
 
-        return enemyCollision || hazardCollision;
+        return enemyCollision || hazardCollision || enemyBulletCollision;
     }
 
     function update() {
@@ -563,10 +654,12 @@
             return;
         }
 
+        state.elapsedMs += 1000 / 60;
         updateEnemies();
         updateBullets();
+        const enemyBulletHit = updateEnemyBullets();
 
-        if (checkPlayerDangerCollisions()) {
+        if (enemyBulletHit || checkPlayerDangerCollisions()) {
             loseLife();
             return;
         }
@@ -592,6 +685,7 @@
         drawFinishZone();
         drawEnemies();
         drawBullets();
+        drawEnemyBullets();
         drawPlayer();
     }
 
@@ -762,6 +856,22 @@
         });
     }
 
+    function drawEnemyBullets() {
+        state.enemyBullets.forEach((bullet) => {
+            const screenX = worldToScreenX(bullet.x);
+
+            if (screenX + bullet.width < -20 || screenX > canvas.width + 20) {
+                return;
+            }
+
+            context.fillStyle = '#475569';
+            context.fillRect(screenX, bullet.y, bullet.width, bullet.height);
+
+            context.fillStyle = '#cbd5e1';
+            context.fillRect(screenX + 2, bullet.y + 1, bullet.width - 4, bullet.height - 2);
+        });
+    }
+
     function drawPlayer() {
         const { player } = state;
         const screenX = worldToScreenX(player.x);
@@ -806,6 +916,10 @@
         }
 
         restartGame();
+    }
+
+    function randomBetween(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
     window.addEventListener('keydown', handleKeyDown);

@@ -161,7 +161,8 @@
     min-width: 180px;
 }
 
-.game-start-screen__button {
+.game-start-screen__button,
+.game-status-screen__button {
     min-height: 50px;
     padding: 12px 24px;
     border-width: 2px;
