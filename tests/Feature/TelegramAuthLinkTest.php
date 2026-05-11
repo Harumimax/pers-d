@@ -58,7 +58,8 @@ class TelegramAuthLinkTest extends TestCase
             'password' => 'secret-password',
         ])
             ->assertOk()
-            ->assertSee(__('auth.telegram_link.success_title'));
+            ->assertSee(__('auth.telegram_link.success_title'))
+            ->assertDontSee(__('auth.telegram_link.back_to_site'));
 
         $user->refresh();
         $intent = TelegramLoginIntent::query()->first();
