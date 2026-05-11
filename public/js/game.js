@@ -44,6 +44,7 @@
     };
 
     const level = createLevel();
+    const clouds = createClouds(level.width);
 
     const state = {
         started: false,
@@ -63,9 +64,11 @@
             x: 0,
             y: 0,
         },
+        clouds,
         player: createPlayer(level),
         bullets: [],
         enemyBullets: [],
+        effects: [],
         enemies: createEnemyRuntime(level.enemyConfigs),
         breakableObstacles: createBreakableRuntime(level.breakableConfigs),
         hazards: createHazardRuntime(level.hazardConfigs),
@@ -152,6 +155,25 @@
             onGround: false,
             facing: 'right',
         };
+    }
+
+    function createClouds(levelWidth) {
+        const cloudsCollection = [];
+
+        for (let x = 120; x < levelWidth; x += 300) {
+            const size = 28 + ((x / 25) % 26);
+            const y = 72 + ((x / 37) % 110);
+
+            cloudsCollection.push({
+                x,
+                y,
+                width: size * 2.4,
+                height: size,
+                opacity: 0.18 + ((x / 1000) % 0.18),
+            });
+        }
+
+        return cloudsCollection;
     }
 
     function createEnemyRuntime(configs) {
@@ -250,6 +272,7 @@
         resetPlayerPosition();
         state.bullets = [];
         state.enemyBullets = [];
+        state.effects = [];
         state.enemies = createEnemyRuntime(state.level.enemyConfigs);
         state.breakableObstacles = createBreakableRuntime(state.level.breakableConfigs);
         state.hazards = createHazardRuntime(state.level.hazardConfigs);
@@ -564,6 +587,7 @@
             if (enemyHit) {
                 enemyHit.alive = false;
                 bullet.active = false;
+                spawnBloodSplash(enemyHit);
                 return;
             }
 
@@ -583,6 +607,24 @@
         });
 
         state.bullets = state.bullets.filter((bullet) => bullet.active);
+    }
+
+    function spawnBloodSplash(enemy) {
+        const centerX = enemy.x + enemy.width / 2;
+        const centerY = enemy.y + enemy.height / 2;
+
+        for (let index = 0; index < 12; index += 1) {
+            state.effects.push({
+                type: 'blood',
+                x: centerX,
+                y: centerY,
+                vx: (Math.random() * 4.6 - 2.3) + (state.player.facing === 'right' ? 1.2 : -1.2),
+                vy: Math.random() * -3.8 - 0.8,
+                radius: Math.random() * 3.2 + 1.8,
+                life: 26 + Math.floor(Math.random() * 12),
+                maxLife: 38,
+            });
+        }
     }
 
     function updateEnemyBullets() {
@@ -629,6 +671,7 @@
 
     function update() {
         if (state.gameStatus !== 'running') {
+            updateEffects();
             syncProgressUI();
             syncLivesUI();
             return;
@@ -658,6 +701,7 @@
         updateEnemies();
         updateBullets();
         const enemyBulletHit = updateEnemyBullets();
+        updateEffects();
 
         if (enemyBulletHit || checkPlayerDangerCollisions()) {
             loseLife();
@@ -686,6 +730,7 @@
         drawEnemies();
         drawBullets();
         drawEnemyBullets();
+        drawEffects();
         drawPlayer();
     }
 
@@ -704,6 +749,30 @@
             const stripeX = worldToScreenX(index);
             context.fillRect(stripeX, canvas.height - FLOOR_HEIGHT - 18, 120, 18);
         }
+
+        drawClouds();
+    }
+
+    function drawClouds() {
+        state.clouds.forEach((cloud) => {
+            const screenX = worldToScreenX(cloud.x);
+
+            if (screenX + cloud.width < -120 || screenX > canvas.width + 120) {
+                return;
+            }
+
+            context.save();
+            context.globalAlpha = cloud.opacity;
+            context.fillStyle = '#64748b';
+
+            context.beginPath();
+            context.ellipse(screenX, cloud.y + 12, cloud.width * 0.24, cloud.height * 0.38, 0, 0, Math.PI * 2);
+            context.ellipse(screenX + cloud.width * 0.2, cloud.y, cloud.width * 0.2, cloud.height * 0.34, 0, 0, Math.PI * 2);
+            context.ellipse(screenX + cloud.width * 0.42, cloud.y + 10, cloud.width * 0.26, cloud.height * 0.4, 0, 0, Math.PI * 2);
+            context.ellipse(screenX + cloud.width * 0.66, cloud.y + 14, cloud.width * 0.22, cloud.height * 0.32, 0, 0, Math.PI * 2);
+            context.fill();
+            context.restore();
+        });
     }
 
     function drawPlatforms() {
@@ -869,6 +938,36 @@
 
             context.fillStyle = '#cbd5e1';
             context.fillRect(screenX + 2, bullet.y + 1, bullet.width - 4, bullet.height - 2);
+        });
+    }
+
+    function updateEffects() {
+        state.effects.forEach((effect) => {
+            effect.x += effect.vx;
+            effect.y += effect.vy;
+            effect.vy += 0.18;
+            effect.life -= 1;
+        });
+
+        state.effects = state.effects.filter((effect) => effect.life > 0);
+    }
+
+    function drawEffects() {
+        state.effects.forEach((effect) => {
+            if (effect.type !== 'blood') {
+                return;
+            }
+
+            const screenX = worldToScreenX(effect.x);
+            const alpha = Math.max(0, effect.life / effect.maxLife);
+
+            context.save();
+            context.globalAlpha = alpha;
+            context.fillStyle = '#b91c1c';
+            context.beginPath();
+            context.arc(screenX, effect.y, effect.radius, 0, Math.PI * 2);
+            context.fill();
+            context.restore();
         });
     }
 
