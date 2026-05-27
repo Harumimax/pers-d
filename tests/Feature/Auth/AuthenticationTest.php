@@ -49,6 +49,21 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect(route('dictionaries.index', absolute: false));
     }
 
+    public function test_users_can_authenticate_with_email_in_different_case(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'maxim@example.com',
+        ]);
+
+        $response = $this->post('/login', [
+            'email' => 'MaXiM@Example.com',
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticatedAs($user);
+        $response->assertRedirect(route('dictionaries.index', absolute: false));
+    }
+
     public function test_users_can_not_authenticate_with_invalid_password(): void
     {
         $user = User::factory()->create();
