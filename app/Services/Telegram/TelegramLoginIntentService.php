@@ -129,6 +129,7 @@ class TelegramLoginIntentService
                     'reply_markup' => [
                         'keyboard' => [
                             [['text' => 'Словари']],
+                            [['text' => 'Поиск слов']],
                             [['text' => 'Выход']],
                         ],
                         'resize_keyboard' => true,

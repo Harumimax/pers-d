@@ -71,7 +71,13 @@ class TelegramAuthLinkTest extends TestCase
         $this->assertNotNull($intent->consumed_at);
         $this->assertGuest();
 
-        Http::assertSent(fn (\Illuminate\Http\Client\Request $request): bool => str_contains((string) $request['text'], 'WordKeeper'));
+        Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
+            return str_ends_with($request->url(), '/sendMessage')
+                && str_contains((string) $request['text'], 'WordKeeper')
+                && data_get($request->data(), 'reply_markup.keyboard.0.0.text') === 'Словари'
+                && data_get($request->data(), 'reply_markup.keyboard.1.0.text') === 'Поиск слов'
+                && data_get($request->data(), 'reply_markup.keyboard.2.0.text') === 'Выход';
+        });
     }
 
     public function test_invalid_password_does_not_consume_intent_or_link_user(): void
