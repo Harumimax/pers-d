@@ -92,8 +92,10 @@
 ### Livewire Components
 - `App\Livewire\Dictionaries\Index`
   - lists current user dictionaries
+  - renders a global word search across all personal dictionaries of the current user
   - creates dictionaries
   - deletes dictionaries with confirmation modal state
+  - delegates dictionary-word search queries to `UserDictionaryWordSearchService`
   - passes `headerDictionaries` into the shared dictionaries layout
 - `App\Livewire\Dictionaries\Show`
   - shows a single dictionary
@@ -104,6 +106,11 @@
   - supports automatic translation flow
   - deletes words with confirmation modal state
   - passes `headerDictionaries` into the shared dictionaries layout
+- `App\Services\Dictionaries\UserDictionaryWordSearchService`
+  - provides the shared search query for user dictionary words
+  - performs case-insensitive partial matching by `words.word` and `words.translation`
+  - limits results strictly to `user_dictionaries.user_id = current user`
+  - returns search results in the context of the concrete dictionary where each word is attached
 - `App\Livewire\ReadyDictionaries\Show`
   - shows one developer-managed ready dictionary
   - lists ready dictionary words with pagination
@@ -206,6 +213,7 @@
   - `TelegramUpdateHandler`
     - handles `/start`, `/login`, Telegram-side logout, and Telegram login intent creation against existing site users
     - serves the authenticated Telegram dictionary browsing flow (`Словари`)
+    - serves the authenticated Telegram dictionary word search flow (`Поиск слов`)
     - handles callback queries for scheduled Telegram runs (`РќР°С‡Р°С‚СЊ` / `РћС‚РјРµРЅР°`)
     - deduplicates incoming webhook updates before business processing through `TelegramProcessedUpdateService`
     - `/login` now asks only for email in Telegram and sends a one-time website confirmation link for password entry
@@ -279,8 +287,8 @@
     - keeps failed update attempts visible for diagnostics
   - `TelegramAuthStateStore`
     - stores the temporary login dialog state in cache for 10 minutes
-    - now stores only the `/login -> awaiting email` step
-    - keeps the Telegram-side auth slice simple without a full state machine subsystem
+    - stores the `/login -> awaiting email` step and the one-shot dictionary search waiting step
+    - keeps the Telegram-side dialog state simple without a full state machine subsystem
   - `TelegramGameConfigFactory`
     - maps one configured Telegram random-word session into the shared `GameSessionConfigData`
     - passes per-session `words_count` from `/tg-bot` into the shared game core
@@ -1139,8 +1147,14 @@
   - dispatch failures mark prepared interval sessions as `failed` instead of leaving half-prepared state without diagnostics
 - After Telegram authorization, the bot exposes a small reply-keyboard main menu:
   - `Словари`
+  - `Поиск слов`
   - `Выход`
 - `Словари` opens the authenticated Telegram dictionary browsing flow
+- `Поиск слов` starts a one-shot search dialog:
+  - the bot asks for a word or partial word
+  - the next user message is searched across all personal dictionaries by word and translation
+  - the bot returns one combined text response with numbered results
+  - the search state is cleared immediately after the response is sent
 - `TelegramDictionaryMenuService` sends:
   - the user's dictionaries as a numbered list (`1. Name — Language`)
   - or an empty-state message with `https://wordkeeper.space` when the user has no dictionaries yet

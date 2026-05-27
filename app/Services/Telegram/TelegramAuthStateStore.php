@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Cache;
 class TelegramAuthStateStore
 {
     public const STEP_AWAITING_EMAIL = 'awaiting_email';
+    public const STEP_AWAITING_DICTIONARY_SEARCH_QUERY = 'awaiting_dictionary_search_query';
 
     private const TTL_MINUTES = 10;
 
@@ -14,6 +15,14 @@ class TelegramAuthStateStore
     {
         $this->put($chatId, [
             'step' => self::STEP_AWAITING_EMAIL,
+            'email' => null,
+        ]);
+    }
+
+    public function startDictionaryWordSearch(string $chatId): void
+    {
+        $this->put($chatId, [
+            'step' => self::STEP_AWAITING_DICTIONARY_SEARCH_QUERY,
             'email' => null,
         ]);
     }

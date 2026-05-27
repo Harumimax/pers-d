@@ -5,6 +5,7 @@ namespace App\Services\Telegram;
 use App\Models\TelegramGameRun;
 use App\Models\TelegramIntervalReviewRun;
 use App\Models\User;
+use App\Services\Dictionaries\UserDictionaryWordSearchService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -24,6 +25,7 @@ class TelegramUpdateHandler
         private readonly TelegramDictionaryViewService $telegramDictionaryViewService,
         private readonly TelegramLoginIntentService $telegramLoginIntentService,
         private readonly TelegramAccountLinkService $telegramAccountLinkService,
+        private readonly UserDictionaryWordSearchService $userDictionaryWordSearchService,
     ) {
     }
 
@@ -108,6 +110,28 @@ class TelegramUpdateHandler
                 return;
             }
 
+            if (in_array($text, ['Поиск слов'], true)) {
+                if (! $linkedUser instanceof User) {
+                    $this->bot->sendMessage($chatId, 'Сначала авторизуйтесь в боте через /login.');
+                    $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
+
+                    return;
+                }
+
+                $this->stateStore->startDictionaryWordSearch($chatId);
+                $this->bot->sendMessage(
+                    $chatId,
+                    implode("\n", [
+                        'Введите слово или часть слова для поиска.',
+                        'Поиск будет осуществлён по вашим словарям по словам и их переводам.',
+                    ]),
+                    $this->mainMenuReplyMarkup(),
+                );
+                $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
+
+                return;
+            }
+
             $state = $this->stateStore->get($chatId);
 
             if ($state === null) {
@@ -119,6 +143,13 @@ class TelegramUpdateHandler
 
             if ($state['step'] === TelegramAuthStateStore::STEP_AWAITING_EMAIL) {
                 $this->handleEmailStep($chatId, $text, $username);
+                $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
+
+                return;
+            }
+
+            if ($state['step'] === TelegramAuthStateStore::STEP_AWAITING_DICTIONARY_SEARCH_QUERY) {
+                $this->handleDictionaryWordSearchStep($chatId, $text, $linkedUser);
                 $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
 
                 return;
@@ -672,6 +703,63 @@ class TelegramUpdateHandler
         );
     }
 
+    private function handleDictionaryWordSearchStep(string $chatId, string $text, ?User $linkedUser): void
+    {
+        if (! $linkedUser instanceof User) {
+            $this->stateStore->clear($chatId);
+            $this->bot->sendMessage($chatId, 'Сначала авторизуйтесь в боте через /login.');
+
+            return;
+        }
+
+        $query = trim($text);
+
+        if ($query === '') {
+            $this->bot->sendMessage($chatId, 'Нужно ввести слово или часть слова для поиска.');
+
+            return;
+        }
+
+        $results = $this->userDictionaryWordSearchService->search($linkedUser, $query);
+        $this->stateStore->clear($chatId);
+
+        if ($results->isEmpty()) {
+            $this->bot->sendMessage(
+                $chatId,
+                implode("\n", [
+                    'Результаты поиска:',
+                    'Таких слов не найдено в ваших словарях.',
+                ]),
+                $this->mainMenuReplyMarkup(),
+            );
+
+            return;
+        }
+
+        $resultBlocks = $results
+            ->values()
+            ->map(function (object $result, int $index): string {
+                $lines = [
+                    ($index + 1).'. '.$result->word.' - '.$result->translation,
+                ];
+
+                if (is_string($result->comment) && trim($result->comment) !== '') {
+                    $lines[] = trim($result->comment);
+                }
+
+                $lines[] = $result->dictionary_name;
+
+                return implode("\n", $lines);
+            })
+            ->all();
+
+        $this->bot->sendMessage(
+            $chatId,
+            implode("\n\n", array_merge(['Результаты поиска:'], $resultBlocks)),
+            $this->mainMenuReplyMarkup(),
+        );
+    }
+
     private function handleLogout(string $chatId): void
     {
         $this->telegramAccountLinkService->unlinkByChatId($chatId);
@@ -764,6 +852,7 @@ class TelegramUpdateHandler
             'reply_markup' => [
                 'keyboard' => [
                     [['text' => 'Словари']],
+                    [['text' => 'Поиск слов']],
                     [['text' => 'Выход']],
                 ],
                 'resize_keyboard' => true,
