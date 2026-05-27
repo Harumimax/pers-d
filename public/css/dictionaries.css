@@ -247,6 +247,56 @@
     gap: 20px;
 }
 
+.dictionaries-search-card {
+    margin-bottom: 24px;
+    background: var(--bg-color);
+    border: 1px solid #d8dce4;
+    border-radius: 16px;
+    padding: 24px 28px 28px;
+}
+
+.dictionaries-search-card__header {
+    margin-bottom: 18px;
+}
+
+.dictionaries-search-card__title {
+    margin: 0;
+    font-size: 1.7rem;
+    letter-spacing: -0.01em;
+    color: var(--text-color);
+}
+
+.dictionaries-search-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 18px;
+    align-items: end;
+}
+
+.dictionaries-search-form__field {
+    min-width: 0;
+}
+
+.dictionaries-search-form__actions {
+    align-self: end;
+}
+
+.dictionaries-search-results {
+    margin-bottom: 24px;
+}
+
+.dictionaries-search-results__header {
+    margin-bottom: 10px;
+}
+
+.dictionaries-search-results__open-link {
+    text-decoration: none;
+}
+
+.dictionaries-search-card__empty {
+    margin-top: 14px;
+}
+
 .dictionary-card {
     position: relative;
     background: var(--bg-color);
@@ -544,6 +594,10 @@
         grid-template-columns: 1fr;
     }
 
+    .dictionaries-search-form {
+        grid-template-columns: 1fr;
+    }
+
     .dictionaries-create-actions {
         width: 100%;
     }
@@ -599,6 +653,10 @@
         padding: 20px;
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .dictionaries-search-card {
+        padding: 20px;
     }
 
     .dictionary-card__edit-form {

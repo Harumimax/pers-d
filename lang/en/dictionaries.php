@@ -47,6 +47,32 @@ return [
             'no' => 'No',
             'yes' => 'Yes',
         ],
+        'search' => [
+            'aria' => 'Search words across all your dictionaries',
+            'title' => 'Search words across your dictionaries',
+            'placeholder' => 'Search by word or translation',
+            'actions' => [
+                'find' => 'Find',
+                'clear' => 'Clear',
+            ],
+            'results' => [
+                'title' => 'Search results',
+                'subtitle' => '{1} :count match found|[2,*] :count matches found',
+                'empty' => 'No such words were found in your dictionaries.',
+                'table' => [
+                    'word' => 'Word',
+                    'translation' => 'Translation',
+                    'comment' => 'Comment',
+                    'added' => 'Added',
+                    'action' => 'Action',
+                ],
+                'open_aria' => 'Open dictionary :dictionary for word :word',
+                'part_of_speech_not_specified' => 'Part of speech not specified',
+                'no_comment' => 'No comment',
+                'remainder_mistake_marker_aria' => 'Previous Remainder mistake',
+                'remainder_mistake_legend' => 'The red dot means you previously made a mistake with this word in the Remainder game.',
+            ],
+        ],
     ],
     'show' => [
         'add_word' => 'Add Word',

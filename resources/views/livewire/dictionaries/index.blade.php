@@ -58,6 +58,135 @@
         </section>
     @endif
 
+    <section class="dictionaries-container dictionaries-search-card" aria-label="{{ __('dictionaries.index.search.aria') }}">
+        <div class="dictionaries-search-card__header">
+            <div>
+                <h2 class="dictionaries-search-card__title">{{ __('dictionaries.index.search.title') }}</h2>
+            </div>
+        </div>
+
+        <form class="dictionaries-search-form" wire:submit="searchWords">
+            <div class="dictionaries-field dictionaries-search-form__field">
+                <input
+                    id="dictionary-global-search"
+                    type="text"
+                    class="dictionaries-input"
+                    placeholder="{{ __('dictionaries.index.search.placeholder') }}"
+                    wire:model.defer="searchQuery"
+                >
+                @error('searchQuery')
+                    <p class="dictionaries-error">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="dictionaries-create-actions dictionaries-search-form__actions">
+                <button type="submit" class="btn btn-primary dictionaries-action-btn">
+                    {{ __('dictionaries.index.search.actions.find') }}
+                </button>
+
+                @if ($searchQuery !== '' || $searchSubmitted)
+                    <button type="button" class="btn btn-secondary dictionaries-action-btn" wire:click="clearSearch">
+                        {{ __('dictionaries.index.search.actions.clear') }}
+                    </button>
+                @endif
+            </div>
+        </form>
+
+        @if ($searchSubmitted && trim($searchQuery) !== '' && $searchResults->isEmpty())
+            <p class="dictionary-show-list__empty dictionaries-search-card__empty">{{ __('dictionaries.index.search.results.empty') }}</p>
+        @endif
+    </section>
+
+    @if ($searchSubmitted && trim($searchQuery) !== '' && $searchResults->isNotEmpty())
+        <section class="dictionaries-container dictionary-show-card dictionaries-search-results" aria-label="{{ __('dictionaries.index.search.results.title') }}">
+            <div class="word-list-header dictionaries-search-results__header">
+                <div>
+                    <h2 class="dictionary-show-card__title">{{ __('dictionaries.index.search.results.title') }}</h2>
+                    <p class="word-list-subtitle">
+                        {{ trans_choice('dictionaries.index.search.results.subtitle', $searchResults->count(), ['count' => $searchResults->count()]) }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="word-list-table-wrap">
+                <table class="word-list-table">
+                    <thead>
+                        <tr>
+                            <th class="word-list-table__word-heading" style="width: 30%;">{{ __('dictionaries.index.search.results.table.word') }}</th>
+                            <th style="width: 22%;">{{ __('dictionaries.index.search.results.table.translation') }}</th>
+                            <th style="width: 28%;">{{ __('dictionaries.index.search.results.table.comment') }}</th>
+                            <th style="width: 12%;">{{ __('dictionaries.index.search.results.table.added') }}</th>
+                            <th style="width: 8%; text-align: center;">{{ __('dictionaries.index.search.results.table.action') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($searchResults as $searchResult)
+                            @php
+                                $languageKey = $searchResult->dictionary_language !== null
+                                    ? 'dictionaries.index.languages.' . strtolower($searchResult->dictionary_language)
+                                    : 'dictionaries.index.languages.not_specified';
+                            @endphp
+                            <tr wire:key="dictionary-search-result-{{ $searchResult->dictionary_id }}-{{ $searchResult->word_id }}">
+                                <td>
+                                    <div class="word-list-word-cell">
+                                        <span class="word-list-mistake-marker-slot">
+                                            @if ($searchResult->remainder_had_mistake)
+                                                <span
+                                                    class="word-list-mistake-marker"
+                                                    aria-label="{{ __('dictionaries.index.search.results.remainder_mistake_marker_aria') }}"
+                                                ></span>
+                                            @endif
+                                        </span>
+
+                                        <div class="word-list-word-content">
+                                            <div class="word-list-main">{{ $searchResult->word }}</div>
+                                            <div class="word-list-meta">
+                                                {{ $searchResult->dictionary_name }}
+                                                &middot;
+                                                {{ __($languageKey) }}
+                                                &middot;
+                                                {{ $partOfSpeechDisplayMap[$searchResult->part_of_speech] ?? __('dictionaries.index.search.results.part_of_speech_not_specified') }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="word-list-translation">{{ $searchResult->translation }}</div>
+                                </td>
+                                <td>
+                                    <div class="word-list-comment">{{ $searchResult->comment ?: __('dictionaries.index.search.results.no_comment') }}</div>
+                                </td>
+                                <td>
+                                    <span class="word-list-badge">{{ $searchResult->attached_at?->translatedFormat('M d') ?? '-' }}</span>
+                                </td>
+                                <td class="word-list-action-cell">
+                                    <div class="word-list-actions">
+                                        <a
+                                            href="{{ route('dictionaries.show', $searchResult->dictionary_id) }}"
+                                            class="word-list-edit-btn dictionaries-search-results__open-link"
+                                            aria-label="{{ __('dictionaries.index.search.results.open_aria', ['word' => $searchResult->word, 'dictionary' => $searchResult->dictionary_name]) }}"
+                                        >
+                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                <path d="M14 5h5v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path d="M10 14 19 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path d="M19 13v4a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="word-list-mistake-legend">
+                <span class="word-list-mistake-marker" aria-hidden="true"></span>
+                <span>{{ __('dictionaries.index.search.results.remainder_mistake_legend') }}</span>
+            </p>
+        </section>
+    @endif
+
     <section class="dictionaries-container dictionaries-list" aria-label="{{ __('dictionaries.index.title') }}">
         @forelse ($dictionaries as $dictionary)
             @php
