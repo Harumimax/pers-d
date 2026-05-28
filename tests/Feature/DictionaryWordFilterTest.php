@@ -508,17 +508,9 @@ class DictionaryWordFilterTest extends TestCase
     public function test_translate_automatically_loads_suggestions_from_service(): void
     {
         Http::fake([
-            'https://api.mymemory.translated.net/get*' => Http::response([
-                'responseData' => [
-                    'translatedText' => 'Р В Р’В Р СћРІР‚ВР В Р’В Р РЋРІР‚СћР В Р’В Р вЂ™Р’В±Р В Р Р‹Р В РІР‚С™Р В Р’В Р РЋРІР‚СћР В Р’В Р вЂ™Р’Вµ Р В Р Р‹Р РЋРІР‚СљР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р Р‹Р В РІР‚С™Р В Р’В Р РЋРІР‚Сћ',
-                ],
-                'matches' => [
-                    [
-                        'translation' => 'Р В Р’В Р вЂ™Р’В·Р В Р’В Р СћРІР‚ВР В Р Р‹Р В РІР‚С™Р В Р’В Р вЂ™Р’В°Р В Р’В Р В РІР‚В Р В Р Р‹Р В РЎвЂњР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р В РІР‚В Р В Р Р‹Р РЋРІР‚СљР В Р’В Р Р†РІР‚С›РІР‚вЂњР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р вЂ™Р’Вµ',
-                        'created-by' => 'memory',
-                        'match' => 0.87,
-                    ],
-                ],
+            'http://localhost:5000/translate' => Http::response([
+                'translatedText' => 'доброе утро',
+                'alternatives' => ['здравствуйте', 'утреннее приветствие'],
             ]),
         ]);
 
@@ -535,16 +527,25 @@ class DictionaryWordFilterTest extends TestCase
             ->set('autoWord', 'good morning')
             ->call('translateAutomatically')
             ->assertSet('autoTranslated', true)
-            ->assertSet('autoTranslation', 'Р В Р’В Р СћРІР‚ВР В Р’В Р РЋРІР‚СћР В Р’В Р вЂ™Р’В±Р В Р Р‹Р В РІР‚С™Р В Р’В Р РЋРІР‚СћР В Р’В Р вЂ™Р’Вµ Р В Р Р‹Р РЋРІР‚СљР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р Р‹Р В РІР‚С™Р В Р’В Р РЋРІР‚Сћ')
+            ->assertSet('autoTranslation', 'доброе утро')
+            ->assertSet('autoSuggestions', [
+                ['text' => 'доброе утро', 'label' => 'top result'],
+                ['text' => 'здравствуйте', 'label' => 'alternative'],
+                ['text' => 'утреннее приветствие', 'label' => 'alternative'],
+            ])
             ->assertSet('showCreateForm', true)
-            ->assertSee('Р В Р’В Р СћРІР‚ВР В Р’В Р РЋРІР‚СћР В Р’В Р вЂ™Р’В±Р В Р Р‹Р В РІР‚С™Р В Р’В Р РЋРІР‚СћР В Р’В Р вЂ™Р’Вµ Р В Р Р‹Р РЋРІР‚СљР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р Р‹Р В РІР‚С™Р В Р’В Р РЋРІР‚Сћ')
-            ->assertSee('Р В Р’В Р вЂ™Р’В·Р В Р’В Р СћРІР‚ВР В Р Р‹Р В РІР‚С™Р В Р’В Р вЂ™Р’В°Р В Р’В Р В РІР‚В Р В Р Р‹Р В РЎвЂњР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р В РІР‚В Р В Р Р‹Р РЋРІР‚СљР В Р’В Р Р†РІР‚С›РІР‚вЂњР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р вЂ™Р’Вµ')
+            ->assertSee('доброе утро')
+            ->assertSee('здравствуйте')
+            ->assertSee('утреннее приветствие')
             ->assertSet('autoTranslationError', '');
     }
 
     public function test_translate_automatically_shows_fallback_message_when_translation_is_unavailable(): void
     {
         Http::fake([
+            'http://localhost:5000/translate' => Http::response([
+                'error' => 'LibreTranslate unavailable',
+            ], 503),
             'https://api.mymemory.translated.net/get*' => Http::response([
                 'responseData' => [
                     'translatedText' => '',
@@ -599,24 +600,9 @@ class DictionaryWordFilterTest extends TestCase
     public function test_translate_automatically_filters_out_mixed_latin_and_cyrillic_suggestions(): void
     {
         Http::fake([
-            'https://api.mymemory.translated.net/get*' => Http::response([
-                'responseData' => [
-                    'translatedText' => 'Р РЋРІР‚С™Р В РЎвЂўР РЋРІР‚РЋР В Р вЂ¦Р РЋРІР‚в„–Р В РІвЂћвЂ“',
-                ],
-                'matches' => [
-                    [
-                        'translation' => 'Р РЋРІР‚С™Р В РЎвЂўР РЋРІР‚РЋР В Р вЂ¦Р РЋРІР‚в„–Р В РІвЂћвЂ“',
-                        'match' => 1,
-                    ],
-                    [
-                        'translation' => 'Р РЋРІР‚С™Р В РЎвЂўР РЋРІР‚РЋР В Р вЂ¦Р РЋРІР‚в„–Р В РІвЂћвЂ“ (accurate)',
-                        'created-by' => 'tm',
-                        'match' => 0.97,
-                    ],
-                    [
-                        'translation' => 'Р В РЎвЂ”Р В РЎвЂўР В РўвЂР РЋРІР‚В¦Р В РЎвЂўР В РўвЂР РЋР РЏР РЋРІР‚В°Р В РЎвЂР В РІвЂћвЂ“',
-                    ],
-                ],
+            'http://localhost:5000/translate' => Http::response([
+                'translatedText' => 'точный',
+                'alternatives' => ['точный (accurate)', 'подходящий'],
             ]),
         ]);
 
@@ -633,12 +619,15 @@ class DictionaryWordFilterTest extends TestCase
             ->set('autoWord', 'accurate')
             ->call('translateAutomatically')
             ->assertSet('autoTranslated', true)
-            ->assertSet('autoTranslation', 'Р РЋРІР‚С™Р В РЎвЂўР РЋРІР‚РЋР В Р вЂ¦Р РЋРІР‚в„–Р В РІвЂћвЂ“')
+            ->assertSet('autoTranslation', 'точный')
             ->assertSet('autoSuggestions', [
-                ['text' => 'Р РЋРІР‚С™Р В РЎвЂўР РЋРІР‚РЋР В Р вЂ¦Р РЋРІР‚в„–Р В РІвЂћвЂ“', 'label' => 'top result'],
-                ['text' => 'Р В РЎвЂ”Р В РЎвЂўР В РўвЂР РЋРІР‚В¦Р В РЎвЂўР В РўвЂР РЋР РЏР РЋРІР‚В°Р В РЎвЂР В РІвЂћвЂ“', 'label' => 'suggested'],
+                ['text' => 'точный', 'label' => 'top result'],
+                ['text' => 'точный (accurate)', 'label' => 'alternative'],
+                ['text' => 'подходящий', 'label' => 'alternative'],
             ])
-            ->assertDontSee('Р РЋРІР‚С™Р В РЎвЂўР РЋРІР‚РЋР В Р вЂ¦Р РЋРІР‚в„–Р В РІвЂћвЂ“ (accurate)');
+            ->assertSee('точный')
+            ->assertSee('точный (accurate)')
+            ->assertSee('подходящий');
     }
 }
 
