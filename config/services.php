@@ -48,6 +48,12 @@ return [
         'alternatives' => env('LIBRETRANSLATE_ALTERNATIVES', 3),
     ],
 
+    'translation' => [
+        'primary_provider' => env('TRANSLATION_PRIMARY_PROVIDER', 'libretranslate'),
+        'fallback_provider' => env('TRANSLATION_FALLBACK_PROVIDER', 'mymemory'),
+        'libretranslate_unhealthy_ttl_minutes' => env('TRANSLATION_LIBRETRANSLATE_UNHEALTHY_TTL_MINUTES', 60),
+    ],
+
     'notisend' => [
         'base_url' => env('NOTISEND_API_URL', 'https://api.notisend.ru/v1'),
         'reserve_base_url' => env('NOTISEND_API_RESERVE_URL', 'https://api-reserve.msndr.net/v1'),

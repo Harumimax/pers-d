@@ -177,6 +177,7 @@
 - Translation integration lives under `app/Services/Translation`
 - Current translation abstraction:
   - `TranslationServiceInterface`
+  - `FailoverTranslationService`
   - `MyMemoryTranslationService`
   - `LibreTranslateTranslationService`
   - `TranslationResult`
@@ -1027,8 +1028,8 @@
 - User clicks `Translate`
 - Livewire calls `translateAutomatically()`
 - `Show` resolves `TranslationServiceInterface`
-- `MyMemoryTranslationService` requests MyMemory API
-- `LibreTranslateTranslationService` is available as an alternative provider for self-hosted translation through LibreTranslate HTTP API
+- `TranslationServiceInterface` is bound to `FailoverTranslationService`
+- `FailoverTranslationService` prefers `LibreTranslateTranslationService` and falls back to `MyMemoryTranslationService` when LibreTranslate has an infrastructure failure
 - Result is normalized into suggestions for chips
 - User selects one suggestion
 - User completes `part of speech` and optional `comment`
@@ -1054,6 +1055,7 @@
 - This is intended to suppress obvious English/Spanish noise from MyMemory
 - Additional semantic noise filtering may still be needed later
 - LibreTranslate suggestions are normalized from `translatedText` plus `alternatives`, deduplicated, and returned through the same `TranslationResult` / `TranslationSuggestion` contract
+- Failover health behavior currently uses a cached `libretranslate unhealthy` circuit-breaker window; after a transport failure LibreTranslate is skipped for 60 minutes and translations go straight to MyMemory
 
 ## Remainder Game Flow
 - Settings page (`/remainder`) uses Blade + Alpine for configuration UI
