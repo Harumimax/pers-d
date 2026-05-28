@@ -41,6 +41,13 @@ return [
         'mt' => env('MYMEMORY_MT', true),
     ],
 
+    'libretranslate' => [
+        'base_url' => env('LIBRETRANSLATE_BASE_URL', 'http://localhost:5000'),
+        'timeout' => env('LIBRETRANSLATE_TIMEOUT', 10),
+        'api_key' => env('LIBRETRANSLATE_API_KEY'),
+        'alternatives' => env('LIBRETRANSLATE_ALTERNATIVES', 3),
+    ],
+
     'notisend' => [
         'base_url' => env('NOTISEND_API_URL', 'https://api.notisend.ru/v1'),
         'reserve_base_url' => env('NOTISEND_API_RESERVE_URL', 'https://api-reserve.msndr.net/v1'),

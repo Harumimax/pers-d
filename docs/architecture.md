@@ -178,6 +178,7 @@
 - Current translation abstraction:
   - `TranslationServiceInterface`
   - `MyMemoryTranslationService`
+  - `LibreTranslateTranslationService`
   - `TranslationResult`
   - `TranslationSuggestion`
 - Interface text localization uses standard Laravel lang files plus application locale set by middleware
@@ -1027,6 +1028,7 @@
 - Livewire calls `translateAutomatically()`
 - `Show` resolves `TranslationServiceInterface`
 - `MyMemoryTranslationService` requests MyMemory API
+- `LibreTranslateTranslationService` is available as an alternative provider for self-hosted translation through LibreTranslate HTTP API
 - Result is normalized into suggestions for chips
 - User selects one suggestion
 - User completes `part of speech` and optional `comment`
@@ -1051,6 +1053,7 @@
   - only suggestions containing Cyrillic and no Latin letters are allowed through to the UI
 - This is intended to suppress obvious English/Spanish noise from MyMemory
 - Additional semantic noise filtering may still be needed later
+- LibreTranslate suggestions are normalized from `translatedText` plus `alternatives`, deduplicated, and returned through the same `TranslationResult` / `TranslationSuggestion` contract
 
 ## Remainder Game Flow
 - Settings page (`/remainder`) uses Blade + Alpine for configuration UI
