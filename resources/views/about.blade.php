@@ -251,6 +251,10 @@
                                     <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
                                 </tr>
                                 <tr>
+                                    <td>{{ __('about.status.items.translation_failover') }}</td>
+                                    <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
+                                </tr>
+                                <tr>
                                     <td>{{ __('about.status.items.delete_confirmations') }}</td>
                                     <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
                                 </tr>
@@ -331,16 +335,20 @@
                                     <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
                                 </tr>
                                 <tr>
+                                    <td>{{ __('about.status.items.telegram_word_search') }}</td>
+                                    <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td>{{ __('about.status.items.telegram_add_word') }}</td>
+                                    <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
+                                </tr>
+                                <tr>
                                     <td>{{ __('about.status.items.telegram_send_mode') }}</td>
                                     <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
                                 </tr>
                                 <tr>
                                     <td>{{ __('about.status.items.telegram_interval_review') }}</td>
                                     <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
-                                </tr>
-                                <tr>
-                                    <td>{{ __('about.status.items.local_translation_provider') }}</td>
-                                    <td><span class="about-status-badge about-status-badge--planning">{{ __('about.status.badges.planning') }}</span></td>
                                 </tr>
                                 <tr>
                                     <td>{{ __('about.status.items.game_visuals') }}</td>
