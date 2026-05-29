@@ -10,7 +10,7 @@
             </div>
         </section>
 
-        <section class="dictionaries-container dictionaries-create-card" aria-label="{{ __('ready_dictionaries.filters.aria') }}">
+        <section class="dictionaries-container dictionaries-create-card ready-dictionaries-filters-card" aria-label="{{ __('ready_dictionaries.filters.aria') }}">
             <form method="GET" action="{{ route('ready-dictionaries.index') }}" class="dictionaries-create-form dictionaries-filter-form">
                 <div class="dictionaries-field">
                     <label for="ready-language" class="dictionaries-label">{{ __('ready_dictionaries.filters.language') }}</label>

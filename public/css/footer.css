@@ -1,7 +1,10 @@
 .site-footer {
     margin-top: auto;
+    display: block;
+    flex-shrink: 0;
     background-color: #ffffff;
     border-top: 1px solid #e5e7eb;
+    padding: 18px 0 22px;
 }
 
 .footer-inner {
@@ -29,4 +32,22 @@
 .footer-link:hover {
     color: #1e3a8a;
     background-color: var(--bg-color);
+}
+
+@media (max-width: 640px) {
+    .site-footer {
+        padding: 20px 0 calc(28px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .footer-inner {
+        min-height: auto;
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+
+    .footer-link {
+        min-height: 44px;
+        padding: 0 20px;
+        font-size: 0.95rem;
+    }
 }

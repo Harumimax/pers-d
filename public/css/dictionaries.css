@@ -649,6 +649,10 @@
         padding: 36px 0 52px;
     }
 
+    .dictionaries-page {
+        padding-bottom: 20px;
+    }
+
     .dictionaries-intro {
         gap: 18px;
         margin-bottom: 24px;
@@ -702,6 +706,11 @@
 
     .dictionaries-search-card {
         padding: 20px;
+    }
+
+    .ready-dictionaries-filters-card {
+        padding-top: 24px;
+        padding-bottom: 24px;
     }
 
     .dictionary-card__edit-form {

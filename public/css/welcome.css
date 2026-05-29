@@ -1389,4 +1389,8 @@ img {
     .auth-submit-btn {
         width: 100%;
     }
+
+    .closing-section {
+        padding-bottom: 40px;
+    }
 }

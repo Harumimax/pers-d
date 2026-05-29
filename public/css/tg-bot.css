@@ -919,6 +919,10 @@
     }
 
     .tg-bot-container {
+        padding-bottom: 20px;
+    }
+
+    .tg-bot-container {
         gap: 20px;
     }
 
