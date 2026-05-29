@@ -534,6 +534,14 @@
     justify-content: space-between;
     gap: 16px;
     flex-wrap: wrap;
+    min-height: 42px;
+}
+
+.tg-bot-interval__dictionary-toolbar-spacer {
+    min-width: 160px;
+    min-height: 42px;
+    visibility: hidden;
+    pointer-events: none;
 }
 
 .tg-bot-interval__dictionary-title,

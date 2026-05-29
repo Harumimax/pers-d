@@ -128,7 +128,10 @@
 
                 <div class="tg-bot-interval__dictionary-columns">
                     <div class="tg-bot-interval__dictionary-column">
-                        <h4 class="tg-bot-interval__dictionary-title">{{ __('tg-bot.interval_review.dictionary_picker.user_title') }}</h4>
+                        <div class="tg-bot-interval__dictionary-toolbar">
+                            <h4 class="tg-bot-interval__dictionary-title">{{ __('tg-bot.interval_review.dictionary_picker.user_title') }}</h4>
+                            <span class="tg-bot-interval__dictionary-toolbar-spacer" aria-hidden="true"></span>
+                        </div>
 
                         @if ($userDictionaries->isNotEmpty())
                             <div class="tg-bot-interval__dictionary-list">
