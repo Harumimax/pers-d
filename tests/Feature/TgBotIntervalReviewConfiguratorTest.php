@@ -159,11 +159,8 @@ class TgBotIntervalReviewConfiguratorTest extends TestCase
             ->assertSee('Apply plan')
             ->assertSee('6 review sessions plan')
             ->assertSee('Session 1')
-            ->assertSee('First session preview')
-            ->assertSee('apple')
             ->call('collapsePlanPreview')
             ->assertDontSee('Schedule preview')
-            ->assertDontSee('First session preview')
             ->assertSee('Show schedule');
     }
 }

@@ -95,6 +95,28 @@
                             </span>
                         </div>
                     </div>
+
+                    @if ($planStatusCode === \App\Models\TelegramIntervalReviewPlan::STATUS_COMPLETED)
+                        <div class="tg-bot-interval__status-card">
+                            <div>
+                                <h4 class="tg-bot-interval__status-title">{{ __('tg-bot.interval_review.completed_cta.title') }}</h4>
+                                <p class="tg-bot-form__hint">{{ __('tg-bot.interval_review.completed_cta.hint') }}</p>
+                            </div>
+
+                            <button
+                                type="button"
+                                class="btn btn-primary tg-bot-form__submit"
+                                x-on:click="
+                                    const scrollTop = window.scrollY;
+                                    $el.blur();
+                                    $wire.resetPlan();
+                                    requestAnimationFrame(() => window.scrollTo({ top: scrollTop }));
+                                "
+                            >
+                                {{ __('tg-bot.interval_review.completed_cta.action') }}
+                            </button>
+                        </div>
+                    @endif
                 @endif
             </section>
 
@@ -337,33 +359,6 @@
                                 <div class="tg-bot-interval__schedule-item">
                                     <span class="tg-bot-interval__schedule-label">{{ $session['label'] }}</span>
                                     <span class="tg-bot-interval__schedule-date">{{ $session['scheduled_at_local'] }}</span>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    <div class="tg-bot-interval__schedule-card">
-                        <h4 class="tg-bot-interval__schedule-title">{{ __('tg-bot.interval_review.preview.first_session_title') }}</h4>
-                        <p class="tg-bot-form__hint">{{ __('tg-bot.interval_review.preview.first_session_hint', ['count' => count($firstSessionPreviewWords)]) }}</p>
-
-                        <div class="tg-bot-interval__first-session-list">
-                            @foreach ($firstSessionPreviewWords as $word)
-                                <div class="tg-bot-interval__first-session-word" wire:key="preview-word-{{ $word['selection_key'] }}">
-                                    <div>
-                                        <div class="tg-bot-interval__selected-word-title">
-                                            {{ $word['word'] }}
-                                        </div>
-                                        <div class="tg-bot-interval__selected-word-comment">
-                                            {{ $word['translation'] }}
-                                            @if ($word['part_of_speech'])
-                                                <span aria-hidden="true">&middot;</span>
-                                                {{ $word['part_of_speech'] }}
-                                            @endif
-                                        </div>
-                                    </div>
-                                    @if ($word['comment'])
-                                        <div class="tg-bot-interval__selected-word-comment">{{ $word['comment'] }}</div>
-                                    @endif
                                 </div>
                             @endforeach
                         </div>

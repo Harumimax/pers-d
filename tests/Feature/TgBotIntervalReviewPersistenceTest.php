@@ -173,7 +173,50 @@ class TgBotIntervalReviewPersistenceTest extends TestCase
             ->assertSet('nextSessionLabel', null)
             ->assertSee('Completed')
             ->assertSee('6/6')
-            ->assertSee('No upcoming sessions');
+            ->assertSee('No upcoming sessions')
+            ->assertSee('Interval review session completed. Create a new one?')
+            ->assertSee('Yes');
+    }
+
+    public function test_completed_plan_can_be_reset_from_completion_prompt(): void
+    {
+        [$user, $dictionary, $word] = $this->createUserDictionaryWithWord();
+
+        $plan = TelegramIntervalReviewPlan::query()->create([
+            'user_id' => $user->id,
+            'status' => TelegramIntervalReviewPlan::STATUS_COMPLETED,
+            'language' => 'English',
+            'start_time' => '08:45',
+            'timezone' => 'Europe/Moscow',
+            'words_count' => 1,
+            'completed_sessions_count' => 6,
+            'completed_at' => now(),
+        ]);
+
+        $plan->words()->create([
+            'source_type' => 'user',
+            'source_dictionary_id' => $dictionary->id,
+            'source_word_id' => $word->id,
+            'dictionary_name' => $dictionary->name,
+            'language' => 'English',
+            'word' => 'apple',
+            'translation' => 'СЏР±Р»РѕРєРѕ',
+            'part_of_speech' => 'noun',
+            'comment' => 'Fruit',
+            'position' => 1,
+        ]);
+
+        $component = Livewire::actingAs($user)
+            ->test(IntervalReviewConfigurator::class, ['timezone' => 'Europe/Moscow'])
+            ->assertSee('Interval review session completed. Create a new one?')
+            ->call('resetPlan')
+            ->assertSet('hasPersistedPlan', false)
+            ->assertSet('selectedWords', [])
+            ->assertSet('selectedLanguage', 'English')
+            ->assertSet('startTime', '09:00')
+            ->assertSee('Interval review plan deleted.');
+
+        $this->assertSame(0, TelegramIntervalReviewPlan::query()->where('user_id', $user->id)->count());
     }
 
     /**

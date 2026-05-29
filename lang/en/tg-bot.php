@@ -109,6 +109,11 @@ return [
             'next_session' => 'Next session',
             'no_next_session' => 'No upcoming sessions',
         ],
+        'completed_cta' => [
+            'title' => 'Interval review session completed. Create a new one?',
+            'hint' => 'This clears the finished plan together with its selected words and schedule so you can configure a new one.',
+            'action' => 'Yes',
+        ],
         'preview' => [
             'action' => 'Show schedule',
             'collapse_action' => 'Collapse schedule',
@@ -117,8 +122,6 @@ return [
             'title' => 'Schedule preview',
             'hint' => 'This preview matches the interval review plan that will be saved after you apply it.',
             'schedule_title' => '6 review sessions plan',
-            'first_session_title' => 'First session preview',
-            'first_session_hint' => 'The first session will include all selected words. Current selection: :count.',
             'session_label' => 'Session :number',
         ],
         'reset' => [

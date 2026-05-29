@@ -63,7 +63,6 @@ class IntervalReviewConfigurator extends Component
             'modalWords' => $this->modalWords(),
             'selectedWordGroups' => $this->selectedWordGroups(),
             'selectedWordsCount' => count($this->selectedWords),
-            'firstSessionPreviewWords' => array_values($this->selectedWords),
             'planStatusLabel' => $this->resolvePlanStatusLabel(),
         ]);
     }
