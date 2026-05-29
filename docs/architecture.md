@@ -111,6 +111,9 @@
   - performs case-insensitive partial matching by `words.word` and `words.translation`
   - limits results strictly to `user_dictionaries.user_id = current user`
   - returns search results in the context of the concrete dictionary where each word is attached
+- `App\Services\Dictionaries\SaveDictionaryWordService`
+  - persists one new `Word` and attaches it to the chosen personal dictionary in a transaction
+  - is reusable from non-web entry points such as Telegram bot dialogs
 - `App\Livewire\ReadyDictionaries\Show`
   - shows one developer-managed ready dictionary
   - lists ready dictionary words with pagination
@@ -229,6 +232,9 @@
     - keeps Telegram chat reassignment rules in one place for both webhook and website confirmation flows
   - `TelegramDictionaryCallbackData`
     - centralizes callback payload generation and parsing for Telegram dictionary browsing
+  - `TelegramAddWordCallbackData`
+    - centralizes callback payload generation and parsing for the Telegram add-word flow
+    - encodes dictionary selection, translation selection, and part-of-speech selection callbacks
   - `TelegramDictionaryMenuService`
     - renders the authenticated user's dictionary list in Telegram
     - returns an empty-state message with a link to the site when the user has no dictionaries yet
@@ -289,7 +295,7 @@
     - keeps failed update attempts visible for diagnostics
   - `TelegramAuthStateStore`
     - stores the temporary login dialog state in cache for 10 minutes
-    - stores the `/login -> awaiting email` step and the one-shot dictionary search waiting step
+    - stores the `/login -> awaiting email` step, the one-shot dictionary search waiting step, and the multi-step add-word dialog state
     - keeps the Telegram-side dialog state simple without a full state machine subsystem
   - `TelegramGameConfigFactory`
     - maps one configured Telegram random-word session into the shared `GameSessionConfigData`
@@ -1160,6 +1166,13 @@
   - the next user message is searched across all personal dictionaries by word and translation
   - the bot returns one combined text response with numbered results
   - the search state is cleared immediately after the response is sent
+- `Добавить слово` starts a multi-step Telegram dialog:
+  - the bot shows the authenticated user's dictionaries as a numbered list with inline choice buttons
+  - after dictionary selection, the next user message is treated as the source word with a 50-character limit
+  - the word is translated through `TranslationServiceInterface`
+  - the bot shows at most 6 translation choices: the first top result plus up to 5 alternatives
+  - after translation selection, the bot shows all supported parts of speech as numbered inline choices
+  - after the final choice, `SaveDictionaryWordService` persists the new word into the selected personal dictionary
 - `TelegramDictionaryMenuService` sends:
   - the user's dictionaries as a numbered list (`1. Name — Language`)
   - or an empty-state message with `https://wordkeeper.space` when the user has no dictionaries yet

@@ -5,13 +5,26 @@ namespace App\Services\Telegram;
 use App\Models\TelegramGameRun;
 use App\Models\TelegramIntervalReviewRun;
 use App\Models\User;
+use App\Models\UserDictionary;
+use App\Services\Dictionaries\SaveDictionaryWordService;
 use App\Services\Dictionaries\UserDictionaryWordSearchService;
+use App\Services\Translation\TranslationServiceInterface;
+use App\Support\PartOfSpeechCatalog;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class TelegramUpdateHandler
 {
+    private const ADD_WORD_MAX_LENGTH = 50;
+    private const TARGET_LANGUAGE = 'ru';
+    private const DICTIONARY_LANGUAGE_CODES = [
+        'English' => 'en',
+        'Spanish' => 'es',
+    ];
+
     public function __construct(
         private readonly TelegramBotService $bot,
         private readonly TelegramAuthStateStore $stateStore,
@@ -21,11 +34,14 @@ class TelegramUpdateHandler
         private readonly TelegramIntervalReviewRunCallbackData $telegramIntervalReviewRunCallbackData,
         private readonly TelegramIntervalReviewRuntimeService $telegramIntervalReviewRuntimeService,
         private readonly TelegramDictionaryCallbackData $telegramDictionaryCallbackData,
+        private readonly TelegramAddWordCallbackData $telegramAddWordCallbackData,
         private readonly TelegramDictionaryMenuService $telegramDictionaryMenuService,
         private readonly TelegramDictionaryViewService $telegramDictionaryViewService,
         private readonly TelegramLoginIntentService $telegramLoginIntentService,
         private readonly TelegramAccountLinkService $telegramAccountLinkService,
         private readonly UserDictionaryWordSearchService $userDictionaryWordSearchService,
+        private readonly SaveDictionaryWordService $saveDictionaryWordService,
+        private readonly TranslationServiceInterface $translationService,
     ) {
     }
 
@@ -132,6 +148,20 @@ class TelegramUpdateHandler
                 return;
             }
 
+            if (in_array($text, ['Добавить слово'], true)) {
+                if (! $linkedUser instanceof User) {
+                    $this->bot->sendMessage($chatId, 'Сначала авторизуйтесь в боте через /login.');
+                    $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
+
+                    return;
+                }
+
+                $this->showAddWordDictionaryPicker($chatId, $linkedUser);
+                $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
+
+                return;
+            }
+
             $state = $this->stateStore->get($chatId);
 
             if ($state === null) {
@@ -150,6 +180,13 @@ class TelegramUpdateHandler
 
             if ($state['step'] === TelegramAuthStateStore::STEP_AWAITING_DICTIONARY_SEARCH_QUERY) {
                 $this->handleDictionaryWordSearchStep($chatId, $text, $linkedUser);
+                $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
+
+                return;
+            }
+
+            if ($state['step'] === TelegramAuthStateStore::STEP_AWAITING_ADD_WORD_TEXT) {
+                $this->handleAddWordTextStep($chatId, $text, $linkedUser, $state);
                 $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
 
                 return;
@@ -177,6 +214,7 @@ class TelegramUpdateHandler
         $intervalPayload = $this->telegramIntervalReviewRunCallbackData->parse($callbackData);
         $gamePayload = $this->telegramGameRunCallbackData->parse($callbackData);
         $dictionaryPayload = $this->telegramDictionaryCallbackData->parse($callbackData);
+        $addWordPayload = $this->telegramAddWordCallbackData->parse($callbackData);
         $chatId = $this->extractCallbackChatId($callbackQuery);
         $messageId = isset($callbackQuery['message']['message_id']) && is_numeric($callbackQuery['message']['message_id'])
             ? (int) $callbackQuery['message']['message_id']
@@ -192,6 +230,12 @@ class TelegramUpdateHandler
 
         if (is_array($dictionaryPayload)) {
             $this->handleDictionaryCallbackQuery($callbackQueryId, $chatId, $messageId, $dictionaryPayload);
+
+            return;
+        }
+
+        if (is_array($addWordPayload)) {
+            $this->handleAddWordCallbackQuery($callbackQueryId, $chatId, $messageId, $addWordPayload);
 
             return;
         }
@@ -760,6 +804,188 @@ class TelegramUpdateHandler
         );
     }
 
+    /**
+     * @param  array<string, int|string>  $payload
+     */
+    private function handleAddWordCallbackQuery(string $callbackQueryId, string $chatId, ?int $messageId, array $payload): void
+    {
+        $linkedUser = $this->findLinkedUserByChatId($chatId);
+
+        if (! $linkedUser instanceof User) {
+            $this->stateStore->clear($chatId);
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Сначала авторизуйтесь через /login.');
+
+            return;
+        }
+
+        $action = (string) ($payload['action'] ?? '');
+        $value = $payload['value'] ?? null;
+
+        if ($action === TelegramAddWordCallbackData::ACTION_DICTIONARY) {
+            $dictionary = $this->ownedDictionary($linkedUser, (int) $value);
+
+            if (! $dictionary instanceof UserDictionary) {
+                $this->stateStore->clear($chatId);
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Словарь не найден.');
+
+                return;
+            }
+
+            $this->stateStore->startAddWord($chatId, $dictionary->id, $dictionary->name, $dictionary->language);
+            $this->bot->answerCallbackQuery($callbackQueryId);
+            $this->clearInlineKeyboard($chatId, $messageId);
+            $this->bot->sendMessage($chatId, 'Введите слово для перевода. Не более 50 символов.');
+
+            return;
+        }
+
+        $state = $this->stateStore->get($chatId);
+
+        if ($state === null) {
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Сценарий истёк. Нажмите «Добавить слово» ещё раз.');
+
+            return;
+        }
+
+        if ($action === TelegramAddWordCallbackData::ACTION_TRANSLATION) {
+            if ($state['step'] !== TelegramAuthStateStore::STEP_AWAITING_ADD_WORD_TRANSLATION) {
+                $this->stateStore->clear($chatId);
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Сценарий истёк. Нажмите «Добавить слово» ещё раз.');
+
+                return;
+            }
+
+            $suggestions = $state['translation_options'] ?? [];
+            $index = (int) $value;
+
+            if (! isset($suggestions[$index]['text']) || trim((string) $suggestions[$index]['text']) === '') {
+                $this->stateStore->clear($chatId);
+                $this->bot->answerCallbackQuery($callbackQueryId, 'Вариант перевода недоступен.');
+
+                return;
+            }
+
+            $selectedTranslation = trim((string) $suggestions[$index]['text']);
+            $this->stateStore->storeSelectedAddWordTranslation($chatId, $selectedTranslation);
+            $this->bot->answerCallbackQuery($callbackQueryId);
+            $this->clearInlineKeyboard($chatId, $messageId);
+            $this->showAddWordPartOfSpeechPicker($chatId);
+
+            return;
+        }
+
+        if ($action !== TelegramAddWordCallbackData::ACTION_PART_OF_SPEECH) {
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Действие недоступно.');
+
+            return;
+        }
+
+        if ($state['step'] !== TelegramAuthStateStore::STEP_AWAITING_ADD_WORD_PART_OF_SPEECH) {
+            $this->stateStore->clear($chatId);
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Сценарий истёк. Нажмите «Добавить слово» ещё раз.');
+
+            return;
+        }
+
+        $partOfSpeech = (string) $value;
+
+        if (! in_array($partOfSpeech, PartOfSpeechCatalog::values(), true)) {
+            $this->stateStore->clear($chatId);
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Часть речи недоступна.');
+
+            return;
+        }
+
+        $dictionaryId = (int) ($state['dictionary_id'] ?? 0);
+        $word = trim((string) ($state['word'] ?? ''));
+        $translation = trim((string) ($state['selected_translation'] ?? ''));
+        $dictionary = $this->ownedDictionary($linkedUser, $dictionaryId);
+
+        if (! $dictionary instanceof UserDictionary || $word === '' || $translation === '') {
+            $this->stateStore->clear($chatId);
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Сценарий истёк. Нажмите «Добавить слово» ещё раз.');
+
+            return;
+        }
+
+        $this->saveDictionaryWordService->save($dictionary, $word, $translation, $partOfSpeech);
+        $this->stateStore->clear($chatId);
+        $this->bot->answerCallbackQuery($callbackQueryId, 'Слово сохранено.');
+        $this->clearInlineKeyboard($chatId, $messageId);
+
+        $partOfSpeechLabel = PartOfSpeechCatalog::dictionaryFormLabels()[$partOfSpeech] ?? $partOfSpeech;
+        $this->bot->sendMessage(
+            $chatId,
+            "Слово {$word} ({$partOfSpeechLabel}) успешно сохранено в {$dictionary->name}",
+            $this->mainMenuReplyMarkup(),
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $state
+     */
+    private function handleAddWordTextStep(string $chatId, string $text, ?User $linkedUser, array $state): void
+    {
+        if (! $linkedUser instanceof User) {
+            $this->stateStore->clear($chatId);
+            $this->bot->sendMessage($chatId, 'Сначала авторизуйтесь в боте через /login.');
+
+            return;
+        }
+
+        $dictionary = $this->ownedDictionary($linkedUser, (int) ($state['dictionary_id'] ?? 0));
+
+        if (! $dictionary instanceof UserDictionary) {
+            $this->stateStore->clear($chatId);
+            $this->bot->sendMessage($chatId, 'Выбранный словарь больше недоступен. Нажмите «Добавить слово» ещё раз.');
+
+            return;
+        }
+
+        $word = trim($text);
+
+        if ($word === '') {
+            $this->bot->sendMessage($chatId, 'Введите слово для перевода. Не более 50 символов.');
+
+            return;
+        }
+
+        if (mb_strlen($word) > self::ADD_WORD_MAX_LENGTH) {
+            $this->bot->sendMessage($chatId, 'Слово не должно превышать 50 символов.');
+
+            return;
+        }
+
+        $sourceLanguage = $this->sourceLanguageCode($dictionary);
+
+        if ($sourceLanguage === null) {
+            $this->bot->sendMessage($chatId, 'Для этого словаря автоматический перевод пока недоступен.');
+
+            return;
+        }
+
+        try {
+            $suggestions = array_slice(
+                $this->translationService->translate($word, $sourceLanguage, self::TARGET_LANGUAGE)->toArray(),
+                0,
+                6,
+            );
+        } catch (ConnectionException|RequestException) {
+            $this->bot->sendMessage($chatId, 'Не удалось получить варианты перевода. Попробуйте другое слово.');
+
+            return;
+        }
+
+        if ($suggestions === []) {
+            $this->bot->sendMessage($chatId, 'Не удалось получить варианты перевода. Попробуйте другое слово.');
+
+            return;
+        }
+
+        $this->stateStore->storeAddWordTranslations($chatId, $word, $suggestions);
+        $this->showAddWordTranslationPicker($chatId, $suggestions);
+    }
+
     private function handleLogout(string $chatId): void
     {
         $this->telegramAccountLinkService->unlinkByChatId($chatId);
@@ -799,6 +1025,127 @@ class TelegramUpdateHandler
                 'Чтобы подключить бота к вашему аккаунту сайта, отправьте /login.',
             ])
         );
+    }
+
+    private function showAddWordDictionaryPicker(string $chatId, User $user): void
+    {
+        $dictionaries = UserDictionary::query()
+            ->where('user_id', $user->id)
+            ->orderBy('id')
+            ->get(['id', 'name', 'language']);
+
+        if ($dictionaries->isEmpty()) {
+            $this->bot->sendMessage($chatId, 'У вас пока нет словарей. Создайте словарь на сайте и возвращайтесь сюда.');
+
+            return;
+        }
+
+        $lines = ['Выберите словарь, в который надо добавить слово:'];
+
+        foreach ($dictionaries as $index => $dictionary) {
+            $languageSuffix = filled($dictionary->language) ? " ({$dictionary->language})" : '';
+            $lines[] = ($index + 1).'. '.$dictionary->name.$languageSuffix;
+        }
+
+        $keyboard = $dictionaries
+            ->values()
+            ->map(fn (UserDictionary $dictionary, int $index): array => [
+                'text' => (string) ($index + 1),
+                'callback_data' => $this->telegramAddWordCallbackData->makeDictionary($dictionary->id),
+            ])
+            ->chunk(4)
+            ->map(fn ($row) => $row->values()->all())
+            ->values()
+            ->all();
+
+        $this->bot->sendMessage($chatId, implode("\n", $lines), [
+            'reply_markup' => [
+                'inline_keyboard' => $keyboard,
+            ],
+        ]);
+    }
+
+    /**
+     * @param  array<int, array{text:string,label:string}>  $suggestions
+     */
+    private function showAddWordTranslationPicker(string $chatId, array $suggestions): void
+    {
+        $lines = ['Выберите вариант перевода:'];
+
+        foreach ($suggestions as $index => $suggestion) {
+            $lines[] = sprintf(
+                '%d. %s (%s)',
+                $index + 1,
+                $suggestion['text'],
+                $suggestion['label']
+            );
+        }
+
+        $keyboard = collect($suggestions)
+            ->values()
+            ->map(fn (array $suggestion, int $index): array => [
+                'text' => (string) ($index + 1),
+                'callback_data' => $this->telegramAddWordCallbackData->makeTranslation($index),
+            ])
+            ->chunk(4)
+            ->map(fn ($row) => $row->values()->all())
+            ->values()
+            ->all();
+
+        $this->bot->sendMessage($chatId, implode("\n", $lines), [
+            'reply_markup' => [
+                'inline_keyboard' => $keyboard,
+            ],
+        ]);
+    }
+
+    private function showAddWordPartOfSpeechPicker(string $chatId): void
+    {
+        $labels = PartOfSpeechCatalog::dictionaryFormLabels();
+        $lines = ['Выберите часть речи:'];
+        $entries = [];
+
+        foreach (array_values($labels) as $index => $label) {
+            $lines[] = ($index + 1).'. '.$label;
+        }
+
+        foreach (array_keys($labels) as $index => $value) {
+            $entries[] = [
+                'text' => (string) ($index + 1),
+                'callback_data' => $this->telegramAddWordCallbackData->makePartOfSpeech($value),
+            ];
+        }
+
+        $keyboard = collect($entries)
+            ->chunk(4)
+            ->map(fn ($row) => $row->values()->all())
+            ->values()
+            ->all();
+
+        $this->bot->sendMessage($chatId, implode("\n", $lines), [
+            'reply_markup' => [
+                'inline_keyboard' => $keyboard,
+            ],
+        ]);
+    }
+
+    private function ownedDictionary(User $user, int $dictionaryId): ?UserDictionary
+    {
+        if ($dictionaryId <= 0) {
+            return null;
+        }
+
+        return UserDictionary::query()
+            ->where('user_id', $user->id)
+            ->whereKey($dictionaryId)
+            ->first();
+    }
+
+    private function sourceLanguageCode(UserDictionary $dictionary): ?string
+    {
+        $language = trim((string) $dictionary->language);
+
+        return self::DICTIONARY_LANGUAGE_CODES[$language] ?? null;
     }
 
     private function extractChatId(array $message): ?string
@@ -853,6 +1200,7 @@ class TelegramUpdateHandler
                 'keyboard' => [
                     [['text' => 'Словари']],
                     [['text' => 'Поиск слов']],
+                    [['text' => 'Добавить слово']],
                     [['text' => 'Выход']],
                 ],
                 'resize_keyboard' => true,

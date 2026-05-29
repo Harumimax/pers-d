@@ -45,7 +45,8 @@ class TelegramDictionaryWordSearchTest extends TestCase
             return str_ends_with($request->url(), '/sendMessage')
                 && data_get($request->data(), 'reply_markup.keyboard.0.0.text') === 'Словари'
                 && data_get($request->data(), 'reply_markup.keyboard.1.0.text') === 'Поиск слов'
-                && data_get($request->data(), 'reply_markup.keyboard.2.0.text') === 'Выход';
+                && data_get($request->data(), 'reply_markup.keyboard.2.0.text') === 'Добавить слово'
+                && data_get($request->data(), 'reply_markup.keyboard.3.0.text') === 'Выход';
         });
     }
 

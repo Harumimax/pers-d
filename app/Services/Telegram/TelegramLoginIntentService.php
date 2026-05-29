@@ -130,6 +130,7 @@ class TelegramLoginIntentService
                         'keyboard' => [
                             [['text' => 'Словари']],
                             [['text' => 'Поиск слов']],
+                            [['text' => 'Добавить слово']],
                             [['text' => 'Выход']],
                         ],
                         'resize_keyboard' => true,
