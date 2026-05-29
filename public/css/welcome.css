@@ -36,6 +36,9 @@ html {
 
 body {
     margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     font-family: Arial, Helvetica, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
@@ -1076,17 +1079,26 @@ img {
 
     .site-header__desktop-group {
         flex: 0 0 auto;
-        gap: 12px;
+        gap: 14px;
     }
 
     .site-header__burger {
         display: inline-flex;
+        margin-left: 4px;
+        margin-right: 4px;
     }
 
     .site-header__mobile-shell {
         display: block;
         border-top: 1px solid #e5e7eb;
         background: rgba(255, 255, 255, 0.98);
+        padding: 12px 0 16px;
+    }
+
+    .site-header__mobile-drawer {
+        gap: 12px;
+        padding-top: 0;
+        padding-bottom: 0;
     }
 
     .site-header__utility .language-switcher__toggle {
@@ -1228,6 +1240,10 @@ img {
 
     .btn-large {
         width: 100%;
+    }
+
+    .site-footer {
+        display: block;
     }
 }
 

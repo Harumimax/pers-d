@@ -9,6 +9,8 @@
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
 
     <link rel="stylesheet" href="{{ asset('css/welcome.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/footer.css') }}">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
 
@@ -236,5 +238,7 @@
             </div>
         </div>
     </section>
+
+    <x-site-footer :link-href="route('about')" :link-label="__('common.links.about')" />
 </body>
 </html>

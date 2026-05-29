@@ -180,6 +180,67 @@
                 </table>
             </div>
 
+            <div class="word-list-mobile-list">
+                @foreach ($searchResults as $searchResult)
+                    @php
+                        $languageKey = $searchResult->dictionary_language !== null
+                            ? 'dictionaries.index.languages.' . strtolower($searchResult->dictionary_language)
+                            : 'dictionaries.index.languages.not_specified';
+                    @endphp
+                    <article class="word-list-mobile-card" wire:key="dictionary-search-mobile-result-{{ $searchResult->dictionary_id }}-{{ $searchResult->word_id }}">
+                        <div class="word-list-mobile-card__header">
+                            <div class="word-list-word-cell">
+                                <span class="word-list-mistake-marker-slot">
+                                    @if ($searchResult->remainder_had_mistake)
+                                        <span
+                                            class="word-list-mistake-marker"
+                                            aria-label="{{ __('dictionaries.index.search.results.remainder_mistake_marker_aria') }}"
+                                        ></span>
+                                    @endif
+                                </span>
+
+                                <div class="word-list-word-content">
+                                    <div class="word-list-mobile-card__title-line">
+                                        <span class="word-list-main">{{ $searchResult->word }}</span>
+                                        <span class="word-list-mobile-card__separator">&mdash;</span>
+                                        <span class="word-list-translation">{{ $searchResult->translation }}</span>
+                                    </div>
+                                    <div class="word-list-meta">
+                                        {{ $searchResult->dictionary_name }}
+                                        &middot;
+                                        {{ __($languageKey) }}
+                                        &middot;
+                                        {{ $partOfSpeechDisplayMap[$searchResult->part_of_speech] ?? __('dictionaries.index.search.results.part_of_speech_not_specified') }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="word-list-mobile-card__body">
+                            <div class="word-list-mobile-card__section">
+                                <div class="word-list-comment">{{ $searchResult->comment ?: __('dictionaries.index.search.results.no_comment') }}</div>
+                            </div>
+                        </div>
+
+                        <div class="word-list-mobile-card__actions">
+                            <div class="word-list-actions">
+                                <a
+                                    href="{{ route('dictionaries.show', $searchResult->dictionary_id) }}"
+                                    class="word-list-edit-btn dictionaries-search-results__open-link"
+                                    aria-label="{{ __('dictionaries.index.search.results.open_aria', ['word' => $searchResult->word, 'dictionary' => $searchResult->dictionary_name]) }}"
+                                >
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M14 5h5v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path d="M10 14 19 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path d="M19 13v4a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                @endforeach
+            </div>
+
             <p class="word-list-mistake-legend">
                 <span class="word-list-mistake-marker" aria-hidden="true"></span>
                 <span>{{ __('dictionaries.index.search.results.remainder_mistake_legend') }}</span>

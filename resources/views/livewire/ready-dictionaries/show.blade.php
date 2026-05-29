@@ -149,6 +149,78 @@
                     </table>
                 </div>
 
+                <div class="word-list-mobile-list">
+                    @foreach ($words as $wordItem)
+                        <article class="word-list-mobile-card" wire:key="ready-word-mobile-card-{{ $wordItem->id }}">
+                            <div class="word-list-mobile-card__header">
+                                <div class="word-list-word-content">
+                                    <div class="word-list-mobile-card__title-line">
+                                        <span class="word-list-main">{{ $wordItem->word }}</span>
+                                        <span class="word-list-mobile-card__separator">&mdash;</span>
+                                        <span class="word-list-translation">{{ $wordItem->translation }}</span>
+                                    </div>
+                                    <div class="word-list-meta">
+                                        {{ $dictionaryLanguageLabel }}
+                                        &middot;
+                                        {{ $partOfSpeechDisplayMap[$wordItem->part_of_speech] ?? __('dictionaries.show.word_list.part_of_speech_not_specified') }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="word-list-mobile-card__body">
+                                <div class="word-list-mobile-card__section">
+                                    <div class="word-list-comment">{{ $wordItem->comment ?: __('dictionaries.show.word_list.no_comment') }}</div>
+                                </div>
+                            </div>
+
+                            <div class="word-list-mobile-card__actions">
+                                <div class="word-list-actions">
+                                    <div class="word-list-transfer-picker">
+                                        <button
+                                            type="button"
+                                            class="word-list-transfer-btn"
+                                            aria-label="{{ __('ready_dictionaries.show.transfer.aria', ['word' => $wordItem->word]) }}"
+                                        >
+                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                <path d="M5 12h13" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                                <path d="m13 6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path d="M4 6v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                            </svg>
+                                        </button>
+
+                                        <div class="word-list-transfer-menu" role="menu">
+                                            @auth
+                                                @if ($userDictionaries->isNotEmpty())
+                                                <p class="word-list-transfer-menu__title">{{ __('ready_dictionaries.show.transfer.title') }}</p>
+                                                @foreach ($userDictionaries as $userDictionary)
+                                                    <button
+                                                        type="button"
+                                                        class="word-list-transfer-menu__item"
+                                                        role="menuitem"
+                                                        wire:key="ready-word-mobile-{{ $wordItem->id }}-transfer-dictionary-{{ $userDictionary->id }}"
+                                                        wire:click="transferWordToDictionary({{ $wordItem->id }}, {{ $userDictionary->id }})"
+                                                        wire:loading.attr="disabled"
+                                                        wire:target="transferWordToDictionary({{ $wordItem->id }}, {{ $userDictionary->id }})"
+                                                    >
+                                                        {{ $userDictionary->name }}
+                                                    </button>
+                                                @endforeach
+                                                @else
+                                                    <p class="word-list-transfer-menu__empty">{{ __('ready_dictionaries.show.transfer.empty') }}</p>
+                                                @endif
+                                            @else
+                                                <a href="{{ route('register') }}" class="word-list-transfer-menu__auth-link" role="menuitem">
+                                                    {{ __('ready_dictionaries.show.transfer.guest_empty') }}
+                                                </a>
+                                            @endauth
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+
                 <div class="word-list-pagination">
                     <p class="word-list-pagination__info">
                         {{ __('dictionaries.show.word_list.pagination.showing', ['from' => $words->firstItem(), 'to' => $words->lastItem(), 'total' => $words->total()]) }}

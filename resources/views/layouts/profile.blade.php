@@ -132,22 +132,6 @@
                         {{ __('common.links.dictionaries') }}
                     </a>
 
-                    @if (($headerDictionaries ?? collect())->isNotEmpty())
-                        <div class="site-header__mobile-section">
-                            <p class="site-header__mobile-section-title">{{ __('common.links.dictionaries') }}</p>
-                            <div class="site-header__mobile-shortcuts">
-                                @foreach ($headerDictionaries as $headerDictionary)
-                                    <a
-                                        href="{{ route('dictionaries.show', $headerDictionary) }}"
-                                        class="site-header__mobile-shortcut"
-                                    >
-                                        {{ $headerDictionary->name }}
-                                    </a>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-
                     <a
                         href="{{ route('remainder') }}"
                         class="site-header__mobile-link {{ $activeNav === 'remainder' ? 'site-header__mobile-link--active' : '' }}"
@@ -161,22 +145,6 @@
                     >
                         {{ __('common.links.ready_dictionaries') }}
                     </a>
-
-                    @if (($headerReadyDictionaries ?? collect())->isNotEmpty())
-                        <div class="site-header__mobile-section">
-                            <p class="site-header__mobile-section-title">{{ __('common.links.ready_dictionaries') }}</p>
-                            <div class="site-header__mobile-shortcuts">
-                                @foreach ($headerReadyDictionaries as $headerReadyDictionary)
-                                    <a
-                                        href="{{ route('ready-dictionaries.show', $headerReadyDictionary) }}"
-                                        class="site-header__mobile-shortcut"
-                                    >
-                                        {{ $headerReadyDictionary->name }}
-                                    </a>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
 
                     <a
                         href="{{ route('tg-bot') }}"
@@ -205,22 +173,6 @@
                     >
                         {{ __('common.links.ready_dictionaries') }}
                     </a>
-
-                    @if (($headerReadyDictionaries ?? collect())->isNotEmpty())
-                        <div class="site-header__mobile-section">
-                            <p class="site-header__mobile-section-title">{{ __('common.links.ready_dictionaries') }}</p>
-                            <div class="site-header__mobile-shortcuts">
-                                @foreach ($headerReadyDictionaries as $headerReadyDictionary)
-                                    <a
-                                        href="{{ route('ready-dictionaries.show', $headerReadyDictionary) }}"
-                                        class="site-header__mobile-shortcut"
-                                    >
-                                        {{ $headerReadyDictionary->name }}
-                                    </a>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
 
                     <a
                         href="{{ route('remainder') }}"

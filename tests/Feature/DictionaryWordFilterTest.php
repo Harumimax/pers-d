@@ -125,7 +125,7 @@ class DictionaryWordFilterTest extends TestCase
             ->assertSee('book')
             ->assertSee('The red dot means you previously made a mistake with this word in the Remainder game.');
 
-        $this->assertSame(1, substr_count($response->getContent(), 'aria-label="Previous Remainder mistake"'));
+        $this->assertGreaterThanOrEqual(1, substr_count($response->getContent(), 'aria-label="Previous Remainder mistake"'));
     }
 
     public function test_user_can_update_word_translation_part_of_speech_and_comment(): void

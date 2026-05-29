@@ -4,7 +4,7 @@
     'mobileLabel' => 'Mobile navigation',
 ])
 
-<header class="site-header" x-data="{ mobileMenuOpen: false }" @keydown.escape.window="mobileMenuOpen = false">
+<header class="site-header" data-site-header>
     <div class="container header-inner">
         <a href="{{ url('/') }}" class="logo" aria-label="WordKeeper home">
             <img
@@ -28,8 +28,8 @@
             <button
                 type="button"
                 class="site-header__burger"
-                x-on:click="mobileMenuOpen = !mobileMenuOpen"
-                x-bind:aria-expanded="mobileMenuOpen.toString()"
+                data-site-header-toggle
+                aria-expanded="false"
                 aria-controls="site-mobile-drawer"
                 aria-label="{{ __('common.navigation.toggle') }}"
             >
@@ -45,9 +45,8 @@
         <div
             id="site-mobile-drawer"
             class="site-header__mobile-shell"
-            x-show="mobileMenuOpen"
-            x-cloak
-            x-on:click.self="mobileMenuOpen = false"
+            data-site-header-drawer
+            hidden
         >
             <nav class="container site-header__mobile-drawer" aria-label="{{ $mobileLabel }}">
                 {{ $mobile }}

@@ -382,6 +382,10 @@
     overflow: visible;
 }
 
+.word-list-mobile-list {
+    display: none;
+}
+
 .word-list-table {
     width: 100%;
     border-collapse: separate;
@@ -514,6 +518,77 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
+}
+
+.word-list-mobile-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.78);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.04);
+}
+
+.word-list-mobile-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.word-list-mobile-card__header .word-list-word-cell {
+    flex: 1 1 auto;
+}
+
+.word-list-mobile-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.word-list-mobile-card__title-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.word-list-mobile-card__separator {
+    color: var(--muted-color);
+    font-weight: 600;
+}
+
+.word-list-mobile-card__section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.word-list-mobile-card__label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted-color);
+}
+
+.word-list-mobile-card__actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.word-list-mobile-card__actions .word-list-actions,
+.word-list-mobile-card__actions .word-list-edit-actions {
+    width: 100%;
+    justify-content: flex-end;
+}
+
+.word-list-mobile-card__actions .word-list-edit-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .word-list-edit-btn,
@@ -946,7 +1021,13 @@
 
 @media (max-width: 640px) {
     .word-list-table-wrap {
-        overflow-x: auto;
+        display: none;
+    }
+
+    .word-list-mobile-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
     }
 
     .dictionary-show-main {
@@ -977,6 +1058,67 @@
 
     .dictionary-show__auto-actions .btn {
         width: 100%;
+    }
+
+    .word-list-mobile-card {
+        gap: 10px;
+        padding: 14px;
+    }
+
+    .word-list-mobile-card__header {
+        align-items: stretch;
+    }
+
+    .word-list-mobile-card__label,
+    .word-list-mobile-card__header .word-list-badge {
+        display: none;
+    }
+
+    .word-list-mobile-card__body {
+        gap: 8px;
+    }
+
+    .word-list-mobile-card__section {
+        gap: 0;
+    }
+
+    .word-list-mobile-card .word-list-main,
+    .word-list-mobile-card .word-list-translation {
+        font-size: 0.92rem;
+        line-height: 1.3;
+    }
+
+    .word-list-mobile-card .word-list-meta {
+        margin-top: 2px;
+        font-size: 0.74rem;
+        line-height: 1.35;
+    }
+
+    .word-list-mobile-card .word-list-comment {
+        font-size: 0.82rem;
+        line-height: 1.35;
+    }
+
+    .word-list-mobile-card__actions {
+        justify-content: stretch;
+    }
+
+    .word-list-mobile-card__actions .word-list-actions,
+    .word-list-mobile-card__actions .word-list-edit-actions {
+        justify-content: stretch;
+    }
+
+    .word-list-mobile-card__actions .word-list-actions {
+        gap: 10px;
+    }
+
+    .word-list-mobile-card__actions .word-list-edit-btn,
+    .word-list-mobile-card__actions .word-list-transfer-btn,
+    .word-list-mobile-card__actions .word-list-delete-btn,
+    .word-list-mobile-card__actions .word-list-edit-accept-btn,
+    .word-list-mobile-card__actions .word-list-edit-cancel-btn {
+        flex: 1 1 0;
+        min-width: 0;
     }
 
     .dictionary-delete-modal__actions {
