@@ -5,6 +5,7 @@ return [
         'profile' => 'Profile navigation',
         'dictionaries' => 'Dictionaries navigation',
         'auth' => 'Authentication links',
+        'toggle' => 'Toggle navigation menu',
     ],
     'links' => [
         'ready_dictionaries' => 'Prepared dictionaries',

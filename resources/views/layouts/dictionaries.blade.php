@@ -22,7 +22,11 @@
     </head>
     @php($dictionariesNavActive = request()->routeIs('dictionaries.index') || request()->routeIs('dictionaries.show'))
     <body class="dictionaries-shell">
-        <x-site-header nav-class="dictionaries-header-nav" :label="__('common.navigation.dictionaries')">
+        <x-site-header
+            nav-class="dictionaries-header-nav"
+            :label="__('common.navigation.dictionaries')"
+            :mobile-label="__('common.navigation.dictionaries')"
+        >
             @auth
                 <div class="dictionaries-header-nav__item dictionaries-header-nav__dropdown">
                     <a
@@ -115,7 +119,117 @@
                     {{ __('common.links.login') }}
                 </a>
             @endauth
-            <x-language-switcher />
+
+            <x-slot:utility>
+                <x-language-switcher />
+            </x-slot:utility>
+
+            <x-slot:mobile>
+                @auth
+                    <a
+                        href="{{ route('dictionaries.index') }}"
+                        class="site-header__mobile-link {{ $dictionariesNavActive ? 'site-header__mobile-link--active' : '' }}"
+                    >
+                        {{ __('common.links.dictionaries') }}
+                    </a>
+
+                    @if (($headerDictionaries ?? collect())->isNotEmpty())
+                        <div class="site-header__mobile-section">
+                            <p class="site-header__mobile-section-title">{{ __('common.links.dictionaries') }}</p>
+                            <div class="site-header__mobile-shortcuts">
+                                @foreach ($headerDictionaries as $headerDictionary)
+                                    <a
+                                        href="{{ route('dictionaries.show', $headerDictionary) }}"
+                                        class="site-header__mobile-shortcut"
+                                    >
+                                        {{ $headerDictionary->name }}
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    <a href="{{ route('remainder') }}" class="site-header__mobile-link">
+                        {{ __('common.links.remainder') }}
+                    </a>
+
+                    <a
+                        href="{{ route('ready-dictionaries.index') }}"
+                        class="site-header__mobile-link {{ request()->routeIs('ready-dictionaries.*') ? 'site-header__mobile-link--active' : '' }}"
+                    >
+                        {{ __('common.links.ready_dictionaries') }}
+                    </a>
+
+                    @if (($headerReadyDictionaries ?? collect())->isNotEmpty())
+                        <div class="site-header__mobile-section">
+                            <p class="site-header__mobile-section-title">{{ __('common.links.ready_dictionaries') }}</p>
+                            <div class="site-header__mobile-shortcuts">
+                                @foreach ($headerReadyDictionaries as $headerReadyDictionary)
+                                    <a
+                                        href="{{ route('ready-dictionaries.show', $headerReadyDictionary) }}"
+                                        class="site-header__mobile-shortcut"
+                                    >
+                                        {{ $headerReadyDictionary->name }}
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    <a
+                        href="{{ route('tg-bot') }}"
+                        class="site-header__mobile-link {{ request()->routeIs('tg-bot') ? 'site-header__mobile-link--active' : '' }}"
+                    >
+                        {{ __('common.links.tg_bot') }}
+                    </a>
+
+                    <a href="{{ route('profile.edit') }}" class="site-header__mobile-link">
+                        {{ __('common.links.profile') }}
+                    </a>
+
+                    <form method="POST" action="{{ route('logout') }}" class="site-header__mobile-form">
+                        @csrf
+                        <button type="submit" class="site-header__mobile-link site-header__mobile-link--button">
+                            {{ __('common.links.logout') }}
+                        </button>
+                    </form>
+                @else
+                    <a
+                        href="{{ route('ready-dictionaries.index') }}"
+                        class="site-header__mobile-link {{ request()->routeIs('ready-dictionaries.*') ? 'site-header__mobile-link--active' : '' }}"
+                    >
+                        {{ __('common.links.ready_dictionaries') }}
+                    </a>
+
+                    @if (($headerReadyDictionaries ?? collect())->isNotEmpty())
+                        <div class="site-header__mobile-section">
+                            <p class="site-header__mobile-section-title">{{ __('common.links.ready_dictionaries') }}</p>
+                            <div class="site-header__mobile-shortcuts">
+                                @foreach ($headerReadyDictionaries as $headerReadyDictionary)
+                                    <a
+                                        href="{{ route('ready-dictionaries.show', $headerReadyDictionary) }}"
+                                        class="site-header__mobile-shortcut"
+                                    >
+                                        {{ $headerReadyDictionary->name }}
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    <a href="{{ route('remainder') }}" class="site-header__mobile-link">
+                        {{ __('common.links.remainder') }}
+                    </a>
+
+                    <a href="{{ route('register') }}" class="site-header__mobile-link">
+                        {{ __('common.links.signup') }}
+                    </a>
+
+                    <a href="{{ route('login') }}" class="site-header__mobile-link">
+                        {{ __('common.links.login') }}
+                    </a>
+                @endauth
+            </x-slot:mobile>
         </x-site-header>
 
         <x-demo-banner />

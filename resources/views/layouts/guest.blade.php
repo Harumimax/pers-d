@@ -17,7 +17,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="auth-shell">
-        <x-site-header :label="__('common.navigation.auth')">
+        <x-site-header :label="__('common.navigation.auth')" :mobile-label="__('common.navigation.auth')">
             @if (Route::has('login'))
                 <a
                     href="{{ route('login') }}"
@@ -36,7 +36,30 @@
                 </a>
             @endif
 
-            <x-language-switcher />
+            <x-slot:utility>
+                <x-language-switcher />
+            </x-slot:utility>
+
+            <x-slot:mobile>
+                @if (Route::has('login'))
+                    <a
+                        href="{{ route('login') }}"
+                        class="site-header__mobile-link {{ request()->routeIs('login') ? 'site-header__mobile-link--active' : '' }}"
+                    >
+                        {{ __('common.links.login') }}
+                    </a>
+                @endif
+
+                @if (Route::has('register'))
+                    <a
+                        href="{{ route('register') }}"
+                        class="site-header__mobile-link {{ request()->routeIs('register') ? 'site-header__mobile-link--active' : '' }}"
+                    >
+                        {{ __('common.links.signup') }}
+                    </a>
+                @endif
+            </x-slot:mobile>
+
         </x-site-header>
 
         <main class="auth-main">

@@ -12,8 +12,7 @@
 </head>
 <body>
 
-
-        <x-site-header :label="__('common.navigation.auth')">
+        <x-site-header :label="__('common.navigation.auth')" :mobile-label="__('common.navigation.auth')">
                 @auth
                     <a href="{{ url('/dashboard') }}" class="header-actions__item header-actions__link">{{ __('common.links.dictionaries') }}</a>
                     <a href="{{ route('remainder') }}" class="header-actions__item header-actions__link">{{ __('common.links.remainder') }}</a>
@@ -24,13 +23,42 @@
                         @csrf
                         <button type="submit" class="header-actions__link header-actions__logout">{{ __('common.links.logout') }}</button>
                     </form>
-                    <x-language-switcher />
                 @else
                     <a href="{{ route('ready-dictionaries.index') }}" class="btn btn-demo">{{ __('common.links.demo') }}</a>
                     <a href="{{ route('login') }}" class="btn btn-secondary">{{ __('common.links.login') }}</a>
                     <a href="{{ route('register') }}" class="btn btn-primary">{{ __('common.links.signup') }}</a>
-                    <x-language-switcher />
                 @endauth
+
+                <x-slot:utility>
+                    <x-language-switcher />
+                </x-slot:utility>
+
+                <x-slot:mobile>
+                    @auth
+                        <a href="{{ url('/dashboard') }}" class="site-header__mobile-link">{{ __('common.links.dictionaries') }}</a>
+                        <a href="{{ route('remainder') }}" class="site-header__mobile-link">{{ __('common.links.remainder') }}</a>
+                        <a href="{{ route('ready-dictionaries.index') }}" class="site-header__mobile-link">{{ __('common.links.ready_dictionaries') }}</a>
+                        <a href="{{ route('tg-bot') }}" class="site-header__mobile-link">{{ __('common.links.tg_bot') }}</a>
+                        <a href="{{ route('profile.edit') }}" class="site-header__mobile-link">{{ __('common.links.profile') }}</a>
+
+                        <form method="POST" action="{{ route('logout') }}" class="site-header__mobile-form">
+                            @csrf
+                            <button type="submit" class="site-header__mobile-link site-header__mobile-link--button">
+                                {{ __('common.links.logout') }}
+                            </button>
+                        </form>
+                    @else
+                        <a href="{{ route('ready-dictionaries.index') }}" class="site-header__mobile-link">
+                            {{ __('common.links.demo') }}
+                        </a>
+                        <a href="{{ route('login') }}" class="site-header__mobile-link">
+                            {{ __('common.links.login') }}
+                        </a>
+                        <a href="{{ route('register') }}" class="site-header__mobile-link">
+                            {{ __('common.links.signup') }}
+                        </a>
+                    @endauth
+                </x-slot:mobile>
         </x-site-header>
 
     <main class="hero">
