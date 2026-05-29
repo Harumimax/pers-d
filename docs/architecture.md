@@ -1172,6 +1172,7 @@
   - the word is translated through `TranslationServiceInterface`
   - the bot shows at most 6 translation choices: the first top result plus up to 5 alternatives
   - after translation selection, the bot shows all supported parts of speech as numbered inline choices
+  - both the translation-choice step and the part-of-speech step include an inline `Отмена` button that clears the temporary dialog state and returns the user to the standard 4-button main menu
   - after the final choice, `SaveDictionaryWordService` persists the new word into the selected personal dictionary
 - `TelegramDictionaryMenuService` sends:
   - the user's dictionaries as a numbered list (`1. Name — Language`)
@@ -1303,5 +1304,4 @@
 - `resources/views/remainder.blade.php`
 - `resources/views/remainder-show.blade.php`
 - `resources/views/livewire/remainder/show.blade.php`
-
 

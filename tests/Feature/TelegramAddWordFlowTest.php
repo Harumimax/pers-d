@@ -164,6 +164,89 @@ class TelegramAddWordFlowTest extends TestCase
             && (string) $request['text'] === 'Словарь не найден.');
     }
 
+    public function test_user_can_cancel_add_word_flow_from_translation_step(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true], 200),
+        ]);
+
+        $this->app->instance(TranslationServiceInterface::class, new class implements TranslationServiceInterface
+        {
+            public function translate(string $text, string $sourceLanguage, string $targetLanguage): TranslationResult
+            {
+                return new TranslationResult([
+                    new TranslationSuggestion('РїСЂРёРІРµС‚', 'top result'),
+                    new TranslationSuggestion('Р·РґСЂР°РІСЃС‚РІСѓР№С‚Рµ', 'alternative'),
+                ]);
+            }
+        });
+
+        $user = User::factory()->create([
+            'tg_chat_id' => '1001',
+            'tg_linked_at' => now(),
+        ]);
+
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'Travel English',
+            'language' => 'English',
+        ]);
+
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('Р”РѕР±Р°РІРёС‚СЊ СЃР»РѕРІРѕ', 40201))->assertOk();
+        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("tg_add_word:dictionary:{$dictionary->id}", 40202, 'cb-dict-cancel-1'))->assertOk();
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('hello', 40203))->assertOk();
+
+        $state = app(TelegramAuthStateStore::class)->get('1001');
+        $this->assertSame(TelegramAuthStateStore::STEP_AWAITING_ADD_WORD_TRANSLATION, $state['step']);
+
+        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate('tg_add_word:cancel:1', 40204, 'cb-cancel-translation'))->assertOk();
+
+        $this->assertNull(app(TelegramAuthStateStore::class)->get('1001'));
+        $this->assertDatabaseCount('words', 0);
+    }
+
+    public function test_user_can_cancel_add_word_flow_from_part_of_speech_step(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true], 200),
+        ]);
+
+        $this->app->instance(TranslationServiceInterface::class, new class implements TranslationServiceInterface
+        {
+            public function translate(string $text, string $sourceLanguage, string $targetLanguage): TranslationResult
+            {
+                return new TranslationResult([
+                    new TranslationSuggestion('РїСЂРёРІРµС‚', 'top result'),
+                    new TranslationSuggestion('Р·РґСЂР°РІСЃС‚РІСѓР№С‚Рµ', 'alternative'),
+                ]);
+            }
+        });
+
+        $user = User::factory()->create([
+            'tg_chat_id' => '1001',
+            'tg_linked_at' => now(),
+        ]);
+
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'Travel English',
+            'language' => 'English',
+        ]);
+
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('Р”РѕР±Р°РІРёС‚СЊ СЃР»РѕРІРѕ', 40301))->assertOk();
+        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("tg_add_word:dictionary:{$dictionary->id}", 40302, 'cb-dict-cancel-2'))->assertOk();
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('hello', 40303))->assertOk();
+        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate('tg_add_word:translation:0', 40304, 'cb-translation-cancel'))->assertOk();
+
+        $state = app(TelegramAuthStateStore::class)->get('1001');
+        $this->assertSame(TelegramAuthStateStore::STEP_AWAITING_ADD_WORD_PART_OF_SPEECH, $state['step']);
+
+        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate('tg_add_word:cancel:1', 40305, 'cb-cancel-pos'))->assertOk();
+
+        $this->assertNull(app(TelegramAuthStateStore::class)->get('1001'));
+        $this->assertDatabaseCount('words', 0);
+    }
+
     /**
      * @return array<string, mixed>
      */

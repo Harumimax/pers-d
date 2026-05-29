@@ -7,6 +7,7 @@ class TelegramAddWordCallbackData
     public const ACTION_DICTIONARY = 'dictionary';
     public const ACTION_TRANSLATION = 'translation';
     public const ACTION_PART_OF_SPEECH = 'part_of_speech';
+    public const ACTION_CANCEL = 'cancel';
 
     public function makeDictionary(int $dictionaryId): string
     {
@@ -21,6 +22,11 @@ class TelegramAddWordCallbackData
     public function makePartOfSpeech(string $value): string
     {
         return 'tg_add_word:'.self::ACTION_PART_OF_SPEECH.":{$value}";
+    }
+
+    public function makeCancel(): string
+    {
+        return 'tg_add_word:'.self::ACTION_CANCEL.':1';
     }
 
     /**
@@ -40,6 +46,14 @@ class TelegramAddWordCallbackData
 
         if (! is_string($action) || $action === '' || ! is_string($value) || $value === '') {
             return null;
+        }
+
+        if ($action === self::ACTION_CANCEL) {
+            return [
+                'type' => 'add_word',
+                'action' => $action,
+                'value' => $value,
+            ];
         }
 
         if ($action === self::ACTION_DICTIONARY || $action === self::ACTION_TRANSLATION) {

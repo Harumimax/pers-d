@@ -821,6 +821,15 @@ class TelegramUpdateHandler
         $action = (string) ($payload['action'] ?? '');
         $value = $payload['value'] ?? null;
 
+        if ($action === TelegramAddWordCallbackData::ACTION_CANCEL) {
+            $this->stateStore->clear($chatId);
+            $this->bot->answerCallbackQuery($callbackQueryId, 'Добавление слова отменено.');
+            $this->clearInlineKeyboard($chatId, $messageId);
+            $this->bot->sendMessage($chatId, 'Добавление слова отменено.', $this->mainMenuReplyMarkup());
+
+            return;
+        }
+
         if ($action === TelegramAddWordCallbackData::ACTION_DICTIONARY) {
             $dictionary = $this->ownedDictionary($linkedUser, (int) $value);
 
@@ -1092,6 +1101,11 @@ class TelegramUpdateHandler
             ->values()
             ->all();
 
+        $keyboard[] = [[
+            'text' => 'Отмена',
+            'callback_data' => $this->telegramAddWordCallbackData->makeCancel(),
+        ]];
+
         $this->bot->sendMessage($chatId, implode("\n", $lines), [
             'reply_markup' => [
                 'inline_keyboard' => $keyboard,
@@ -1121,6 +1135,11 @@ class TelegramUpdateHandler
             ->map(fn ($row) => $row->values()->all())
             ->values()
             ->all();
+
+        $keyboard[] = [[
+            'text' => 'Отмена',
+            'callback_data' => $this->telegramAddWordCallbackData->makeCancel(),
+        ]];
 
         $this->bot->sendMessage($chatId, implode("\n", $lines), [
             'reply_markup' => [
