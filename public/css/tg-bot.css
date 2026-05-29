@@ -918,6 +918,36 @@
         padding: 34px 0 54px;
     }
 
+    .tg-bot-container {
+        gap: 20px;
+    }
+
+    .tg-bot-page-title {
+        margin-bottom: 10px;
+        line-height: 1.08;
+    }
+
+    .tg-bot-card__header,
+    .tg-bot-status-card {
+        gap: 12px;
+    }
+
+    .tg-bot-card__description {
+        line-height: 1.55;
+    }
+
+    .tg-bot-form__switch-row--spaced {
+        margin-top: 14px;
+    }
+
+    .tg-bot-form__sessions-header {
+        gap: 12px;
+    }
+
+    .tg-bot-session-card {
+        padding: 18px;
+    }
+
     .tg-bot-form__actions {
         justify-content: stretch;
     }

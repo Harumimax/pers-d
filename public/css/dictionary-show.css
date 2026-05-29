@@ -1034,16 +1034,51 @@
         padding-top: 34px;
     }
 
+    .dictionary-show__header {
+        margin-bottom: 20px;
+    }
+
+    .dictionary-show__title-row {
+        gap: 14px;
+    }
+
     .dictionary-show__title {
         font-size: 1.95rem;
+        line-height: 1.08;
     }
 
     .dictionary-show__add-btn {
         min-width: 0;
+        width: 100%;
+        min-height: 52px;
+    }
+
+    .dictionary-show__subtitle {
+        font-size: 0.95rem;
+        line-height: 1.6;
     }
 
     .dictionary-show-card {
         padding: 20px;
+    }
+
+    .dictionary-show-card__title {
+        font-size: 1.45rem;
+        line-height: 1.15;
+    }
+
+    .word-list-header {
+        gap: 14px;
+        padding-bottom: 14px;
+    }
+
+    .word-list-subtitle {
+        margin-top: 6px;
+        line-height: 1.5;
+    }
+
+    .word-list-controls {
+        gap: 10px;
     }
 
     .dictionary-show__translation-chip {
@@ -1119,6 +1154,20 @@
     .word-list-mobile-card__actions .word-list-edit-cancel-btn {
         flex: 1 1 0;
         min-width: 0;
+    }
+
+    .word-list-edit-btn,
+    .word-list-transfer-btn,
+    .word-list-delete-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+    }
+
+    .word-list-edit-accept-btn,
+    .word-list-edit-cancel-btn {
+        min-height: 44px;
+        border-radius: 10px;
     }
 
     .dictionary-delete-modal__actions {

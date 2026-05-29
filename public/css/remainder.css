@@ -562,18 +562,41 @@
 
     .remainder-title {
         font-size: 1.95rem;
+        line-height: 1.08;
     }
 
     .remainder-heading-line {
         flex-wrap: wrap;
+        gap: 8px;
     }
 
     .remainder-description {
         white-space: normal;
+        line-height: 1.55;
+    }
+
+    .remainder-demo-note {
+        width: 100%;
     }
 
     .remainder-setup-card__title {
         font-size: 1.65rem;
+    }
+
+    .remainder-setup-card {
+        padding: 18px;
+    }
+
+    .remainder-setup-card__header {
+        gap: 12px;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+    }
+
+    .remainder-setup-card__subtitle {
+        max-width: 100%;
+        font-size: 0.94rem;
+        line-height: 1.55;
     }
 
     .remainder-section {
@@ -586,6 +609,9 @@
 
     .remainder-actions {
         flex-direction: column;
+        gap: 10px;
+        margin-top: 20px;
+        padding-top: 18px;
     }
 
     .remainder-actions .btn {

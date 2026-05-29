@@ -1102,14 +1102,43 @@ img {
     }
 
     .site-header__utility .language-switcher__toggle {
-        width: 78px;
-        height: 40px;
-        padding: 0 11px;
+        width: 88px;
+        height: 44px;
+        padding: 0 12px;
     }
 
     .site-header__utility .language-switcher__thumb {
-        width: 28px;
-        height: 28px;
+        top: 6px;
+        left: 6px;
+        width: 32px;
+        height: 32px;
+    }
+
+    .site-header__utility .language-switcher__label {
+        font-size: 0.88rem;
+    }
+
+    .site-header__utility .language-switcher__toggle--en .language-switcher__thumb {
+        transform: translateX(44px);
+    }
+
+    .auth-link,
+    .hero-login-link,
+    .footer-link {
+        min-height: 44px;
+        padding: 0 14px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .auth-link,
+    .hero-login-link {
+        text-underline-offset: 3px;
+    }
+
+    .footer-link {
+        padding: 0 18px;
     }
 
     .demo-banner__inner {

@@ -525,6 +525,15 @@
         gap: 20px;
     }
 
+    .profile-header-nav__link,
+    .profile-inline-link {
+        min-height: 44px;
+        padding: 0 10px;
+        display: inline-flex;
+        align-items: center;
+        border-radius: 10px;
+    }
+
     .profile-header-nav__menu {
         left: 50%;
         transform: translateX(-50%);
@@ -542,8 +551,21 @@
         padding: 38px 0 56px;
     }
 
+    .profile-container {
+        padding: 0 20px;
+    }
+
+    .profile-page-header {
+        margin-bottom: 20px;
+    }
+
+    .profile-page-header--spacious {
+        margin-top: 28px;
+    }
+
     .profile-title {
         font-size: 2rem;
+        line-height: 1.08;
     }
 
     .profile-title-toggle__icon {
@@ -553,6 +575,10 @@
 
     .profile-section__title {
         font-size: 1.65rem;
+    }
+
+    .profile-card {
+        padding: 18px;
     }
 
     .profile-statistics-table th,
