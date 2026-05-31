@@ -82,6 +82,44 @@ class DictionarySubscriptionUiTest extends TestCase
             ->assertDontSee('Edit dictionary Shared Spanish');
     }
 
+    public function test_subscriber_can_unsubscribe_dictionary_from_index(): void
+    {
+        $owner = User::factory()->create([
+            'email' => 'owner@example.com',
+        ]);
+        $subscriber = User::factory()->create([
+            'email' => 'subscriber@example.com',
+        ]);
+
+        $dictionary = UserDictionary::create([
+            'user_id' => $owner->id,
+            'name' => 'Shared Spanish',
+            'language' => 'Spanish',
+        ]);
+
+        DictionarySubscription::query()->create([
+            'user_dictionary_id' => $dictionary->id,
+            'subscriber_user_id' => $subscriber->id,
+        ]);
+
+        Livewire::actingAs($subscriber)
+            ->test(Index::class)
+            ->call('confirmUnsubscribeDictionary', $dictionary->id)
+            ->assertSet('pendingUnsubscribeDictionaryId', $dictionary->id)
+            ->assertSet('pendingUnsubscribeDictionaryLabel', 'Shared Spanish')
+            ->call('unsubscribeConfirmedDictionary')
+            ->assertSet('pendingUnsubscribeDictionaryId', null);
+
+        $this->assertDatabaseMissing('dictionary_subscriptions', [
+            'user_dictionary_id' => $dictionary->id,
+            'subscriber_user_id' => $subscriber->id,
+        ]);
+        $this->assertDatabaseHas('user_dictionaries', [
+            'id' => $dictionary->id,
+            'user_id' => $owner->id,
+        ]);
+    }
+
     public function test_subscriber_can_open_dictionary_in_read_only_mode(): void
     {
         $owner = User::factory()->create([

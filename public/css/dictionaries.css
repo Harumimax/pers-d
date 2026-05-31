@@ -483,6 +483,29 @@
     flex-shrink: 0;
 }
 
+.dictionary-card__actions--subscription {
+    align-self: flex-start;
+}
+
+.dictionary-card__unsubscribe {
+    min-height: 42px;
+    padding: 0 16px;
+    border: 1px solid rgba(220, 38, 38, 0.28);
+    border-radius: 12px;
+    background: rgba(254, 242, 242, 0.9);
+    color: #b91c1c;
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.dictionary-card__unsubscribe:hover {
+    background: rgba(254, 226, 226, 1);
+    border-color: rgba(220, 38, 38, 0.42);
+    color: #991b1b;
+}
+
 .dictionary-card__share,
 .dictionary-card__edit,
 .dictionary-card__delete {
@@ -794,6 +817,16 @@
 
     .dictionary-card__actions {
         align-self: flex-end;
+    }
+
+    .dictionary-card__actions--subscription {
+        width: 100%;
+        align-self: stretch;
+    }
+
+    .dictionary-card__unsubscribe {
+        width: 100%;
+        min-height: 44px;
     }
 
     .dictionary-card__share,

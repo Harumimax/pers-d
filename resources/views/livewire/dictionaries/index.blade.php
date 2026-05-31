@@ -397,6 +397,16 @@
                         {{ __('dictionaries.index.card.subscription_owner', ['email' => $dictionary->owner_email ?? __('dictionaries.index.card.owner_unknown')]) }}
                     </p>
                 </div>
+
+                <div class="dictionary-card__actions dictionary-card__actions--subscription">
+                    <button
+                        type="button"
+                        class="dictionary-card__unsubscribe"
+                        wire:click="confirmUnsubscribeDictionary({{ $dictionary->id }})"
+                    >
+                        {{ __('dictionaries.index.unsubscribe.button') }}
+                    </button>
+                </div>
             </article>
         @endforeach
 
@@ -480,6 +490,38 @@
                             wire:click="deleteConfirmedDictionary"
                         >
                             {{ __('dictionaries.index.delete.yes') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if ($pendingUnsubscribeDictionaryId !== null)
+        <div class="dictionary-delete-overlay" wire:click="cancelUnsubscribeDictionary">
+            <div class="dictionary-delete-dialog" wire:click.stop>
+                <div class="dictionary-delete-modal">
+                    <h2 class="dictionary-delete-modal__title">{{ __('dictionaries.index.unsubscribe.title') }}</h2>
+
+                    <p class="dictionary-delete-modal__text">
+                        {{ __('dictionaries.index.unsubscribe.text', ['name' => $pendingUnsubscribeDictionaryLabel]) }}
+                    </p>
+
+                    <div class="dictionary-delete-modal__actions">
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            wire:click="cancelUnsubscribeDictionary"
+                        >
+                            {{ __('dictionaries.index.unsubscribe.no') }}
+                        </button>
+
+                        <button
+                            type="button"
+                            class="dictionary-delete-modal__danger-btn"
+                            wire:click="unsubscribeConfirmedDictionary"
+                        >
+                            {{ __('dictionaries.index.unsubscribe.yes') }}
                         </button>
                     </div>
                 </div>

@@ -39,6 +39,8 @@ class Index extends Component
     public ?int $sharingDictionaryId = null;
     public string $sharingDictionaryLabel = '';
     public string $sharingTargetEmail = '';
+    public ?int $pendingUnsubscribeDictionaryId = null;
+    public string $pendingUnsubscribeDictionaryLabel = '';
 
     public function openCreateForm(): void
     {
@@ -202,6 +204,41 @@ class Index extends Component
     {
         $this->pendingDeleteDictionaryId = null;
         $this->pendingDeleteDictionaryLabel = '';
+    }
+
+    public function confirmUnsubscribeDictionary(int $dictionaryId): void
+    {
+        $dictionary = $this->subscribedDictionary($dictionaryId);
+
+        $this->pendingUnsubscribeDictionaryId = $dictionary->id;
+        $this->pendingUnsubscribeDictionaryLabel = $dictionary->name;
+    }
+
+    public function cancelUnsubscribeDictionary(): void
+    {
+        $this->pendingUnsubscribeDictionaryId = null;
+        $this->pendingUnsubscribeDictionaryLabel = '';
+    }
+
+    public function unsubscribeConfirmedDictionary(): void
+    {
+        $dictionaryId = $this->pendingUnsubscribeDictionaryId;
+        abort_if($dictionaryId === null, 404);
+
+        $subscription = $this->currentUser()
+            ->dictionarySubscriptions()
+            ->where('user_dictionary_id', $dictionaryId)
+            ->first();
+
+        abort_if($subscription === null, 403);
+
+        $subscription->delete();
+
+        session()->flash('status', __('dictionaries.index.unsubscribe.removed', [
+            'name' => $this->pendingUnsubscribeDictionaryLabel,
+        ]));
+
+        $this->cancelUnsubscribeDictionary();
     }
 
     public function deleteConfirmedDictionary(): void
@@ -379,6 +416,15 @@ class Index extends Component
     private function ownedDictionary(int $dictionaryId): UserDictionary
     {
         $dictionary = $this->currentUser()->ownedDictionaries()->find($dictionaryId);
+
+        abort_if($dictionary === null, 403);
+
+        return $dictionary;
+    }
+
+    private function subscribedDictionary(int $dictionaryId): UserDictionary
+    {
+        $dictionary = $this->currentUser()->subscribedDictionaries()->find($dictionaryId);
 
         abort_if($dictionary === null, 403);
 

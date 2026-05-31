@@ -36,34 +36,49 @@ class DictionaryShareInvitationNotification extends Notification implements Shou
      */
     public function toNotiSend($notifiable): NotiSendMessage
     {
-        $subject = __('dictionary-subscriptions.email.subject', [
+        $englishSubject = __('dictionary-subscriptions.email.subject', [
             'dictionary' => $this->dictionaryName,
-        ], $notifiable->preferredLocaleOrDefault());
+        ], 'en');
+        $russianSubject = __('dictionary-subscriptions.email.subject', [
+            'dictionary' => $this->dictionaryName,
+        ], 'ru');
 
-        $text = $this->hasExistingAccount
+        $englishText = $this->hasExistingAccount
             ? __('dictionary-subscriptions.email.existing.text', [
                 'owner' => $this->ownerEmail,
                 'dictionary' => $this->dictionaryName,
                 'link' => $this->invitationUrl,
-            ], $notifiable->preferredLocaleOrDefault())
+            ], 'en')
             : __('dictionary-subscriptions.email.new_user.text', [
                 'owner' => $this->ownerEmail,
                 'dictionary' => $this->dictionaryName,
                 'register' => $this->registerUrl,
                 'link' => $this->invitationUrl,
-            ], $notifiable->preferredLocaleOrDefault());
+            ], 'en');
+
+        $russianText = $this->hasExistingAccount
+            ? __('dictionary-subscriptions.email.existing.text', [
+                'owner' => $this->ownerEmail,
+                'dictionary' => $this->dictionaryName,
+                'link' => $this->invitationUrl,
+            ], 'ru')
+            : __('dictionary-subscriptions.email.new_user.text', [
+                'owner' => $this->ownerEmail,
+                'dictionary' => $this->dictionaryName,
+                'register' => $this->registerUrl,
+                'link' => $this->invitationUrl,
+            ], 'ru');
 
         return new NotiSendMessage(
             to: $notifiable->email,
-            subject: $subject,
-            text: $text,
+            subject: $englishSubject.' / '.$russianSubject,
+            text: trim($englishText)."\n\n--------------------\n\n".trim($russianText),
             html: View::make('emails.dictionary-subscriptions.invitation', [
                 'ownerEmail' => $this->ownerEmail,
                 'dictionaryName' => $this->dictionaryName,
                 'invitationUrl' => $this->invitationUrl,
                 'registerUrl' => $this->registerUrl,
                 'hasExistingAccount' => $this->hasExistingAccount,
-                'locale' => $notifiable->preferredLocaleOrDefault(),
             ])->render(),
         );
     }

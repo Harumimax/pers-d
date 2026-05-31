@@ -282,6 +282,7 @@
     justify-content: space-between;
     gap: 16px;
     flex-wrap: wrap;
+    min-height: 42px;
 }
 
 .remainder-dictionary-filter {
@@ -289,6 +290,11 @@
     align-items: center;
     gap: 10px;
     margin-left: auto;
+}
+
+.remainder-dictionary-filter--placeholder {
+    visibility: hidden;
+    pointer-events: none;
 }
 
 .remainder-dictionary-filter__label {

@@ -53,6 +53,14 @@ return [
             'submit' => 'Send',
             'sent' => 'Invitation to subscribe to dictionary was sent to :email.',
         ],
+        'unsubscribe' => [
+            'button' => 'Unsubscribe',
+            'title' => 'Unsubscribe From Dictionary',
+            'text' => 'Are you sure you want to unsubscribe from ":name"?',
+            'yes' => 'Yes',
+            'no' => 'No',
+            'removed' => 'Dictionary ":name" was removed from your subscriptions.',
+        ],
         'edit' => [
             'aria' => 'Edit dictionary :name',
             'field_aria' => 'Dictionary name for :name',

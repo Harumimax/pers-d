@@ -276,15 +276,22 @@
                             <h4 class="remainder-dictionary-column__title">{{ __('remainder.settings.dictionaries.user_title') }}</h4>
 
                             @if ($remainderDictionaries->isNotEmpty())
-                                <label class="remainder-dictionary-select-all">
-                                    <input
-                                        type="checkbox"
-                                        class="remainder-dictionary-select-all__input"
-                                        :checked="areAllDictionariesSelected()"
-                                        @change="toggleAllDictionaries()"
-                                    >
-                                    <span>{{ __('remainder.settings.dictionaries.select_all') }}</span>
-                                </label>
+                                <div class="remainder-dictionary-toolbar">
+                                    <label class="remainder-dictionary-select-all">
+                                        <input
+                                            type="checkbox"
+                                            class="remainder-dictionary-select-all__input"
+                                            :checked="areAllDictionariesSelected()"
+                                            @change="toggleAllDictionaries()"
+                                        >
+                                        <span>{{ __('remainder.settings.dictionaries.select_all') }}</span>
+                                    </label>
+
+                                    <div class="remainder-dictionary-filter remainder-dictionary-filter--placeholder" aria-hidden="true">
+                                        <span class="remainder-dictionary-filter__label">{{ __('remainder.settings.dictionaries.language_filter.label') }}</span>
+                                        <span class="remainder-dictionary-filter__control"></span>
+                                    </div>
+                                </div>
 
                                 <div class="remainder-dictionary-list" role="list" aria-label="{{ __('remainder.settings.dictionaries.available_aria') }}">
                                     @foreach ($remainderDictionaries as $dictionary)
