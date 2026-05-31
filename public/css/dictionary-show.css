@@ -13,6 +13,17 @@
     gap: 20px;
 }
 
+.dictionary-show__heading {
+    min-width: 0;
+}
+
+.dictionary-show__badge-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
 .dictionary-show__back-link {
     display: inline-block;
     margin-bottom: 16px;
@@ -54,6 +65,14 @@
     font-size: 1rem;
     line-height: 1.55;
     color: var(--muted-color);
+}
+
+.dictionary-show__read-only-note {
+    margin: 12px 0 0;
+    max-width: 760px;
+    font-size: 0.95rem;
+    line-height: 1.55;
+    color: #155e75;
 }
 
 .dictionary-show-transfer-alert {
@@ -1039,12 +1058,18 @@
     }
 
     .dictionary-show__title-row {
+        flex-direction: column;
+        align-items: stretch;
         gap: 14px;
     }
 
     .dictionary-show__title {
         font-size: 1.95rem;
         line-height: 1.08;
+    }
+
+    .dictionary-show__badge-row {
+        margin-bottom: 8px;
     }
 
     .dictionary-show__add-btn {
@@ -1055,6 +1080,11 @@
 
     .dictionary-show__subtitle {
         font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    .dictionary-show__read-only-note {
+        font-size: 0.92rem;
         line-height: 1.6;
     }
 

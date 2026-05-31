@@ -33,6 +33,25 @@ return [
         ],
         'card' => [
             'open_aria' => 'Open dictionary :name',
+            'badges' => [
+                'owned' => 'Owner',
+                'subscription' => 'Subscription',
+            ],
+            'subscription_owner' => 'Owner: :email',
+            'owner_unknown' => 'unknown owner',
+        ],
+        'share' => [
+            'aria' => 'Share dictionary :name',
+            'title' => 'Share Dictionary',
+            'text' => 'Send a subscription invitation for dictionary ":name".',
+            'fields' => [
+                'email' => 'User email',
+            ],
+            'placeholders' => [
+                'email' => 'friend@example.com',
+            ],
+            'submit' => 'Send',
+            'sent' => 'Invitation to subscribe to dictionary was sent to :email.',
         ],
         'edit' => [
             'aria' => 'Edit dictionary :name',
@@ -113,6 +132,7 @@ return [
             'suggested_subtitle' => 'Choose the most suitable translation for this dictionary',
             'selected_translation_empty' => 'Choose a translation from the suggestions above',
         ],
+        'read_only_note' => 'This dictionary is available in subscription mode. Owner: :email. You can view and use the words, but you cannot edit this dictionary.',
         'word_list' => [
             'title' => 'Word List',
             'subtitle' => '{1} :count word in this dictionary|[2,*] :count words in this dictionary',

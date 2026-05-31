@@ -257,7 +257,11 @@
     @endif
 
     <section class="dictionaries-container dictionaries-list" aria-label="{{ __('dictionaries.index.title') }}">
-        @forelse ($dictionaries as $dictionary)
+        @php
+            $hasAnyDictionaries = $ownedDictionaries->isNotEmpty() || $subscribedDictionaries->isNotEmpty();
+        @endphp
+
+        @foreach ($ownedDictionaries as $dictionary)
             @php
                 $languageKey = $dictionary->language !== null ? 'dictionaries.index.languages.' . strtolower($dictionary->language) : 'dictionaries.index.languages.not_specified';
             @endphp
@@ -271,6 +275,10 @@
                 @endif
 
                 <div class="dictionary-card__content">
+                    <div class="dictionary-card__badge-row">
+                        <span class="dictionary-card__badge dictionary-card__badge--owned">{{ __('dictionaries.index.card.badges.owned') }}</span>
+                    </div>
+
                     @if ($editingDictionaryId === $dictionary->id)
                         <div class="dictionary-card__edit-form">
                             <div class="dictionary-card__edit-field">
@@ -324,6 +332,17 @@
                 <div class="dictionary-card__actions">
                     <button
                         type="button"
+                        class="dictionary-card__share"
+                        wire:click="openShareDictionaryModal({{ $dictionary->id }})"
+                        aria-label="{{ __('dictionaries.index.share.aria', ['name' => $dictionary->name]) }}"
+                    >
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M16 8a3 3 0 1 0-2.83-4H13a3 3 0 0 0 .17 1L7.91 8.09a3 3 0 0 0-3.74.42A3 3 0 1 0 5 13a3 3 0 0 0 2.91-.91l5.26 3.09A3 3 0 0 0 13 16a3 3 0 1 0 3-3c-.65 0-1.25.2-1.75.54l-5.22-3.07c.03-.15.05-.31.05-.47s-.02-.32-.05-.47l5.22-3.07C14.75 7.8 15.35 8 16 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+
+                    <button
+                        type="button"
                         class="dictionary-card__edit"
                         wire:click="startEditingDictionary({{ $dictionary->id }})"
                         aria-label="{{ __('dictionaries.index.edit.aria', ['name' => $dictionary->name]) }}"
@@ -346,13 +365,95 @@
                     </button>
                 </div>
             </article>
-        @empty
+        @endforeach
+
+        @foreach ($subscribedDictionaries as $dictionary)
+            @php
+                $languageKey = $dictionary->language !== null ? 'dictionaries.index.languages.' . strtolower($dictionary->language) : 'dictionaries.index.languages.not_specified';
+            @endphp
+            <article class="dictionary-card dictionary-card--clickable dictionary-card--subscription" wire:key="subscribed-dictionary-{{ $dictionary->id }}">
+                <a
+                    href="{{ route('dictionaries.show', $dictionary) }}"
+                    class="dictionary-card__overlay-link"
+                    aria-label="{{ __('dictionaries.index.card.open_aria', ['name' => $dictionary->name]) }}"
+                ></a>
+
+                <div class="dictionary-card__content">
+                    <div class="dictionary-card__badge-row">
+                        <span class="dictionary-card__badge dictionary-card__badge--subscription">{{ __('dictionaries.index.card.badges.subscription') }}</span>
+                    </div>
+
+                    <h2 class="dictionary-card__title">
+                        <a href="{{ route('dictionaries.show', $dictionary) }}">{{ $dictionary->name }}</a>
+                    </h2>
+
+                    <p class="dictionary-card__meta">
+                        {{ __($languageKey) }}
+                        <span class="dictionary-card__dot">&middot;</span>
+                        {{ trans_choice('dictionaries.index.words_count', $dictionary->words_count ?? 0, ['count' => $dictionary->words_count ?? 0]) }}
+                    </p>
+
+                    <p class="dictionary-card__subscription-owner">
+                        {{ __('dictionaries.index.card.subscription_owner', ['email' => $dictionary->owner_email ?? __('dictionaries.index.card.owner_unknown')]) }}
+                    </p>
+                </div>
+            </article>
+        @endforeach
+
+        @if (! $hasAnyDictionaries)
             <article class="dictionary-card dictionary-card--empty">
                 <h2 class="dictionary-card__title">{{ __('dictionaries.index.empty.title') }}</h2>
                 <p class="dictionary-card__meta">{{ __('dictionaries.index.empty.text') }}</p>
             </article>
-        @endforelse
+        @endif
     </section>
+
+    @if ($sharingDictionaryId !== null)
+        <div class="dictionary-delete-overlay" wire:click="cancelShareDictionary">
+            <div class="dictionary-delete-dialog" wire:click.stop>
+                <div class="dictionary-delete-modal dictionary-share-modal">
+                    <h2 class="dictionary-delete-modal__title">{{ __('dictionaries.index.share.title') }}</h2>
+
+                    <p class="dictionary-delete-modal__text">
+                        {{ __('dictionaries.index.share.text', ['name' => $sharingDictionaryLabel]) }}
+                    </p>
+
+                    <form class="dictionary-share-modal__form" wire:submit="sendShareInvitation">
+                        <div class="dictionaries-field">
+                            <label for="share-target-email" class="dictionaries-label">{{ __('dictionaries.index.share.fields.email') }}</label>
+                            <input
+                                id="share-target-email"
+                                type="email"
+                                class="dictionaries-input"
+                                placeholder="{{ __('dictionaries.index.share.placeholders.email') }}"
+                                wire:model.defer="sharingTargetEmail"
+                            >
+                            @error('sharingTargetEmail')
+                                <p class="dictionaries-error">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div class="dictionary-delete-modal__actions">
+                            <button
+                                type="button"
+                                class="btn btn-secondary"
+                                wire:click="cancelShareDictionary"
+                            >
+                                {{ __('dictionaries.index.actions.cancel') }}
+                            </button>
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary"
+                            >
+                                {{ __('dictionaries.index.share.submit') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
 
     @if ($pendingDeleteDictionaryId !== null)
         <div class="dictionary-delete-overlay" wire:click="cancelDeleteDictionary">

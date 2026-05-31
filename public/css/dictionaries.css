@@ -348,6 +348,35 @@
     flex: 1;
 }
 
+.dictionary-card__badge-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.dictionary-card__badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.dictionary-card__badge--owned {
+    background: rgba(35, 66, 160, 0.08);
+    color: var(--primary-color);
+}
+
+.dictionary-card__badge--subscription {
+    background: rgba(14, 116, 144, 0.1);
+    color: #155e75;
+}
+
 .dictionary-card__edit-form {
     display: flex;
     align-items: center;
@@ -434,6 +463,13 @@
     line-height: 1.5;
 }
 
+.dictionary-card__subscription-owner {
+    margin: 10px 0 0;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    color: var(--muted-color);
+}
+
 .dictionary-card__dot {
     margin: 0 8px;
 }
@@ -447,6 +483,7 @@
     flex-shrink: 0;
 }
 
+.dictionary-card__share,
 .dictionary-card__edit,
 .dictionary-card__delete {
     display: inline-flex;
@@ -461,10 +498,12 @@
     cursor: pointer;
 }
 
+.dictionary-card__share,
 .dictionary-card__edit {
     color: #64748b;
 }
 
+.dictionary-card__share:hover,
 .dictionary-card__edit:hover {
     background: rgba(100, 116, 139, 0.12);
     color: #475569;
@@ -474,10 +513,17 @@
     background: rgba(239, 68, 68, 0.1);
 }
 
+.dictionary-card__share svg,
 .dictionary-card__edit svg,
 .dictionary-card__delete svg {
     width: 24px;
     height: 24px;
+}
+
+.dictionary-card--subscription {
+    border-style: dashed;
+    border-color: rgba(21, 94, 117, 0.25);
+    background: linear-gradient(180deg, rgba(247, 253, 255, 0.96) 0%, rgba(255, 255, 255, 0.96) 100%);
 }
 
 .dictionary-card--empty {
@@ -515,6 +561,16 @@
 .dictionary-delete-modal__actions .btn {
     min-width: 84px;
     height: 48px;
+}
+
+.dictionary-share-modal {
+    min-width: min(100%, 520px);
+}
+
+.dictionary-share-modal__form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
 }
 
 .dictionary-delete-modal__danger-btn {
@@ -740,6 +796,7 @@
         align-self: flex-end;
     }
 
+    .dictionary-card__share,
     .dictionary-card__edit,
     .dictionary-card__delete {
         width: 44px;

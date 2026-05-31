@@ -73,7 +73,7 @@
   - validates the URL secret against `config('services.telegram.webhook_secret')`
   - delegates both message updates and callback query updates to `TelegramUpdateHandler`
   - always returns `200`, even if update handling raised an internal exception
-- Header dropdown data is assembled through `HeaderNavigationService` so shared layouts receive personal dictionaries and ready dictionaries without querying from Blade
+- Header dropdown data is assembled through `HeaderNavigationService` so shared layouts receive owned dictionaries, subscribed dictionaries, and ready dictionaries without querying from Blade
 - `App\Http\Controllers\DictionaryShareInvitationController`
   - creates subscription invitations for owner dictionaries
   - renders the guest/auth invitation landing page by token
@@ -99,25 +99,27 @@
 
 ### Livewire Components
 - `App\Livewire\Dictionaries\Index`
-  - lists current user dictionaries
-  - renders a global word search across all personal dictionaries of the current user
+  - lists current user dictionaries, combining owned dictionaries and subscribed dictionaries in one screen
+  - renders a global word search across all dictionaries available to the current user, including subscribed dictionaries
   - creates dictionaries
   - deletes dictionaries with confirmation modal state
+  - opens the owner-only share modal and sends dictionary subscription invitations
   - delegates dictionary-word search queries to `UserDictionaryWordSearchService`
   - passes `headerDictionaries` into the shared dictionaries layout
 - `App\Livewire\Dictionaries\Show`
-  - shows a single dictionary
+  - shows a single dictionary in either owner mode or subscription read-only mode
   - lists words with pagination
   - receives each word's user-scoped `remainder_had_mistake` flag from `user_word_progress` for Remainder error markers
   - supports search, sorting, and part-of-speech filtering
-  - supports manual word creation
-  - supports automatic translation flow
-  - deletes words with confirmation modal state
+  - supports manual word creation only for the dictionary owner
+  - supports automatic translation flow only for the dictionary owner
+  - deletes words with confirmation modal state only for the dictionary owner
+  - blocks create, edit, and delete actions for subscribers at both the UI layer and Livewire action layer
   - passes `headerDictionaries` into the shared dictionaries layout
 - `App\Services\Dictionaries\UserDictionaryWordSearchService`
   - provides the shared search query for user dictionary words
   - performs case-insensitive partial matching by `words.word` and `words.translation`
-  - limits results strictly to `user_dictionaries.user_id = current user`
+  - limits results to dictionaries the current user can access: owned dictionaries plus subscribed dictionaries
   - returns search results in the context of the concrete dictionary where each word is attached
   - decorates each result with the current user's mistake marker from `user_word_progress`
 - `App\Services\Dictionaries\SaveDictionaryWordService`
@@ -132,6 +134,8 @@
   - is the new source of truth for `remainder_had_mistake`
 - `App\Services\DictionarySubscriptions\CreateDictionaryShareInvitationService`
   - normalizes target email
+  - rejects invitations to the owner email
+  - rejects invitations when the target email already belongs to an existing subscriber
   - cancels previous pending invitations for the same dictionary/email pair
   - creates a new invitation row plus raw token
 - `App\Services\DictionarySubscriptions\SendDictionaryShareInvitationService`
@@ -373,7 +377,7 @@
     - normalizes unsupported filters so query parameters do not break the page
 - Navigation read-model services live under `app/Services/Navigation`
   - `HeaderNavigationService`
-    - returns the authenticated user's personal dictionaries for the `My Dictionaries` dropdown
+    - returns the authenticated user's owned dictionaries plus subscribed dictionaries for the `My Dictionaries` dropdown
     - returns all ready dictionaries for the Prepared dictionaries dropdown
     - feeds the shared authenticated navigation used by Profile, Dictionaries, Remainder, Ready dictionaries, and TG bot
     - keeps shared layouts free from direct database queries

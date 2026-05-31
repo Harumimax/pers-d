@@ -3,7 +3,10 @@
 namespace App\Livewire\Dictionaries;
 
 use App\Models\User;
+use App\Models\UserDictionary;
 use App\Models\Word;
+use App\Services\DictionarySubscriptions\CreateDictionaryShareInvitationService;
+use App\Services\DictionarySubscriptions\SendDictionaryShareInvitationService;
 use App\Services\Navigation\HeaderNavigationService;
 use App\Services\Dictionaries\UserDictionaryWordSearchService;
 use App\Support\PartOfSpeechCatalog;
@@ -15,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 
 class Index extends Component
@@ -32,6 +36,9 @@ class Index extends Component
     public string $pendingDeleteDictionaryLabel = '';
     public ?int $editingDictionaryId = null;
     public string $editingDictionaryName = '';
+    public ?int $sharingDictionaryId = null;
+    public string $sharingDictionaryLabel = '';
+    public string $sharingTargetEmail = '';
 
     public function openCreateForm(): void
     {
@@ -183,7 +190,7 @@ class Index extends Component
     {
         $user = $this->currentUser();
 
-        $dictionary = $user->dictionaries()->find($dictionaryId);
+        $dictionary = $user->ownedDictionaries()->find($dictionaryId);
 
         abort_if($dictionary === null, 403);
 
@@ -204,7 +211,7 @@ class Index extends Component
         $dictionaryId = $this->pendingDeleteDictionaryId;
         abort_if($dictionaryId === null, 404);
 
-        $dictionary = $user->dictionaries()->find($dictionaryId);
+        $dictionary = $user->ownedDictionaries()->find($dictionaryId);
 
         abort_if($dictionary === null, 403);
 
@@ -223,21 +230,92 @@ class Index extends Component
         $this->cancelDeleteDictionary();
     }
 
+    public function openShareDictionaryModal(int $dictionaryId): void
+    {
+        $dictionary = $this->ownedDictionary($dictionaryId);
+
+        $this->sharingDictionaryId = $dictionary->id;
+        $this->sharingDictionaryLabel = $dictionary->name;
+        $this->sharingTargetEmail = '';
+        $this->resetValidation('sharingTargetEmail');
+    }
+
+    public function cancelShareDictionary(): void
+    {
+        $this->sharingDictionaryId = null;
+        $this->sharingDictionaryLabel = '';
+        $this->sharingTargetEmail = '';
+        $this->resetValidation('sharingTargetEmail');
+    }
+
+    public function sendShareInvitation(
+        CreateDictionaryShareInvitationService $createInvitationService,
+        SendDictionaryShareInvitationService $sendInvitationService,
+    ): void {
+        $dictionaryId = $this->sharingDictionaryId;
+        abort_if($dictionaryId === null, 404);
+
+        $dictionary = $this->ownedDictionary($dictionaryId);
+
+        $this->sharingTargetEmail = mb_strtolower(trim($this->sharingTargetEmail));
+
+        $validated = $this->validate([
+            'sharingTargetEmail' => ['required', 'string', 'email', 'max:255'],
+        ], [], [
+            'sharingTargetEmail' => __('dictionaries.index.share.fields.email'),
+        ]);
+
+        try {
+            $result = $createInvitationService->create(
+                owner: $this->currentUser(),
+                dictionary: $dictionary,
+                targetEmail: $validated['sharingTargetEmail'],
+            );
+        } catch (ValidationException $exception) {
+            $errorMessages = $exception->errors()['target_email'] ?? [];
+
+            foreach ($errorMessages as $message) {
+                $this->addError('sharingTargetEmail', $message);
+            }
+
+            return;
+        }
+
+        $sendInvitationService->send(
+            invitation: $result['invitation'],
+            rawToken: $result['raw_token'],
+        );
+
+        session()->flash('status', __('dictionaries.index.share.sent', ['email' => $validated['sharingTargetEmail']]));
+
+        $this->cancelShareDictionary();
+    }
+
     public function render(): View
     {
         $user = $this->currentUser();
 
-        /** @var EloquentCollection<int, \App\Models\UserDictionary> $dictionaries */
-        $dictionaries = $user->dictionaries()
+        /** @var EloquentCollection<int, UserDictionary> $ownedDictionaries */
+        $ownedDictionaries = $user->ownedDictionaries()
             ->withCount('words')
             ->orderByDesc('created_at')
             ->get();
+        /** @var EloquentCollection<int, UserDictionary> $subscribedDictionaries */
+        $subscribedDictionaries = $user->subscribedDictionaries()
+            ->with('owner:id,email')
+            ->withCount('words')
+            ->orderByDesc('dictionary_subscriptions.created_at')
+            ->get();
+        $subscribedDictionaries->each(function (UserDictionary $dictionary): void {
+            $dictionary->setAttribute('owner_email', $dictionary->owner()->value('email'));
+        });
         $searchResults = $this->searchResults($user);
 
         $headerNavigation = app(HeaderNavigationService::class)->forUser($user);
 
         return view('livewire.dictionaries.index', [
-            'dictionaries' => $dictionaries,
+            'ownedDictionaries' => $ownedDictionaries,
+            'subscribedDictionaries' => $subscribedDictionaries,
             'searchResults' => $searchResults,
             'partOfSpeechDisplayMap' => PartOfSpeechCatalog::labels(),
         ])->layout('layouts.dictionaries', $headerNavigation);
@@ -296,5 +374,14 @@ class Index extends Component
         $normalized = preg_replace(self::ZERO_WIDTH_CHARACTER_PATTERN, '', (string) $value) ?? (string) $value;
 
         return trim($normalized);
+    }
+
+    private function ownedDictionary(int $dictionaryId): UserDictionary
+    {
+        $dictionary = $this->currentUser()->ownedDictionaries()->find($dictionaryId);
+
+        abort_if($dictionary === null, 403);
+
+        return $dictionary;
     }
 }

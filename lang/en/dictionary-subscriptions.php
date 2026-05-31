@@ -8,6 +8,7 @@ return [
     'errors' => [
         'cannot_invite_owner' => 'You already own this dictionary.',
         'owner_already_has_access' => 'The dictionary owner already has access.',
+        'target_already_subscribed' => 'This user already subscribes to the dictionary.',
         'email_mismatch' => 'This invitation can only be accepted by the invited email address.',
         'expired' => 'This invitation has expired.',
         'invalid' => 'This invitation is invalid or no longer available.',

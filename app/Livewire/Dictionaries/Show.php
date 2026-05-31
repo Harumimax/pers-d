@@ -5,6 +5,7 @@ namespace App\Livewire\Dictionaries;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
+use App\Services\DictionarySubscriptions\DictionaryAccessService;
 use App\Services\Navigation\HeaderNavigationService;
 use App\Support\PartOfSpeechCatalog;
 use App\Services\Translation\TranslationServiceInterface;
@@ -58,15 +59,19 @@ class Show extends Component
     public string $editingWordTranslation = '';
     public string $editingWordPartOfSpeech = '';
     public string $editingWordComment = '';
+    public bool $readOnly = false;
+    public string $dictionaryOwnerEmail = '';
 
-    public function mount(UserDictionary $dictionary): void
+    public function mount(UserDictionary $dictionary, DictionaryAccessService $dictionaryAccessService): void
     {
         $user = Auth::user();
 
         abort_unless($user !== null, 401);
-        abort_if($dictionary->user_id !== $user->id, 403);
+        abort_unless($dictionaryAccessService->canView($user, $dictionary), 403);
 
         $this->dictionary = $dictionary;
+        $this->readOnly = ! $dictionaryAccessService->canManage($user, $dictionary);
+        $this->dictionaryOwnerEmail = (string) ($dictionary->owner()->value('email') ?? '');
     }
 
     public function render(): View
@@ -109,11 +114,15 @@ class Show extends Component
             'partOfSpeechFilterOptions' => PartOfSpeechCatalog::dictionaryFilterLabels(),
             'partOfSpeechDisplayMap' => PartOfSpeechCatalog::labels(),
             'autoTranslationUnavailableMessage' => __('dictionaries.show.translation.unavailable'),
+            'isReadOnly' => $this->readOnly,
+            'dictionaryOwnerEmail' => $this->dictionaryOwnerEmail,
         ])->layout('layouts.dictionaries', $headerNavigation);
     }
 
     public function addWord(): void
     {
+        $this->assertCanManage();
+
         $this->word = $this->sanitizeTextInput($this->word);
         $this->translation = $this->sanitizeTextInput($this->translation);
         $this->comment = $this->sanitizeTextInput($this->comment);
@@ -140,6 +149,8 @@ class Show extends Component
 
     public function addTranslatedWord(): void
     {
+        $this->assertCanManage();
+
         $this->autoWord = $this->sanitizeTextInput($this->autoWord);
         $this->autoTranslation = $this->sanitizeTextInput($this->autoTranslation);
         $this->autoComment = $this->sanitizeTextInput($this->autoComment);
@@ -170,6 +181,8 @@ class Show extends Component
 
     public function translateAutomatically(TranslationServiceInterface $translationService): void
     {
+        $this->assertCanManage();
+
         $this->autoWord = $this->sanitizeTextInput($this->autoWord);
 
         $validated = $this->validate([
@@ -235,6 +248,8 @@ class Show extends Component
 
     public function openCreateForm(): void
     {
+        $this->assertCanManage();
+
         $this->showCreateForm = true;
     }
 
@@ -294,6 +309,8 @@ class Show extends Component
 
     public function startEditingWord(int $wordId): void
     {
+        $this->assertCanManage();
+
         $word = $this->attachedWord($wordId);
 
         $this->editingWordId = $word->id;
@@ -322,6 +339,8 @@ class Show extends Component
 
     public function updateEditingWord(): void
     {
+        $this->assertCanManage();
+
         $wordId = $this->editingWordId;
         abort_if($wordId === null || $wordId <= 0, 404);
 
@@ -375,6 +394,8 @@ class Show extends Component
 
     public function confirmDeleteWord(int $wordId): void
     {
+        $this->assertCanManage();
+
         $isAttached = $this->dictionary->words()
             ->where('words.id', $wordId)
             ->exists();
@@ -394,6 +415,8 @@ class Show extends Component
 
     public function deleteConfirmedWord(): void
     {
+        $this->assertCanManage();
+
         $wordId = $this->pendingDeleteWordId;
         abort_if($wordId === null || $wordId <= 0, 404);
 
@@ -463,6 +486,11 @@ class Show extends Component
         $language = trim((string) $this->dictionary->language);
 
         return self::DICTIONARY_LANGUAGE_CODES[$language] ?? null;
+    }
+
+    private function assertCanManage(): void
+    {
+        abort_if($this->readOnly, 403);
     }
 
     private function currentUser(): User

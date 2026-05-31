@@ -24,9 +24,14 @@ class CreateDictionaryShareInvitationService
             ]);
         }
 
-        if ($dictionary->subscriptions()->where('subscriber_user_id', $owner->id)->exists()) {
+        $existingUser = User::query()
+            ->whereRaw('LOWER(email) = ?', [$normalizedEmail])
+            ->first();
+
+        if ($existingUser !== null
+            && $dictionary->subscriptions()->where('subscriber_user_id', $existingUser->id)->exists()) {
             throw ValidationException::withMessages([
-                'target_email' => __('dictionary-subscriptions.errors.owner_already_has_access'),
+                'target_email' => __('dictionary-subscriptions.errors.target_already_subscribed'),
             ]);
         }
 

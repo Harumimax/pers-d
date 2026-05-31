@@ -8,8 +8,17 @@
 
         <header class="dictionary-show__header">
             <div class="dictionary-show__title-row">
-                <h1 class="dictionary-show__title">{{ $dictionary->name }}</h1>
-                @if (! $showCreateForm)
+                <div class="dictionary-show__heading">
+                    @if ($isReadOnly)
+                        <div class="dictionary-show__badge-row">
+                            <span class="dictionary-card__badge dictionary-card__badge--subscription">{{ __('dictionaries.index.card.badges.subscription') }}</span>
+                        </div>
+                    @endif
+
+                    <h1 class="dictionary-show__title">{{ $dictionary->name }}</h1>
+                </div>
+
+                @if (! $showCreateForm && ! $isReadOnly)
                     <button
                         type="button"
                         class="btn btn-primary dictionaries-new-btn dictionary-show__add-btn"
@@ -24,9 +33,15 @@
             <p class="dictionary-show__subtitle">
                 {!! __('dictionaries.show.subtitle', ['language' => '<b>' . e($dictionaryLanguageLabel) . '</b>', 'count' => '<b>' . e($totalWordsCount) . '</b>', 'date' => '<b>' . e($createdDateLabel) . '</b>']) !!}
             </p>
+
+            @if ($isReadOnly)
+                <p class="dictionary-show__read-only-note">
+                    {{ __('dictionaries.show.read_only_note', ['email' => $dictionaryOwnerEmail ?? __('dictionaries.index.card.owner_unknown')]) }}
+                </p>
+            @endif
         </header>
 
-        @if ($showCreateForm)
+        @if ($showCreateForm && ! $isReadOnly)
             <section
                 class="dictionaries-create-card dictionary-show__create-card"
                 aria-label="{{ __('dictionaries.show.add_word_form_aria') }}"
@@ -320,7 +335,9 @@
                                 <th style="width: 22%;">{{ __('dictionaries.show.word_list.table.translation') }}</th>
                                 <th style="width: 30%;">{{ __('dictionaries.show.word_list.table.comment') }}</th>
                                 <th style="width: 12%;">{{ __('dictionaries.show.word_list.table.added') }}</th>
-                                <th style="width: 8%; text-align: center;">{{ __('dictionaries.show.word_list.table.action') }}</th>
+                                @unless ($isReadOnly)
+                                    <th style="width: 8%; text-align: center;">{{ __('dictionaries.show.word_list.table.action') }}</th>
+                                @endunless
                             </tr>
                         </thead>
                         <tbody>
@@ -414,53 +431,55 @@
                                     <td>
                                         <span class="word-list-badge">{{ $wordItem->pivot->created_at?->translatedFormat('M d') ?? '-' }}</span>
                                     </td>
-                                    <td class="word-list-action-cell">
-                                        <div class="word-list-actions">
-                                            @if ($editingWordId === $wordItem->id)
-                                                <div class="word-list-edit-actions">
-                                                    <button
-                                                        type="button"
-                                                        class="word-list-edit-accept-btn"
-                                                        wire:click="updateEditingWord"
-                                                    >
-                                                        {{ __('dictionaries.show.word_list.edit.accept') }}
-                                                    </button>
+                                    @unless ($isReadOnly)
+                                        <td class="word-list-action-cell">
+                                            <div class="word-list-actions">
+                                                @if ($editingWordId === $wordItem->id)
+                                                    <div class="word-list-edit-actions">
+                                                        <button
+                                                            type="button"
+                                                            class="word-list-edit-accept-btn"
+                                                            wire:click="updateEditingWord"
+                                                        >
+                                                            {{ __('dictionaries.show.word_list.edit.accept') }}
+                                                        </button>
 
+                                                        <button
+                                                            type="button"
+                                                            class="word-list-edit-cancel-btn"
+                                                            wire:click="cancelEditingWord"
+                                                        >
+                                                            {{ __('dictionaries.show.word_list.edit.cancel') }}
+                                                        </button>
+                                                    </div>
+                                                @else
                                                     <button
                                                         type="button"
-                                                        class="word-list-edit-cancel-btn"
-                                                        wire:click="cancelEditingWord"
+                                                        class="word-list-edit-btn"
+                                                        wire:click="startEditingWord({{ $wordItem->id }})"
+                                                        aria-label="{{ __('dictionaries.show.word_list.edit.aria', ['name' => $wordItem->word]) }}"
                                                     >
-                                                        {{ __('dictionaries.show.word_list.edit.cancel') }}
+                                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                            <path d="m4 20 4.25-1.06a2 2 0 0 0 .9-.52L19 8.57a2.12 2.12 0 0 0-3-3L6.15 15.42a2 2 0 0 0-.52.9L4 20Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                            <path d="m14.5 7.5 2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                                        </svg>
                                                     </button>
-                                                </div>
-                                            @else
+                                                @endif
+
                                                 <button
                                                     type="button"
-                                                    class="word-list-edit-btn"
-                                                    wire:click="startEditingWord({{ $wordItem->id }})"
-                                                    aria-label="{{ __('dictionaries.show.word_list.edit.aria', ['name' => $wordItem->word]) }}"
+                                                    class="word-list-delete-btn"
+                                                    wire:key="word-delete-btn-{{ $wordItem->id }}"
+                                                    wire:click="confirmDeleteWord({{ $wordItem->id }})"
+                                                    aria-label="{{ __('dictionaries.show.word_list.delete.aria', ['name' => $wordItem->word]) }}"
                                                 >
                                                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                                        <path d="m4 20 4.25-1.06a2 2 0 0 0 .9-.52L19 8.57a2.12 2.12 0 0 0-3-3L6.15 15.42a2 2 0 0 0-.52.9L4 20Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                                        <path d="m14.5 7.5 2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                                        <path d="M9 3h6m-8 3h10m-1 0-.7 11.2A2 2 0 0 1 13.3 19h-2.6a2 2 0 0 1-1.99-1.8L8 6m3 4v5m2-5v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                                     </svg>
                                                 </button>
-                                            @endif
-
-                                            <button
-                                                type="button"
-                                                class="word-list-delete-btn"
-                                                wire:key="word-delete-btn-{{ $wordItem->id }}"
-                                                wire:click="confirmDeleteWord({{ $wordItem->id }})"
-                                                aria-label="{{ __('dictionaries.show.word_list.delete.aria', ['name' => $wordItem->word]) }}"
-                                            >
-                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                                    <path d="M9 3h6m-8 3h10m-1 0-.7 11.2A2 2 0 0 1 13.3 19h-2.6a2 2 0 0 1-1.99-1.8L8 6m3 4v5m2-5v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </td>
+                                            </div>
+                                        </td>
+                                    @endunless
                                 </tr>
                             @endforeach
                         </tbody>
@@ -564,53 +583,55 @@
                                 </div>
                             </div>
 
-                            <div class="word-list-mobile-card__actions">
-                                @if ($editingWordId === $wordItem->id)
-                                    <div class="word-list-edit-actions">
-                                        <button
-                                            type="button"
-                                            class="word-list-edit-accept-btn"
-                                            wire:click="updateEditingWord"
-                                        >
-                                            {{ __('dictionaries.show.word_list.edit.accept') }}
-                                        </button>
+                            @unless ($isReadOnly)
+                                <div class="word-list-mobile-card__actions">
+                                    @if ($editingWordId === $wordItem->id)
+                                        <div class="word-list-edit-actions">
+                                            <button
+                                                type="button"
+                                                class="word-list-edit-accept-btn"
+                                                wire:click="updateEditingWord"
+                                            >
+                                                {{ __('dictionaries.show.word_list.edit.accept') }}
+                                            </button>
 
-                                        <button
-                                            type="button"
-                                            class="word-list-edit-cancel-btn"
-                                            wire:click="cancelEditingWord"
-                                        >
-                                            {{ __('dictionaries.show.word_list.edit.cancel') }}
-                                        </button>
-                                    </div>
-                                @else
-                                    <div class="word-list-actions">
-                                        <button
-                                            type="button"
-                                            class="word-list-edit-btn"
-                                            wire:click="startEditingWord({{ $wordItem->id }})"
-                                            aria-label="{{ __('dictionaries.show.word_list.edit.aria', ['name' => $wordItem->word]) }}"
-                                        >
-                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                                <path d="m4 20 4.25-1.06a2 2 0 0 0 .9-.52L19 8.57a2.12 2.12 0 0 0-3-3L6.15 15.42a2 2 0 0 0-.52.9L4 20Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="m14.5 7.5 2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                                            </svg>
-                                        </button>
+                                            <button
+                                                type="button"
+                                                class="word-list-edit-cancel-btn"
+                                                wire:click="cancelEditingWord"
+                                            >
+                                                {{ __('dictionaries.show.word_list.edit.cancel') }}
+                                            </button>
+                                        </div>
+                                    @else
+                                        <div class="word-list-actions">
+                                            <button
+                                                type="button"
+                                                class="word-list-edit-btn"
+                                                wire:click="startEditingWord({{ $wordItem->id }})"
+                                                aria-label="{{ __('dictionaries.show.word_list.edit.aria', ['name' => $wordItem->word]) }}"
+                                            >
+                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                    <path d="m4 20 4.25-1.06a2 2 0 0 0 .9-.52L19 8.57a2.12 2.12 0 0 0-3-3L6.15 15.42a2 2 0 0 0-.52.9L4 20Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                    <path d="m14.5 7.5 2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                                </svg>
+                                            </button>
 
-                                        <button
-                                            type="button"
-                                            class="word-list-delete-btn"
-                                            wire:key="word-mobile-delete-btn-{{ $wordItem->id }}"
-                                            wire:click="confirmDeleteWord({{ $wordItem->id }})"
-                                            aria-label="{{ __('dictionaries.show.word_list.delete.aria', ['name' => $wordItem->word]) }}"
-                                        >
-                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                                <path d="M9 3h6m-8 3h10m-1 0-.7 11.2A2 2 0 0 1 13.3 19h-2.6a2 2 0 0 1-1.99-1.8L8 6m3 4v5m2-5v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                @endif
-                            </div>
+                                            <button
+                                                type="button"
+                                                class="word-list-delete-btn"
+                                                wire:key="word-mobile-delete-btn-{{ $wordItem->id }}"
+                                                wire:click="confirmDeleteWord({{ $wordItem->id }})"
+                                                aria-label="{{ __('dictionaries.show.word_list.delete.aria', ['name' => $wordItem->word]) }}"
+                                            >
+                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                    <path d="M9 3h6m-8 3h10m-1 0-.7 11.2A2 2 0 0 1 13.3 19h-2.6a2 2 0 0 1-1.99-1.8L8 6m3 4v5m2-5v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endunless
                         </article>
                     @endforeach
                 </div>
@@ -658,7 +679,7 @@
             @endif
         </article>
 
-        @if ($pendingDeleteWordId !== null)
+        @if ($pendingDeleteWordId !== null && ! $isReadOnly)
             <div class="dictionary-delete-overlay" wire:key="delete-overlay-{{ $pendingDeleteWordId }}" wire:click="cancelDeleteWord">
                 <div class="dictionary-delete-dialog" wire:click.stop>
                     <div class="dictionary-delete-modal">

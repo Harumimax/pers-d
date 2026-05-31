@@ -39,7 +39,14 @@ class UserDictionaryWordSearchService
             ->withProgressForUser($user)
             ->join('user_dictionary_word', 'user_dictionary_word.word_id', '=', 'words.id')
             ->join('user_dictionaries', 'user_dictionaries.id', '=', 'user_dictionary_word.user_dictionary_id')
-            ->where('user_dictionaries.user_id', $user->id)
+            ->leftJoin('dictionary_subscriptions', function ($join) use ($user): void {
+                $join->on('dictionary_subscriptions.user_dictionary_id', '=', 'user_dictionaries.id')
+                    ->where('dictionary_subscriptions.subscriber_user_id', '=', $user->id);
+            })
+            ->where(function ($builder) use ($user): void {
+                $builder->where('user_dictionaries.user_id', $user->id)
+                    ->orWhereNotNull('dictionary_subscriptions.id');
+            })
             ->where(function ($builder) use ($normalizedSearchTerm): void {
                 $builder->whereRaw('LOWER(words.word) LIKE ?', ['%'.$normalizedSearchTerm.'%'])
                     ->orWhereRaw('LOWER(words.translation) LIKE ?', ['%'.$normalizedSearchTerm.'%']);
@@ -58,6 +65,7 @@ class UserDictionaryWordSearchService
                 'user_remainder_had_mistake',
                 'user_dictionary_word.created_at as attached_at',
             ])
+            ->distinct()
             ->get()
             ->map(function (Word $result): object {
                 return (object) [
