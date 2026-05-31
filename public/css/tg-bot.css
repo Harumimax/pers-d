@@ -374,6 +374,22 @@
     gap: 10px;
 }
 
+.tg-bot-dictionary-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    min-height: 42px;
+}
+
+.tg-bot-dictionary-toolbar-spacer {
+    min-width: 160px;
+    min-height: 42px;
+    visibility: hidden;
+    pointer-events: none;
+}
+
 .tg-bot-select-toolbar {
     display: flex;
     align-items: center;
@@ -404,6 +420,13 @@
     margin-left: auto;
 }
 
+.tg-bot-select-filter--spacer {
+    min-width: 160px;
+    min-height: 42px;
+    visibility: hidden;
+    pointer-events: none;
+}
+
 .tg-bot-select-filter__label {
     font-size: 0.9rem;
     font-weight: 700;
@@ -431,6 +454,13 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+.tg-bot-select-list--scrollable,
+.tg-bot-interval__dictionary-list--scrollable {
+    max-height: 382px;
+    overflow-y: auto;
+    padding-right: 6px;
 }
 
 .tg-bot-select-card {
@@ -938,6 +968,18 @@
 
     .tg-bot-card__description {
         line-height: 1.55;
+    }
+
+    .tg-bot-dictionary-toolbar,
+    .tg-bot-select-toolbar,
+    .tg-bot-interval__dictionary-toolbar {
+        min-height: 0;
+    }
+
+    .tg-bot-dictionary-toolbar-spacer,
+    .tg-bot-interval__dictionary-toolbar-spacer,
+    .tg-bot-select-filter--spacer {
+        display: none;
     }
 
     .tg-bot-form__switch-row--spaced {

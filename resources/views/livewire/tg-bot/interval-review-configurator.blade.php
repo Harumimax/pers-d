@@ -175,7 +175,7 @@
                         </div>
 
                         @if ($readyDictionaries->isNotEmpty())
-                            <div class="tg-bot-interval__dictionary-list">
+                            <div class="tg-bot-interval__dictionary-list tg-bot-interval__dictionary-list--scrollable">
                                 @foreach ($readyDictionaries as $dictionary)
                                     @php
                                         $languageKey = $dictionary->language !== null

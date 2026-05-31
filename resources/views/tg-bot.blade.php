@@ -428,18 +428,24 @@
 
                                                     <div class="tg-bot-dictionary-columns">
                                                         <div class="tg-bot-dictionary-column">
-                                                            <span class="tg-bot-form__label">{{ __('tg-bot.form.sessions.fields.user_dictionaries') }}</span>
+                                                            <div class="tg-bot-dictionary-toolbar">
+                                                                <span class="tg-bot-form__label">{{ __('tg-bot.form.sessions.fields.user_dictionaries') }}</span>
+                                                                <span class="tg-bot-dictionary-toolbar-spacer" aria-hidden="true"></span>
+                                                            </div>
 
                                                             @if ($userDictionaries->isNotEmpty())
-                                                                <label class="tg-bot-select-all">
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        class="tg-bot-select-all__input"
-                                                                        :checked="areAllSelected(session, 'user_dictionary_ids', availableUserDictionaryIds)"
-                                                                        @change="toggleAllSelections(session, 'user_dictionary_ids', availableUserDictionaryIds)"
-                                                                    >
-                                                                    <span>{{ __('remainder.settings.dictionaries.select_all') }}</span>
-                                                                </label>
+                                                                <div class="tg-bot-select-toolbar">
+                                                                    <label class="tg-bot-select-all">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            class="tg-bot-select-all__input"
+                                                                            :checked="areAllSelected(session, 'user_dictionary_ids', availableUserDictionaryIds)"
+                                                                            @change="toggleAllSelections(session, 'user_dictionary_ids', availableUserDictionaryIds)"
+                                                                        >
+                                                                        <span>{{ __('remainder.settings.dictionaries.select_all') }}</span>
+                                                                    </label>
+                                                                    <span class="tg-bot-select-filter tg-bot-select-filter--spacer" aria-hidden="true"></span>
+                                                                </div>
 
                                                                 <div class="tg-bot-select-list">
                                                                     @foreach ($userDictionaries as $dictionary)
@@ -475,7 +481,10 @@
                                                         </div>
 
                                                         <div class="tg-bot-dictionary-column">
-                                                            <span class="tg-bot-form__label">{{ __('tg-bot.form.sessions.fields.ready_dictionaries') }}</span>
+                                                            <div class="tg-bot-dictionary-toolbar">
+                                                                <span class="tg-bot-form__label">{{ __('tg-bot.form.sessions.fields.ready_dictionaries') }}</span>
+                                                                <span class="tg-bot-dictionary-toolbar-spacer" aria-hidden="true"></span>
+                                                            </div>
 
                                                             @if ($readyDictionaries->isNotEmpty())
                                                                 <div class="tg-bot-select-toolbar">
@@ -499,7 +508,7 @@
                                                                     </label>
                                                                 </div>
 
-                                                                <div class="tg-bot-select-list">
+                                                                <div class="tg-bot-select-list tg-bot-select-list--scrollable">
                                                                     @foreach ($readyDictionaries as $dictionary)
                                                                         @php
                                                                             $dictionaryLanguageKey = $dictionary->language !== null
