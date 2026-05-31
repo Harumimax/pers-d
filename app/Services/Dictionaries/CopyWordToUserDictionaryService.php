@@ -3,6 +3,7 @@
 namespace App\Services\Dictionaries;
 
 use App\Models\UserDictionary;
+use App\Models\UserWordProgress;
 use App\Models\Word;
 use Illuminate\Support\Facades\DB;
 
@@ -26,10 +27,21 @@ class CopyWordToUserDictionaryService
                 'translation' => $payload['translation'],
                 'part_of_speech' => $payload['part_of_speech'],
                 'comment' => $payload['comment'],
-                'remainder_had_mistake' => $payload['remainder_had_mistake'] ?? false,
             ]);
 
             $userDictionary->words()->attach($word->id);
+
+            if (($payload['remainder_had_mistake'] ?? false) === true) {
+                UserWordProgress::query()->updateOrCreate(
+                    [
+                        'user_id' => $userDictionary->user_id,
+                        'word_id' => $word->id,
+                    ],
+                    [
+                        'remainder_had_mistake' => true,
+                    ],
+                );
+            }
 
             return $word;
         });

@@ -23,6 +23,7 @@ class GameWordSelectionService
         if ($user !== null && $config->dictionaryIds !== []) {
             $query = Word::query()
                 ->select('words.*')
+                ->withProgressForUser($user)
                 ->join('user_dictionary_word', 'user_dictionary_word.word_id', '=', 'words.id')
                 ->join('user_dictionaries', 'user_dictionaries.id', '=', 'user_dictionary_word.user_dictionary_id')
                 ->where('user_dictionaries.user_id', $user->id)

@@ -35,6 +35,8 @@ class UserDictionaryWordSearchService
         $normalizedSearchTerm = mb_strtolower($searchTerm);
 
         return Word::query()
+            ->select('words.*')
+            ->withProgressForUser($user)
             ->join('user_dictionary_word', 'user_dictionary_word.word_id', '=', 'words.id')
             ->join('user_dictionaries', 'user_dictionaries.id', '=', 'user_dictionary_word.user_dictionary_id')
             ->where('user_dictionaries.user_id', $user->id)
@@ -44,7 +46,7 @@ class UserDictionaryWordSearchService
             })
             ->orderBy('words.word')
             ->orderBy('user_dictionaries.name')
-            ->get([
+            ->addSelect([
                 'user_dictionaries.id as dictionary_id',
                 'user_dictionaries.name as dictionary_name',
                 'user_dictionaries.language as dictionary_language',
@@ -53,9 +55,10 @@ class UserDictionaryWordSearchService
                 'words.translation',
                 'words.comment',
                 'words.part_of_speech',
-                'words.remainder_had_mistake',
+                'user_remainder_had_mistake',
                 'user_dictionary_word.created_at as attached_at',
             ])
+            ->get()
             ->map(function (Word $result): object {
                 return (object) [
                     'dictionary_id' => (int) $result->getAttribute('dictionary_id'),
@@ -66,7 +69,7 @@ class UserDictionaryWordSearchService
                     'translation' => (string) $result->getAttribute('translation'),
                     'comment' => $result->getAttribute('comment'),
                     'part_of_speech' => $result->getAttribute('part_of_speech'),
-                    'remainder_had_mistake' => (bool) $result->getAttribute('remainder_had_mistake'),
+                    'remainder_had_mistake' => $result->remainder_had_mistake,
                     'attached_at' => $result->getAttribute('attached_at') !== null
                         ? Carbon::parse((string) $result->getAttribute('attached_at'))
                         : null,

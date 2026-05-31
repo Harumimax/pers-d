@@ -73,7 +73,9 @@ class Show extends Component
     {
         $user = $this->currentUser();
         $totalWordsCount = $this->dictionary->words()->count();
-        $wordsQuery = $this->dictionary->words();
+        $wordsQuery = $this->dictionary->words()
+            ->select('words.*')
+            ->withProgressForUser($user);
         $partOfSpeechOptions = $this->partOfSpeechOptions();
         $searchTerm = trim($this->search);
         $normalizedSearchTerm = mb_strtolower($searchTerm);

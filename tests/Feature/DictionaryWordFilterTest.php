@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Livewire\Dictionaries\Show;
 use App\Models\User;
 use App\Models\UserDictionary;
+use App\Models\UserWordProgress;
 use App\Models\Word;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -105,17 +106,20 @@ class DictionaryWordFilterTest extends TestCase
             'part_of_speech' => 'noun',
             'translation' => 'apple',
             'comment' => null,
-            'remainder_had_mistake' => true,
         ]);
         $cleanWord = Word::create([
             'word' => 'book',
             'part_of_speech' => 'noun',
             'translation' => 'book',
             'comment' => null,
-            'remainder_had_mistake' => false,
         ]);
 
         $dictionary->words()->attach([$mistakeWord->id, $cleanWord->id]);
+        UserWordProgress::query()->create([
+            'user_id' => $user->id,
+            'word_id' => $mistakeWord->id,
+            'remainder_had_mistake' => true,
+        ]);
 
         $response = $this->actingAs($user)->get(route('dictionaries.show', $dictionary));
 
@@ -630,5 +634,3 @@ class DictionaryWordFilterTest extends TestCase
             ->assertSee('подходящий');
     }
 }
-
-

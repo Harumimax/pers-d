@@ -100,7 +100,7 @@
 - `App\Livewire\Dictionaries\Show`
   - shows a single dictionary
   - lists words with pagination
-  - receives each word's `remainder_had_mistake` flag for Remainder error markers
+  - receives each word's user-scoped `remainder_had_mistake` flag from `user_word_progress` for Remainder error markers
   - supports search, sorting, and part-of-speech filtering
   - supports manual word creation
   - supports automatic translation flow
@@ -111,9 +111,17 @@
   - performs case-insensitive partial matching by `words.word` and `words.translation`
   - limits results strictly to `user_dictionaries.user_id = current user`
   - returns search results in the context of the concrete dictionary where each word is attached
+  - decorates each result with the current user's mistake marker from `user_word_progress`
 - `App\Services\Dictionaries\SaveDictionaryWordService`
   - persists one new `Word` and attaches it to the chosen personal dictionary in a transaction
   - is reusable from non-web entry points such as Telegram bot dialogs
+- `DictionarySubscription`
+  - links one subscriber user to one owner dictionary in read-only mode
+- `DictionaryShareInvitation`
+  - stores the future email-based subscription invitation token flow
+- `UserWordProgress`
+  - stores learner-specific flags per `user_id + word_id`
+  - is the new source of truth for `remainder_had_mistake`
 - `App\Livewire\ReadyDictionaries\Show`
   - shows one developer-managed ready dictionary
   - lists ready dictionary words with pagination
@@ -1077,8 +1085,8 @@
   - delegates the `50% mistake words` rule and top-up behavior to `GameWordSelectionService`
   - delegates immutable snapshot payload creation to `GameItemSnapshotFactory`
   - delegates database persistence of `GameSession` and `GameSessionItem` rows to `GameSessionFactory`
-- Personal dictionary session items store the original `words.id`, so `GameEngineService` updates `words.remainder_had_mistake` for words attached to the current user's dictionaries when a non-demo session finishes
-- Demo sessions never update `words.remainder_had_mistake`
+- Personal dictionary session items store the original `words.id`, so `GameEngineService` updates `user_word_progress.remainder_had_mistake` for the active user when a non-demo session finishes
+- Demo sessions never update `user_word_progress`
 - Ready dictionary words are stored in separate `ready_dictionary_words`; when they are selected for a game, `PrepareGameService` copies them into `words` as session snapshot records so the existing `game_session_items.word_id` flow remains stable
 - `PrepareGameService` also stores `game_session_items.source_type_snapshot`, so the result screen can still distinguish personal words from prepared-dictionary words after snapshot creation
 - Ready dictionary snapshot words are not attached to `user_dictionary_word`, so Remainder mistake flags should ignore them when applying finished-session updates
@@ -1089,7 +1097,18 @@
 - `GameEngineService` now acts as a thin orchestration layer over reusable core services, so Telegram can later use the same answer and finalization logic without copying the web flow
 - choice-mode warnings about incomplete option sets are stored in `config_snapshot['warnings']` and shown on the game screen
 - Result screen is rendered by the same Livewire component when the session status becomes `finished`
-- On the finished result screen, authenticated users can copy incorrect prepared-dictionary words into a selected personal dictionary; copied words are created as new `words` rows with `remainder_had_mistake = true`
+- On the finished result screen, authenticated users can copy incorrect prepared-dictionary words into a selected personal dictionary; copied words are created as new `words` rows and the owner's `user_word_progress` row is marked with `remainder_had_mistake = true`
+
+## Dictionary Ownership And Sharing Foundation
+- `UserDictionary` still has exactly one owner through `user_dictionaries.user_id`
+- read-only sharing is now modeled separately from word storage:
+  - `dictionary_subscriptions` will hold subscriber access without copying words
+  - `dictionary_share_invitations` will hold pending invitation tokens
+- `Word` remains shared content that can be attached to multiple dictionaries
+- learner-specific progress is intentionally separated from shared content:
+  - `user_word_progress` is keyed by `user_id + word_id`
+  - shared dictionaries can later be introduced without leaking one user's Remainder mistakes into another user's experience
+- `words.remainder_had_mistake` is now a legacy transitional column and should no longer be treated as the authoritative source for practice state
 
 ## Telegram Scheduled Session Flow
 - `/tg-bot` now contains two expandable Telegram mode blocks:
@@ -1304,4 +1323,3 @@
 - `resources/views/remainder.blade.php`
 - `resources/views/remainder-show.blade.php`
 - `resources/views/livewire/remainder/show.blade.php`
-

@@ -9,6 +9,7 @@ use App\Models\TelegramRandomWordSession;
 use App\Models\TelegramSetting;
 use App\Models\User;
 use App\Models\UserDictionary;
+use App\Models\UserWordProgress;
 use App\Models\Word;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -306,16 +307,19 @@ class TelegramScheduledSessionsTest extends TestCase
             'translation' => 'red',
             'part_of_speech' => 'noun',
             'comment' => null,
-            'remainder_had_mistake' => false,
         ]);
         $wordTwo = Word::query()->create([
             'word' => 'book',
             'translation' => 'blue',
             'part_of_speech' => 'noun',
             'comment' => null,
-            'remainder_had_mistake' => true,
         ]);
         $dictionary->words()->attach([$wordOne->id, $wordTwo->id]);
+        UserWordProgress::query()->create([
+            'user_id' => $user->id,
+            'word_id' => $wordTwo->id,
+            'remainder_had_mistake' => true,
+        ]);
 
         $readyDictionary = ReadyDictionary::factory()->create([
             'name' => 'Ready deck',

@@ -9,6 +9,7 @@ use App\Models\ReadyDictionary;
 use App\Models\ReadyDictionaryWord;
 use App\Models\User;
 use App\Models\UserDictionary;
+use App\Models\UserWordProgress;
 use App\Models\Word;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\URL;
@@ -311,7 +312,7 @@ class RemainderGameTest extends TestCase
             ->set('answer', 'wrong answer')
             ->call('submitAnswer');
 
-        $this->assertFalse($snapshotWord->refresh()->remainder_had_mistake);
+        $this->assertUserWordMistakeFlag($user, $snapshotWord, false);
     }
 
     public function test_game_can_combine_personal_and_ready_dictionaries(): void
@@ -455,7 +456,7 @@ class RemainderGameTest extends TestCase
         $this->assertContains($mistakeWord->id, $selectedWordIds);
         $this->assertSame(
             1,
-            Word::query()->whereIn('id', $selectedWordIds)->where('remainder_had_mistake', true)->count(),
+            $this->countUserMistakeWords($user, $selectedWordIds),
         );
     }
 
@@ -488,7 +489,7 @@ class RemainderGameTest extends TestCase
         $this->assertContains($secondMistakeWord->id, $selectedWordIds);
         $this->assertSame(
             2,
-            Word::query()->whereIn('id', $selectedWordIds)->where('remainder_had_mistake', true)->count(),
+            $this->countUserMistakeWords($user, $selectedWordIds),
         );
     }
 
@@ -520,7 +521,7 @@ class RemainderGameTest extends TestCase
         $this->assertContains($cleanWord->id, $selectedWordIds);
         $this->assertGreaterThanOrEqual(
             5,
-            Word::query()->whereIn('id', $selectedWordIds)->where('remainder_had_mistake', true)->count(),
+            $this->countUserMistakeWords($user, $selectedWordIds),
         );
     }
 
@@ -1031,7 +1032,7 @@ class RemainderGameTest extends TestCase
             ->set('answer', 'wrong answer')
             ->call('submitAnswer');
 
-        $this->assertTrue($word->refresh()->remainder_had_mistake);
+        $this->assertUserWordMistakeFlag($user, $word, true);
     }
 
     public function test_finished_session_clears_previous_remainder_mistake_for_correct_personal_words(): void
@@ -1055,7 +1056,7 @@ class RemainderGameTest extends TestCase
             ->set('answer', 'apple')
             ->call('submitAnswer');
 
-        $this->assertFalse($word->refresh()->remainder_had_mistake);
+        $this->assertUserWordMistakeFlag($user, $word, false);
     }
 
     public function test_finished_session_ignores_ready_dictionary_snapshot_words_for_remainder_mistakes(): void
@@ -1195,7 +1196,7 @@ class RemainderGameTest extends TestCase
         $this->assertSame('точный', $copiedWord->translation);
         $this->assertSame('adjective', $copiedWord->part_of_speech);
         $this->assertNull($copiedWord->comment);
-        $this->assertTrue($copiedWord->remainder_had_mistake);
+        $this->assertUserWordMistakeFlag($user, $copiedWord, true);
     }
 
     public function test_user_cannot_open_another_users_game_session(): void
@@ -1260,11 +1261,40 @@ class RemainderGameTest extends TestCase
             'translation' => $translation,
             'part_of_speech' => $partOfSpeech,
             'comment' => null,
-            'remainder_had_mistake' => $remainderHadMistake,
         ]);
 
         $dictionary->words()->attach($wordModel->id);
 
+        if ($remainderHadMistake) {
+            UserWordProgress::query()->create([
+                'user_id' => $dictionary->user_id,
+                'word_id' => $wordModel->id,
+                'remainder_had_mistake' => true,
+            ]);
+        }
+
         return $wordModel;
+    }
+
+    private function assertUserWordMistakeFlag(User $user, Word $word, bool $expected): void
+    {
+        $progress = UserWordProgress::query()
+            ->where('user_id', $user->id)
+            ->where('word_id', $word->id)
+            ->first();
+
+        $this->assertSame($expected, (bool) $progress?->remainder_had_mistake);
+    }
+
+    /**
+     * @param array<int, int> $wordIds
+     */
+    private function countUserMistakeWords(User $user, array $wordIds): int
+    {
+        return UserWordProgress::query()
+            ->where('user_id', $user->id)
+            ->whereIn('word_id', $wordIds)
+            ->where('remainder_had_mistake', true)
+            ->count();
     }
 }

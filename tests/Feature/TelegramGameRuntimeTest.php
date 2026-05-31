@@ -8,6 +8,7 @@ use App\Models\TelegramRandomWordSession;
 use App\Models\TelegramSetting;
 use App\Models\User;
 use App\Models\UserDictionary;
+use App\Models\UserWordProgress;
 use App\Models\Word;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
@@ -114,8 +115,8 @@ class TelegramGameRuntimeTest extends TestCase
         $this->assertSame(TelegramGameRun::STATUS_FINISHED, $run->status);
         $this->assertSame(1, $run->correct_answers);
         $this->assertSame(1, $run->incorrect_answers);
-        $this->assertFalse($firstWord->remainder_had_mistake);
-        $this->assertTrue($secondWord->remainder_had_mistake);
+        $this->assertUserWordMistakeFlag($run->user, $firstWord, false);
+        $this->assertUserWordMistakeFlag($run->user, $secondWord, true);
     }
 
     public function test_cannot_answer_same_item_twice(): void
@@ -180,17 +181,17 @@ class TelegramGameRuntimeTest extends TestCase
             'word' => 'apple',
             'translation' => 'СЏР±Р»РѕРєРѕ',
             'part_of_speech' => 'noun',
-            'remainder_had_mistake' => $firstWordHadMistake,
         ]);
 
         $secondWord = Word::query()->create([
             'word' => 'book',
             'translation' => 'РєРЅРёРіР°',
             'part_of_speech' => 'noun',
-            'remainder_had_mistake' => $secondWordHadMistake,
         ]);
 
         $dictionary->words()->attach([$firstWord->id, $secondWord->id]);
+        $this->syncWordMistakeFlag($user, $firstWord, $firstWordHadMistake);
+        $this->syncWordMistakeFlag($user, $secondWord, $secondWordHadMistake);
 
         $setting = TelegramSetting::query()->create([
             'user_id' => $user->id,
@@ -271,6 +272,29 @@ class TelegramGameRuntimeTest extends TestCase
                 'data' => $data,
             ],
         ];
+    }
+
+    private function syncWordMistakeFlag(User $user, Word $word, bool $hasMistake): void
+    {
+        UserWordProgress::query()->updateOrCreate(
+            [
+                'user_id' => $user->id,
+                'word_id' => $word->id,
+            ],
+            [
+                'remainder_had_mistake' => $hasMistake,
+            ],
+        );
+    }
+
+    private function assertUserWordMistakeFlag(User $user, Word $word, bool $expected): void
+    {
+        $progress = UserWordProgress::query()
+            ->where('user_id', $user->id)
+            ->where('word_id', $word->id)
+            ->first();
+
+        $this->assertSame($expected, (bool) $progress?->remainder_had_mistake);
     }
 }
 

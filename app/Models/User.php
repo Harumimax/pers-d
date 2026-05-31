@@ -10,6 +10,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -24,7 +25,38 @@ class User extends Authenticatable
 
     public function dictionaries(): HasMany
     {
+        return $this->ownedDictionaries();
+    }
+
+    public function ownedDictionaries(): HasMany
+    {
         return $this->hasMany(UserDictionary::class);
+    }
+
+    public function dictionarySubscriptions(): HasMany
+    {
+        return $this->hasMany(DictionarySubscription::class, 'subscriber_user_id');
+    }
+
+    public function subscribedDictionaries(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            UserDictionary::class,
+            'dictionary_subscriptions',
+            'subscriber_user_id',
+            'user_dictionary_id'
+        )
+            ->withTimestamps();
+    }
+
+    public function dictionaryShareInvitations(): HasMany
+    {
+        return $this->hasMany(DictionaryShareInvitation::class, 'owner_user_id');
+    }
+
+    public function wordProgress(): HasMany
+    {
+        return $this->hasMany(UserWordProgress::class);
     }
 
     public function gameSessions(): HasMany
