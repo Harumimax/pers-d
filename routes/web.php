@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\AboutContactController;
+use App\Http\Controllers\DictionaryShareInvitationController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReadyDictionariesController;
@@ -46,6 +47,8 @@ Route::get('/about', [AboutController::class, 'index'])->name('about');
 Route::post('/telegram/webhook/{secret}', TelegramWebhookController::class)->name('telegram.webhook');
 Route::get('/telegram-auth/{token}', [TelegramAuthLinkController::class, 'show'])->name('telegram-auth.show');
 Route::post('/telegram-auth/{token}', [TelegramAuthLinkController::class, 'store'])->name('telegram-auth.store');
+Route::get('/dictionary-subscriptions/{token}', [DictionaryShareInvitationController::class, 'show'])
+    ->name('dictionary-subscriptions.show');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', fn () => redirect()->route('dictionaries.index'))
@@ -63,6 +66,10 @@ Route::middleware('auth')->group(function () {
         ->name('about.contact.store');
     Route::get('/dictionaries', Index::class)->name('dictionaries.index');
     Route::get('/dictionaries/{dictionary}', Show::class)->name('dictionaries.show');
+    Route::post('/dictionaries/{dictionary}/share-invitations', [DictionaryShareInvitationController::class, 'store'])
+        ->name('dictionary-share-invitations.store');
+    Route::post('/dictionary-subscriptions/{token}/accept', [DictionaryShareInvitationController::class, 'accept'])
+        ->name('dictionary-subscriptions.accept');
 });
 
 require __DIR__.'/auth.php';

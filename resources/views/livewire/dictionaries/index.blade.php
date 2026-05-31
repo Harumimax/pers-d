@@ -1,4 +1,12 @@
 <main class="dictionaries-main">
+    @if (session('status'))
+        <section class="dictionaries-container dictionaries-search-card" aria-label="Status message">
+            <p class="dictionary-show-transfer-alert dictionary-show-transfer-alert--success" role="status">
+                {{ session('status') }}
+            </p>
+        </section>
+    @endif
+
     <section class="dictionaries-container dictionaries-intro">
         <div class="dictionaries-intro__copy">
             <h1 class="dictionaries-title">{{ __('dictionaries.index.title') }}</h1>

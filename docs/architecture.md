@@ -20,6 +20,7 @@
   - `POST /telegram/webhook/{secret}` -> `TelegramWebhookController`, accepts Telegram bot updates through a secretized webhook URL
   - `GET /telegram-auth/{token}` -> `TelegramAuthLinkController@show`, renders the one-time Telegram login confirmation page
   - `POST /telegram-auth/{token}` -> `TelegramAuthLinkController@store`, validates the password and confirms Telegram linking without creating a browser session
+  - `GET /dictionary-subscriptions/{token}` -> `DictionaryShareInvitationController@show`, renders the dictionary subscription invitation landing page
   - `/ready-dictionaries` -> `ReadyDictionariesController@index`, also used as the guest Prepared dictionaries demo entry page
   - `/ready-dictionaries/{readyDictionary}` -> `App\Livewire\ReadyDictionaries\Show`, readable by guests as part of demo mode
   - `/remainder` -> `RemainderController@index`, available to guests as demo Remainder using ready dictionaries only
@@ -34,6 +35,8 @@
   - `POST /about/contact` -> `AboutContactController@store`
   - `/dictionaries` -> `App\Livewire\Dictionaries\Index`
   - `/dictionaries/{dictionary}` -> `App\Livewire\Dictionaries\Show`
+  - `POST /dictionaries/{dictionary}/share-invitations` -> `DictionaryShareInvitationController@store`, creates and sends a new dictionary subscription invitation
+  - `POST /dictionary-subscriptions/{token}/accept` -> `DictionaryShareInvitationController@accept`, accepts a pending invitation for the authenticated matching email
 
 ### Controllers
 - `App\Http\Controllers\ProfileController`
@@ -71,6 +74,11 @@
   - delegates both message updates and callback query updates to `TelegramUpdateHandler`
   - always returns `200`, even if update handling raised an internal exception
 - Header dropdown data is assembled through `HeaderNavigationService` so shared layouts receive personal dictionaries and ready dictionaries without querying from Blade
+- `App\Http\Controllers\DictionaryShareInvitationController`
+  - creates subscription invitations for owner dictionaries
+  - renders the guest/auth invitation landing page by token
+  - accepts valid invitations and creates read-only subscriptions
+  - relies on dedicated services for invitation creation, email sending, acceptance, and access checks
 - Auth controllers are the standard Breeze-style controllers under `app/Http/Controllers/Auth`
 - Dictionaries are not handled by traditional controllers; they are handled by Livewire page components
 - Locale switching is currently handled by a small route closure plus web middleware, not by a dedicated controller
@@ -122,6 +130,20 @@
 - `UserWordProgress`
   - stores learner-specific flags per `user_id + word_id`
   - is the new source of truth for `remainder_had_mistake`
+- `App\Services\DictionarySubscriptions\CreateDictionaryShareInvitationService`
+  - normalizes target email
+  - cancels previous pending invitations for the same dictionary/email pair
+  - creates a new invitation row plus raw token
+- `App\Services\DictionarySubscriptions\SendDictionaryShareInvitationService`
+  - resolves whether the target email already belongs to a registered user
+  - sends the correct invitation email variant through the existing `NotiSend` notification channel
+- `App\Services\DictionarySubscriptions\AcceptDictionarySubscriptionService`
+  - resolves the invitation by raw token hash
+  - enforces expiry and invited-email matching
+  - creates `dictionary_subscriptions` rows idempotently
+  - marks invitations as `accepted` or `expired`
+- `App\Services\DictionarySubscriptions\DictionaryAccessService`
+  - centralizes owner-vs-subscriber access checks for dictionaries
 - `App\Livewire\ReadyDictionaries\Show`
   - shows one developer-managed ready dictionary
   - lists ready dictionary words with pagination
@@ -1103,12 +1125,36 @@
 - `UserDictionary` still has exactly one owner through `user_dictionaries.user_id`
 - read-only sharing is now modeled separately from word storage:
   - `dictionary_subscriptions` will hold subscriber access without copying words
-  - `dictionary_share_invitations` will hold pending invitation tokens
+  - `dictionary_share_invitations` holds pending invitation tokens tied to a target email, owner, and dictionary
 - `Word` remains shared content that can be attached to multiple dictionaries
 - learner-specific progress is intentionally separated from shared content:
   - `user_word_progress` is keyed by `user_id + word_id`
   - shared dictionaries can later be introduced without leaking one user's Remainder mistakes into another user's experience
 - `words.remainder_had_mistake` is now a legacy transitional column and should no longer be treated as the authoritative source for practice state
+
+## Dictionary Subscription Invitation Flow
+- Owner creates an invitation through `POST /dictionaries/{dictionary}/share-invitations`
+- `CreateDictionaryShareInvitationService` stores one pending invitation row with:
+  - target email
+  - owner
+  - dictionary
+  - token hash
+  - expiry timestamp
+- `SendDictionaryShareInvitationService` sends one email flow with two content variants:
+  - existing-account recipient
+  - not-yet-registered recipient
+- Guest invitation landing page is available through `GET /dictionary-subscriptions/{token}`
+- When a guest opens the landing page, the application stores `url.intended`, so standard login and registration flows return the user back to that invitation
+- `RegisteredUserController` now redirects with `redirect()->intended(...)`, matching the existing login behavior
+- Accepting the invitation requires:
+  - authenticated user
+  - matching email with `dictionary_share_invitations.target_email`
+  - non-expired token
+  - invitation not invalidated
+- Acceptance is idempotent:
+  - repeated accepts do not create duplicate `dictionary_subscriptions`
+  - accepted invitations are marked with status `accepted`
+  - expired invitations are marked with status `expired`
 
 ## Telegram Scheduled Session Flow
 - `/tg-bot` now contains two expandable Telegram mode blocks:

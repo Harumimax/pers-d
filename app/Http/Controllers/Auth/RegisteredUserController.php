@@ -54,7 +54,7 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dictionaries.index', absolute: false));
+        return redirect()->intended(route('dictionaries.index', absolute: false));
     }
 
     private function sanitizeTextInput(?string $value): string
