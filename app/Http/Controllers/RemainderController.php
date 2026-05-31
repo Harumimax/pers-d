@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StartGameRequest;
 use App\Models\GameSession;
 use App\Models\ReadyDictionary;
+use App\Services\DictionarySubscriptions\DictionaryAccessService;
 use App\Services\Navigation\HeaderNavigationService;
 use App\Services\Remainder\PrepareGameService;
 use Illuminate\Http\RedirectResponse;
@@ -22,12 +23,16 @@ class RemainderController extends Controller
     public function index(Request $request, HeaderNavigationService $headerNavigationService): View
     {
         $user = $request->user();
+        $dictionaryAccessService = app(DictionaryAccessService::class);
 
         return view('remainder', [
-            'remainderDictionaries' => $user?->dictionaries()
-                ->withCount('words')
-                ->orderByDesc('created_at')
-                ->get(['id', 'name', 'language']) ?? collect(),
+            'remainderDictionaries' => $user !== null
+                ? $dictionaryAccessService->accessibleDictionariesQuery($user)
+                    ->withCount('words')
+                    ->with('owner:id,email')
+                    ->orderByDesc('user_dictionaries.created_at')
+                    ->get(['user_dictionaries.id', 'user_dictionaries.name', 'user_dictionaries.language', 'user_dictionaries.user_id'])
+                : collect(),
             'remainderReadyDictionaries' => ReadyDictionary::query()
                 ->withCount('words')
                 ->orderBy('language')

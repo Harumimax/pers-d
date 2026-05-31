@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\DictionarySubscription;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
@@ -84,6 +85,42 @@ class TelegramDictionaryBrowserTest extends TestCase
         Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/sendMessage')
             && str_contains((string) $request['text'], 'У вас пока нет созданных словарей')
             && str_contains((string) $request['text'], 'https://wordkeeper.space'));
+    }
+
+    public function test_user_can_open_subscribed_dictionary_from_menu(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true], 200),
+        ]);
+
+        $owner = User::factory()->create();
+        $subscriber = User::factory()->create([
+            'tg_chat_id' => '1001',
+            'tg_linked_at' => now(),
+        ]);
+
+        $dictionary = UserDictionary::query()->create([
+            'user_id' => $owner->id,
+            'name' => 'Shared dictionary',
+            'language' => 'English',
+        ]);
+
+        $word = Word::query()->create([
+            'word' => 'shared',
+            'translation' => 'РѕР±С‰РёР№',
+        ]);
+
+        $dictionary->words()->attach($word->id);
+
+        DictionarySubscription::query()->create([
+            'user_dictionary_id' => $dictionary->id,
+            'subscriber_user_id' => $subscriber->id,
+        ]);
+
+        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("tg_dict:show:{$dictionary->id}:1", 30011, 'callback-shared-dict'))
+            ->assertOk();
+
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/editMessageText'));
     }
 
     public function test_user_can_open_dictionary_page_paginate_and_go_back(): void

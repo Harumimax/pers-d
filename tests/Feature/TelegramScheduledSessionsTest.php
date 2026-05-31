@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\DictionarySubscription;
 use App\Models\ReadyDictionary;
 use App\Models\ReadyDictionaryWord;
 use App\Models\TelegramGameRun;
@@ -82,6 +83,79 @@ class TelegramScheduledSessionsTest extends TestCase
         $this->artisan('telegram:dispatch-scheduled-sessions')->assertSuccessful();
 
         $this->assertDatabaseCount('telegram_game_runs', 1);
+    }
+
+    public function test_dispatch_command_can_build_run_from_subscribed_dictionary(): void
+    {
+        CarbonImmutable::setTestNow('2026-04-28 09:15:00 UTC');
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response([
+                'ok' => true,
+                'result' => ['message_id' => 445],
+            ], 200),
+        ]);
+
+        $owner = User::factory()->create();
+        $subscriber = User::factory()->create([
+            'tg_chat_id' => '1001',
+            'tg_linked_at' => now(),
+        ]);
+
+        $dictionary = UserDictionary::query()->create([
+            'user_id' => $owner->id,
+            'name' => 'Shared deck',
+            'language' => 'English',
+        ]);
+
+        $sharedWord = Word::query()->create([
+            'word' => 'shared',
+            'translation' => 'orange',
+            'part_of_speech' => 'noun',
+        ]);
+        $secondSharedWord = Word::query()->create([
+            'word' => 'borrowed',
+            'translation' => 'purple',
+            'part_of_speech' => 'noun',
+        ]);
+
+        $dictionary->words()->attach([$sharedWord->id, $secondSharedWord->id]);
+
+        DictionarySubscription::query()->create([
+            'user_dictionary_id' => $dictionary->id,
+            'subscriber_user_id' => $subscriber->id,
+        ]);
+
+        UserWordProgress::query()->create([
+            'user_id' => $subscriber->id,
+            'word_id' => $sharedWord->id,
+            'remainder_had_mistake' => true,
+        ]);
+
+        $setting = TelegramSetting::query()->create([
+            'user_id' => $subscriber->id,
+            'timezone' => 'UTC',
+            'random_words_enabled' => true,
+        ]);
+
+        $session = TelegramRandomWordSession::query()->create([
+            'telegram_setting_id' => $setting->id,
+            'position' => 1,
+            'send_time' => '09:15:00',
+            'translation_direction' => 'foreign_to_ru',
+            'words_count' => 3,
+        ]);
+
+        $session->userDictionaries()->attach($dictionary->id);
+
+        $this->artisan('telegram:dispatch-scheduled-sessions')->assertSuccessful();
+
+        $run = TelegramGameRun::query()
+            ->with('items.word')
+            ->firstOrFail();
+
+        $this->assertSame($subscriber->id, $run->user_id);
+        $this->assertSame([$dictionary->id], $run->config_snapshot['dictionary_ids']);
+        $this->assertContains($run->items->firstOrFail()->word->word, ['shared', 'borrowed']);
     }
 
     public function test_dispatch_command_expires_previous_unfinished_runs_before_sending_new_intro(): void
@@ -386,4 +460,3 @@ class TelegramScheduledSessionsTest extends TestCase
         ];
     }
 }
-

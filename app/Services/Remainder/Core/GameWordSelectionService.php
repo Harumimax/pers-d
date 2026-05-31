@@ -6,11 +6,17 @@ use App\Models\ReadyDictionary;
 use App\Models\ReadyDictionaryWord;
 use App\Models\User;
 use App\Models\Word;
+use App\Services\DictionarySubscriptions\DictionaryAccessService;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
 class GameWordSelectionService
 {
+    public function __construct(
+        private readonly DictionaryAccessService $dictionaryAccessService,
+    ) {
+    }
+
     /**
      * @return Collection<int, array{source:string,word_id:int|null,word:string,translation:string,part_of_speech:?string,comment:?string,remainder_had_mistake:bool}>
      */
@@ -26,7 +32,14 @@ class GameWordSelectionService
                 ->withProgressForUser($user)
                 ->join('user_dictionary_word', 'user_dictionary_word.word_id', '=', 'words.id')
                 ->join('user_dictionaries', 'user_dictionaries.id', '=', 'user_dictionary_word.user_dictionary_id')
-                ->where('user_dictionaries.user_id', $user->id)
+                ->leftJoin('dictionary_subscriptions', function ($join) use ($user): void {
+                    $join->on('dictionary_subscriptions.user_dictionary_id', '=', 'user_dictionaries.id')
+                        ->where('dictionary_subscriptions.subscriber_user_id', '=', $user->id);
+                })
+                ->where(function ($builder) use ($user): void {
+                    $builder->where('user_dictionaries.user_id', $user->id)
+                        ->orWhereNotNull('dictionary_subscriptions.id');
+                })
                 ->whereIn('user_dictionaries.id', $config->dictionaryIds)
                 ->distinct();
 
@@ -126,23 +139,34 @@ class GameWordSelectionService
 
     private function assertDictionaryAccess(?User $user, GameSessionConfigData $config): void
     {
-        $ownedDictionaryIds = [];
+        $selectedDictionaryIds = collect($config->dictionaryIds)
+            ->map(static fn ($id): int => (int) $id)
+            ->sort()
+            ->values()
+            ->all();
+
+        $accessibleDictionaryIds = [];
 
         if ($user !== null && $config->dictionaryIds !== []) {
-            $ownedDictionaryIds = $user->dictionaries()
-                ->whereIn('id', $config->dictionaryIds)
-                ->pluck('id')
+            $accessibleDictionaryIds = collect($this->dictionaryAccessService->accessibleDictionaryIds($user))
+                ->intersect($config->dictionaryIds)
                 ->map(static fn ($id): int => (int) $id)
                 ->sort()
                 ->values()
                 ->all();
         }
 
-        if ($config->dictionaryIds !== $ownedDictionaryIds) {
+        if ($selectedDictionaryIds !== $accessibleDictionaryIds) {
             throw ValidationException::withMessages([
                 'dictionary_ids' => __('remainder.messages.start.not_owner'),
             ]);
         }
+
+        $selectedReadyDictionaryIds = collect($config->readyDictionaryIds)
+            ->map(static fn ($id): int => (int) $id)
+            ->sort()
+            ->values()
+            ->all();
 
         $availableReadyDictionaryIds = ReadyDictionary::query()
             ->whereIn('id', $config->readyDictionaryIds)
@@ -152,7 +176,7 @@ class GameWordSelectionService
             ->values()
             ->all();
 
-        if ($config->readyDictionaryIds !== $availableReadyDictionaryIds) {
+        if ($selectedReadyDictionaryIds !== $availableReadyDictionaryIds) {
             throw ValidationException::withMessages([
                 'ready_dictionary_ids' => __('remainder.messages.start.ready_not_found'),
             ]);

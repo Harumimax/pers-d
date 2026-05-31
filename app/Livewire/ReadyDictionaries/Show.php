@@ -45,7 +45,9 @@ class Show extends Component
         $normalizedSearchTerm = mb_strtolower($searchTerm);
 
         $headerNavigation = app(HeaderNavigationService::class)->forUser($user);
-        $userDictionaries = $headerNavigation['headerDictionaries'];
+        $userDictionaries = $user instanceof User
+            ? $user->ownedDictionaries()->orderBy('name')->get(['id', 'name'])
+            : collect();
 
         if ($this->partOfSpeechFilter !== self::PART_OF_SPEECH_FILTER_ALL) {
             $wordsQuery->where('part_of_speech', $this->partOfSpeechFilter);

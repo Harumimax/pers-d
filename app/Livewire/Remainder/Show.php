@@ -50,7 +50,9 @@ class Show extends Component
         $currentPartOfSpeechLabel = null;
         $resultSummary = null;
         $progressLabel = null;
-        $userDictionaries = $headerNavigation['headerDictionaries'];
+        $userDictionaries = $user instanceof User
+            ? $user->ownedDictionaries()->orderBy('name')->get(['id', 'name'])
+            : collect();
         $sessionWarnings = collect($this->gameSession->config_snapshot['warnings'] ?? [])
             ->filter(static fn ($warning): bool => is_string($warning) && trim($warning) !== '')
             ->values();

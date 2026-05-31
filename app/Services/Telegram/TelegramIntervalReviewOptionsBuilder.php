@@ -37,8 +37,16 @@ class TelegramIntervalReviewOptionsBuilder
             ->select('words.translation')
             ->join('user_dictionary_word', 'user_dictionary_word.word_id', '=', 'words.id')
             ->join('user_dictionaries', 'user_dictionaries.id', '=', 'user_dictionary_word.user_dictionary_id')
-            ->where('user_dictionaries.user_id', $user->id)
+            ->leftJoin('dictionary_subscriptions', function ($join) use ($user): void {
+                $join->on('dictionary_subscriptions.user_dictionary_id', '=', 'user_dictionaries.id')
+                    ->where('dictionary_subscriptions.subscriber_user_id', '=', $user->id);
+            })
+            ->where(function ($builder) use ($user): void {
+                $builder->where('user_dictionaries.user_id', $user->id)
+                    ->orWhereNotNull('dictionary_subscriptions.id');
+            })
             ->where('user_dictionaries.language', $language)
+            ->distinct()
             ->pluck('words.translation');
 
         $readyAnswers = ReadyDictionaryWord::query()

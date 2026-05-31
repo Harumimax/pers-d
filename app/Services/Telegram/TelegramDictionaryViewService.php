@@ -4,6 +4,7 @@ namespace App\Services\Telegram;
 
 use App\Models\User;
 use App\Models\UserDictionary;
+use App\Services\DictionarySubscriptions\DictionaryAccessService;
 use App\Support\PartOfSpeechCatalog;
 
 class TelegramDictionaryViewService
@@ -13,6 +14,7 @@ class TelegramDictionaryViewService
     public function __construct(
         private readonly TelegramBotService $telegramBotService,
         private readonly TelegramDictionaryCallbackData $telegramDictionaryCallbackData,
+        private readonly DictionaryAccessService $dictionaryAccessService,
     ) {
     }
 
@@ -21,9 +23,7 @@ class TelegramDictionaryViewService
      */
     public function show(User $user, int $dictionaryId, int $page, string $chatId, int $messageId): array
     {
-        $dictionary = UserDictionary::query()
-            ->where('user_id', $user->id)
-            ->find($dictionaryId);
+        $dictionary = $this->dictionaryAccessService->findAccessibleDictionary($user, $dictionaryId);
 
         if (! $dictionary instanceof UserDictionary) {
             return [

@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\DictionarySubscription;
 use App\Models\ReadyDictionary;
 use App\Models\ReadyDictionaryWord;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
+use App\Services\Dictionaries\UserDictionaryWordSearchService;
 use App\Services\Telegram\TelegramAuthStateStore;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
@@ -200,6 +202,50 @@ class TelegramDictionaryWordSearchTest extends TestCase
                 && str_contains($text, 'Испанские слова')
                 && ! str_contains($text, 'mesa - стол');
         });
+    }
+
+    public function test_search_query_returns_results_from_subscribed_dictionary(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true], 200),
+        ]);
+
+        $owner = User::factory()->create();
+        $subscriber = User::factory()->create([
+            'tg_chat_id' => '1001',
+            'tg_linked_at' => now(),
+        ]);
+
+        $dictionary = UserDictionary::create([
+            'user_id' => $owner->id,
+            'name' => 'Shared dictionary',
+            'language' => 'English',
+        ]);
+
+        $word = Word::create([
+            'word' => 'shared hello',
+            'translation' => 'РѕР±С‰РёР№ РїСЂРёРІРµС‚',
+            'comment' => 'Shared comment',
+        ]);
+
+        $dictionary->words()->attach($word->id);
+
+        DictionarySubscription::query()->create([
+            'user_dictionary_id' => $dictionary->id,
+            'subscriber_user_id' => $subscriber->id,
+        ]);
+
+        $results = app(UserDictionaryWordSearchService::class)->search($subscriber, 'shared');
+
+        $this->assertCount(1, $results);
+        $this->assertSame('Shared dictionary', $results->first()->dictionary_name);
+        $this->assertSame('shared hello', $results->first()->word);
+
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('РџРѕРёСЃРє СЃР»РѕРІ', 33011))->assertOk();
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('shared', 33012))->assertOk();
+
+        $this->assertNull(app(TelegramAuthStateStore::class)->get('1001'));
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/sendMessage'));
     }
 
     public function test_search_query_returns_empty_state_when_nothing_is_found(): void

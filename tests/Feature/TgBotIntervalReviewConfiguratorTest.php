@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Livewire\TgBot\IntervalReviewConfigurator;
+use App\Models\DictionarySubscription;
 use App\Models\ReadyDictionary;
 use App\Models\ReadyDictionaryWord;
 use App\Models\User;
@@ -162,5 +163,38 @@ class TgBotIntervalReviewConfiguratorTest extends TestCase
             ->call('collapsePlanPreview')
             ->assertDontSee('Schedule preview')
             ->assertSee('Show schedule');
+    }
+
+    public function test_component_can_open_subscribed_dictionary_words(): void
+    {
+        $owner = User::factory()->create();
+        $subscriber = User::factory()->create();
+
+        $dictionary = UserDictionary::query()->create([
+            'user_id' => $owner->id,
+            'name' => 'Shared English',
+            'language' => 'English',
+        ]);
+
+        $word = Word::query()->create([
+            'word' => 'shared',
+            'translation' => 'РѕР±С‰РёР№',
+            'part_of_speech' => 'adjective',
+        ]);
+
+        $dictionary->words()->attach($word->id);
+
+        DictionarySubscription::query()->create([
+            'user_dictionary_id' => $dictionary->id,
+            'subscriber_user_id' => $subscriber->id,
+        ]);
+
+        Livewire::actingAs($subscriber)
+            ->test(IntervalReviewConfigurator::class, ['timezone' => 'Europe/Moscow'])
+            ->assertSee('Shared English')
+            ->call('openDictionary', 'user', $dictionary->id)
+            ->assertSet('modalOpen', true)
+            ->assertSee('shared')
+            ->assertSee('РѕР±С‰РёР№');
     }
 }

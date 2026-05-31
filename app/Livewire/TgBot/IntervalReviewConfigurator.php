@@ -9,6 +9,7 @@ use App\Models\TelegramIntervalReviewPlan;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
+use App\Services\DictionarySubscriptions\DictionaryAccessService;
 use App\Services\Telegram\TelegramIntervalReviewPlanService;
 use App\Services\Telegram\TelegramIntervalReviewSchedulePreviewService;
 use App\Support\PartOfSpeechCatalog;
@@ -394,12 +395,13 @@ class IntervalReviewConfigurator extends Component
         /** @var User $user */
         $user = auth()->user();
 
-        return UserDictionary::query()
-            ->where('user_id', $user->id)
+        return app(DictionaryAccessService::class)
+            ->accessibleDictionariesQuery($user)
             ->where('language', $this->selectedLanguage)
             ->withCount('words')
+            ->with('owner:id,email')
             ->orderBy('name')
-            ->get();
+            ->get(['user_dictionaries.id', 'user_dictionaries.user_id', 'user_dictionaries.name', 'user_dictionaries.language']);
     }
 
     /**
@@ -429,10 +431,10 @@ class IntervalReviewConfigurator extends Component
             /** @var User $user */
             $user = auth()->user();
 
-            return UserDictionary::query()
-                ->where('user_id', $user->id)
+            return app(DictionaryAccessService::class)
+                ->accessibleDictionariesQuery($user)
                 ->where('language', $this->selectedLanguage)
-                ->find($this->modalDictionaryId);
+                ->find($this->modalDictionaryId, ['user_dictionaries.*']);
         }
 
         $query = ReadyDictionary::query();
@@ -509,10 +511,10 @@ class IntervalReviewConfigurator extends Component
             /** @var User $user */
             $user = auth()->user();
 
-            $dictionary = UserDictionary::query()
-                ->where('user_id', $user->id)
+            $dictionary = app(DictionaryAccessService::class)
+                ->accessibleDictionariesQuery($user)
                 ->where('language', $this->selectedLanguage)
-                ->find($dictionaryId);
+                ->find($dictionaryId, ['user_dictionaries.*']);
 
             if (! $dictionary instanceof UserDictionary) {
                 return null;

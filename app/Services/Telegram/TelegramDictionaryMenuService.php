@@ -2,14 +2,16 @@
 
 namespace App\Services\Telegram;
 
-use App\Models\User;
 use App\Models\UserDictionary;
+use App\Models\User;
+use App\Services\DictionarySubscriptions\DictionaryAccessService;
 
 class TelegramDictionaryMenuService
 {
     public function __construct(
         private readonly TelegramBotService $telegramBotService,
         private readonly TelegramDictionaryCallbackData $telegramDictionaryCallbackData,
+        private readonly DictionaryAccessService $dictionaryAccessService,
     ) {
     }
 
@@ -18,10 +20,10 @@ class TelegramDictionaryMenuService
      */
     public function show(User $user, string $chatId, ?int $messageId = null): array
     {
-        $dictionaries = UserDictionary::query()
-            ->where('user_id', $user->id)
+        $dictionaries = $this->dictionaryAccessService
+            ->accessibleDictionariesQuery($user)
             ->orderBy('id')
-            ->get(['id', 'name', 'language']);
+            ->get(['user_dictionaries.id', 'user_dictionaries.name', 'user_dictionaries.language']);
 
         if ($dictionaries->isEmpty()) {
             $text = 'У вас пока нет созданных словарей, сделать это можно на https://wordkeeper.space';

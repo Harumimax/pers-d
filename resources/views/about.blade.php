@@ -255,6 +255,14 @@
                                     <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
                                 </tr>
                                 <tr>
+                                    <td>{{ __('about.status.items.dictionary_subscriptions') }}</td>
+                                    <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td>{{ __('about.status.items.read_only_subscribed_usage') }}</td>
+                                    <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
+                                </tr>
+                                <tr>
                                     <td>{{ __('about.status.items.delete_confirmations') }}</td>
                                     <td><span class="about-status-badge about-status-badge--done">{{ __('about.status.badges.done') }}</span></td>
                                 </tr>

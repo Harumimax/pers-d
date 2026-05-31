@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Remainder;
 
+use App\Services\DictionarySubscriptions\DictionaryAccessService;
 use App\Services\Remainder\Core\GameWordSelectionService;
 use PHPUnit\Framework\TestCase;
 
@@ -9,7 +10,7 @@ class GameWordSelectionServiceTest extends TestCase
 {
     public function test_select_words_prioritizes_up_to_fifty_percent_mistake_words(): void
     {
-        $service = new GameWordSelectionService();
+        $service = new GameWordSelectionService(new DictionaryAccessService());
         $availableWords = collect([
             ['word' => 'mistake-1', 'remainder_had_mistake' => true],
             ['word' => 'mistake-2', 'remainder_had_mistake' => true],
@@ -33,7 +34,7 @@ class GameWordSelectionServiceTest extends TestCase
 
     public function test_select_words_tops_up_with_additional_mistake_words_when_clean_words_are_not_enough(): void
     {
-        $service = new GameWordSelectionService();
+        $service = new GameWordSelectionService(new DictionaryAccessService());
         $availableWords = collect([
             ['word' => 'mistake-1', 'remainder_had_mistake' => true],
             ['word' => 'mistake-2', 'remainder_had_mistake' => true],

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Telegram;
 
 use App\Models\GameSession;
+use App\Services\DictionarySubscriptions\DictionaryAccessService;
 use App\Support\PartOfSpeechCatalog;
 use DateTimeZone;
 use Illuminate\Contracts\Validation\Validator;
@@ -81,9 +82,7 @@ class UpdateTelegramSettingsRequest extends FormRequest
             'sessions.*.user_dictionary_ids' => ['nullable', 'array'],
             'sessions.*.user_dictionary_ids.*' => [
                 'integer',
-                Rule::exists('user_dictionaries', 'id')->where(
-                    fn ($query) => $query->where('user_id', $this->user()->id)
-                ),
+                Rule::exists('user_dictionaries', 'id'),
             ],
             'sessions.*.ready_dictionary_ids' => ['nullable', 'array'],
             'sessions.*.ready_dictionary_ids.*' => [
@@ -96,6 +95,10 @@ class UpdateTelegramSettingsRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
+            $accessibleDictionaryIds = $this->user() !== null
+                ? app(DictionaryAccessService::class)->accessibleDictionaryIds($this->user())
+                : [];
+
             foreach ((array) $this->input('sessions', []) as $index => $session) {
                 $userDictionaryIds = collect($session['user_dictionary_ids'] ?? [])
                     ->filter()
@@ -109,6 +112,15 @@ class UpdateTelegramSettingsRequest extends FormRequest
                         "sessions.{$index}.user_dictionary_ids",
                         __('tg-bot.validation.session_requires_dictionary', ['number' => $index + 1])
                     );
+                }
+
+                foreach ($userDictionaryIds as $position => $dictionaryId) {
+                    if (! in_array((int) $dictionaryId, $accessibleDictionaryIds, true)) {
+                        $validator->errors()->add(
+                            "sessions.{$index}.user_dictionary_ids.{$position}",
+                            __('validation.exists', ['attribute' => __('tg-bot.form.sessions.fields.user_dictionaries')])
+                        );
+                    }
                 }
             }
         });

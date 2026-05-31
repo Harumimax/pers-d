@@ -7,6 +7,7 @@ use App\Models\GameSession;
 use App\Models\GameSessionItem;
 use App\Models\ReadyDictionary;
 use App\Models\ReadyDictionaryWord;
+use App\Models\DictionarySubscription;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\UserWordProgress;
@@ -368,6 +369,40 @@ class RemainderGameTest extends TestCase
         $response->assertRedirect(route('remainder'));
         $response->assertSessionHasErrors('dictionary_ids');
         $this->assertDatabaseCount('game_sessions', 0);
+    }
+
+    public function test_authenticated_user_can_start_game_from_subscribed_dictionary(): void
+    {
+        $owner = User::factory()->create();
+        $subscriber = User::factory()->create();
+        $dictionary = $this->createDictionaryForUser($owner, 'Shared English', 'English');
+        $word = $this->attachWord($dictionary, 'shared', 'РѕР±С‰РёР№', 'adjective');
+
+        DictionarySubscription::query()->create([
+            'user_dictionary_id' => $dictionary->id,
+            'subscriber_user_id' => $subscriber->id,
+        ]);
+
+        UserWordProgress::query()->create([
+            'user_id' => $subscriber->id,
+            'word_id' => $word->id,
+            'remainder_had_mistake' => true,
+        ]);
+
+        $response = $this->actingAs($subscriber)->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'dictionary_ids' => [$dictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 1,
+        ]);
+
+        $gameSession = GameSession::query()->firstOrFail();
+
+        $response->assertRedirect(route('remainder.sessions.show', $gameSession));
+        $this->assertSame($subscriber->id, $gameSession->user_id);
+        $this->assertSame([$dictionary->id], $gameSession->config_snapshot['dictionary_ids']);
+        $this->assertSame('shared', $gameSession->items()->firstOrFail()->prompt_text);
     }
 
     public function test_game_uses_available_word_count_when_less_than_requested(): void

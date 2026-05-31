@@ -55,6 +55,7 @@
   - persists delivery status in `about_contact_messages`
 - `App\Http\Controllers\RemainderController`
   - renders remainder settings page for authenticated users and guests
+  - exposes owned and subscribed dictionaries as read-only word sources for authenticated users
   - starts user game sessions or guest demo sessions
   - renders the game session page shell with owner/demo access checks
   - signs guest demo session URLs and binds them to the current session/browser context
@@ -64,7 +65,7 @@
   - delegates ready dictionary catalog queries and filter normalization to `ReadyDictionaryCatalogService`
 - `App\Http\Controllers\TgBotController`
   - renders the authenticated `TG bot` settings page
-  - loads personal dictionaries, prepared dictionaries, timezone options, and saved Telegram configuration
+  - loads owned and subscribed dictionaries, prepared dictionaries, timezone options, and saved Telegram configuration
   - blocks settings persistence until the user is actually linked to the bot through `users.tg_chat_id`
   - delegates settings persistence to `SaveTelegramSettingsService`
   - reuses shared authenticated header/footer navigation through `HeaderNavigationService`
@@ -148,22 +149,24 @@
   - marks invitations as `accepted` or `expired`
 - `App\Services\DictionarySubscriptions\DictionaryAccessService`
   - centralizes owner-vs-subscriber access checks for dictionaries
+  - exposes reusable query helpers for all dictionaries available to the current user
+  - exposes reusable query helpers for all dictionaries available to the current user
 - `App\Livewire\ReadyDictionaries\Show`
   - shows one developer-managed ready dictionary
   - lists ready dictionary words with pagination
   - supports read-only search, sorting, and part-of-speech filtering
   - allows guests to browse ready dictionary words as demo content
   - does not expose word creation, editing, or deletion actions
-  - copying ready words into personal dictionaries remains available only to authenticated users
+  - copying ready words into personal dictionaries remains available only to authenticated users and only into owned dictionaries and only into owned dictionaries
 - `App\Livewire\Remainder\Show`
   - drives one active game session on the remainder game page
   - allows demo sessions while preserving owner checks for user sessions
   - renders either the current question, immediate feedback, or the final result summary
   - delegates answer checking and session transitions to `GameEngineService`
-  - allows authenticated users to copy incorrect prepared-dictionary result words into personal dictionaries
+  - allows authenticated users to copy incorrect prepared-dictionary result words only into owned personal dictionaries
 - `App\Livewire\TgBot\IntervalReviewConfigurator`
   - renders the interval review configurator inside `/tg-bot`
-  - filters personal and prepared dictionaries by selected language
+  - filters owned and subscribed dictionaries plus prepared dictionaries by selected language
   - opens a modal dictionary picker with search, part-of-speech filtering, pagination, and bulk selection
   - saves and reloads one persisted interval review plan per user
   - supports plan preview, pause/resume, and confirm-reset flows
@@ -251,9 +254,10 @@
     - emits structured logs for retry attempts and terminal transport failures
   - `TelegramUpdateHandler`
     - handles `/start`, `/login`, Telegram-side logout, and Telegram login intent creation against existing site users
-    - serves the authenticated Telegram dictionary browsing flow (`Словари`)
-    - serves the authenticated Telegram dictionary word search flow (`Поиск слов`)
-    - handles callback queries for scheduled Telegram runs (`РќР°С‡Р°С‚СЊ` / `РћС‚РјРµРЅР°`)
+    - serves the authenticated Telegram dictionary browsing flow for all accessible dictionaries (`Р В Р Р‹Р В Р’В»Р В РЎвЂўР В Р вЂ Р В Р’В°Р РЋР вЂљР В РЎвЂ`)
+    - serves the authenticated Telegram dictionary word search flow across all accessible dictionaries (`Р В РЎСџР В РЎвЂўР В РЎвЂР РЋР С“Р В РЎвЂќ Р РЋР С“Р В Р’В»Р В РЎвЂўР В Р вЂ `)
+    - keeps the Telegram add-word flow owner-only, so subscribed dictionaries never become write targets
+    - handles callback queries for scheduled Telegram runs (`Р В Р’В Р РЋРЎС™Р В Р’В Р вЂ™Р’В°Р В Р Р‹Р Р†Р вЂљР Р‹Р В Р’В Р вЂ™Р’В°Р В Р Р‹Р Р†Р вЂљРЎв„ўР В Р Р‹Р В Р вЂ°` / `Р В Р’В Р РЋРІР‚С”Р В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р РЋР’ВР В Р’В Р вЂ™Р’ВµР В Р’В Р В РІР‚В¦Р В Р’В Р вЂ™Р’В°`)
     - deduplicates incoming webhook updates before business processing through `TelegramProcessedUpdateService`
     - `/login` now asks only for email in Telegram and sends a one-time website confirmation link for password entry
     - never persists or logs the submitted password
@@ -270,12 +274,12 @@
     - centralizes callback payload generation and parsing for the Telegram add-word flow
     - encodes dictionary selection, translation selection, and part-of-speech selection callbacks
   - `TelegramDictionaryMenuService`
-    - renders the authenticated user's dictionary list in Telegram
+    - renders the authenticated user's owned and subscribed dictionary list in Telegram
     - returns an empty-state message with a link to the site when the user has no dictionaries yet
   - `TelegramDictionaryViewService`
-    - renders one user dictionary in Telegram with 20 words per page
+    - renders one accessible dictionary in Telegram with 20 words per page
     - formats only existing word attributes (`word`, `part of speech`, `translation`, `comment`)
-    - builds compact pagination controls and the `К словарям` back navigation
+    - builds compact pagination controls and the `Р В РЎв„ў Р РЋР С“Р В Р’В»Р В РЎвЂўР В Р вЂ Р В Р’В°Р РЋР вЂљР РЋР РЏР В РЎВ` back navigation
   - `TelegramIntervalReviewSchedulePreviewService`
     - calculates the UI preview schedule for the future interval review mode
     - returns 6 local datetimes based on the selected start time and the shared Telegram timezone
@@ -289,7 +293,7 @@
     - ignores paused plans and users without a linked Telegram chat
   - `TelegramIntervalReviewOptionsBuilder`
     - builds multiple-choice options for interval review items
-    - uses the selected review language and gathers distractors from all personal and prepared dictionaries of that language
+    - uses the selected review language and gathers distractors from all owned, subscribed, and prepared dictionaries of that language
   - `CreateTelegramIntervalReviewRunService`
     - creates one runtime run for one due interval review session
     - snapshots all selected plan words into runtime items
@@ -299,10 +303,10 @@
     - stores `intro_message_id` and moves the runtime session to `awaiting_start`
   - `TelegramIntervalReviewRunCallbackData`
     - centralizes callback payload generation and parsing for interval review runtime actions
-    - supports intro actions, the `Начать квиз` transition, and numbered answer callbacks
+    - supports intro actions, the `Р В РЎСљР В Р’В°Р РЋРІР‚РЋР В Р’В°Р РЋРІР‚С™Р РЋР Р‰ Р В РЎвЂќР В Р вЂ Р В РЎвЂР В Р’В·` transition, and numbered answer callbacks
   - `TelegramIntervalReviewWordListSender`
     - sends the full selected-word list for one interval review session
-    - adds the inline button `Начать квиз` for the transition into the question loop
+    - adds the inline button `Р В РЎСљР В Р’В°Р РЋРІР‚РЋР В Р’В°Р РЋРІР‚С™Р РЋР Р‰ Р В РЎвЂќР В Р вЂ Р В РЎвЂР В Р’В·` for the transition into the question loop
   - `TelegramIntervalReviewQuestionSender`
     - sends one interval review question at a time
     - prints all answer options in the message text and keeps inline buttons compact as `1..6`
@@ -341,7 +345,7 @@
     - prepares Telegram run items through the shared Remainder core
     - stores runtime state in Telegram-specific tables instead of reusing web `game_sessions`
   - `TelegramGameRunNotifier`
-    - sends the intro message with inline buttons `РќР°С‡Р°С‚СЊ` / `РћС‚РјРµРЅР°`
+    - sends the intro message with inline buttons `Р В Р’В Р РЋРЎС™Р В Р’В Р вЂ™Р’В°Р В Р Р‹Р Р†Р вЂљР Р‹Р В Р’В Р вЂ™Р’В°Р В Р Р‹Р Р†Р вЂљРЎв„ўР В Р Р‹Р В Р вЂ°` / `Р В Р’В Р РЋРІР‚С”Р В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р РЋР’ВР В Р’В Р вЂ™Р’ВµР В Р’В Р В РІР‚В¦Р В Р’В Р вЂ™Р’В°`
     - moves the run to `awaiting_start` and stores the Telegram intro message id
     - initializes `last_interaction_at` after successful intro delivery
   - `TelegramGameRunCallbackData`
@@ -396,8 +400,8 @@
     - normalizes dictionary ids, ready dictionary ids, parts of speech, and requested words count into one domain config object
     - removes the need for the game core to depend on HTTP request payload shape
   - `Core\GameWordSelectionService`
-    - validates dictionary ownership / ready dictionary availability at the domain layer
-    - loads candidate words from personal and prepared dictionaries
+    - validates dictionary access / ready dictionary availability at the domain layer
+    - loads candidate words from owned, subscribed, and prepared dictionaries
     - filters by parts of speech
     - applies the `50% previous mistakes` selection rule and top-up behavior
   - `Core\GameItemSnapshotFactory`
@@ -1128,13 +1132,26 @@
 ## Dictionary Ownership And Sharing Foundation
 - `UserDictionary` still has exactly one owner through `user_dictionaries.user_id`
 - read-only sharing is now modeled separately from word storage:
-  - `dictionary_subscriptions` will hold subscriber access without copying words
+  - `dictionary_subscriptions` holds subscriber access without copying words
   - `dictionary_share_invitations` holds pending invitation tokens tied to a target email, owner, and dictionary
 - `Word` remains shared content that can be attached to multiple dictionaries
 - learner-specific progress is intentionally separated from shared content:
   - `user_word_progress` is keyed by `user_id + word_id`
-  - shared dictionaries can later be introduced without leaking one user's Remainder mistakes into another user's experience
+  - shared dictionaries can be used without leaking one user's Remainder mistakes into another user's experience
 - `words.remainder_had_mistake` is now a legacy transitional column and should no longer be treated as the authoritative source for practice state
+- subscribed dictionaries are now first-class read-only sources in:
+  - `/dictionaries`
+  - dictionary search
+  - Remainder
+  - Telegram dictionary browsing
+  - Telegram dictionary search
+  - Telegram scheduled random-word sessions
+  - Telegram interval review
+- subscribed dictionaries never become write targets:
+  - not in web dictionary editing
+  - not in ready-word transfer targets
+  - not in Telegram add-word flow
+  - not in Remainder result transfer targets
 
 ## Dictionary Subscription Invitation Flow
 - Owner creates an invitation through `POST /dictionaries/{dictionary}/share-invitations`
@@ -1188,18 +1205,18 @@
   - each prepared interval review item represents one word selected into the plan
   - answer choices are precomputed with distractors from all personal and prepared dictionaries of the selected review language
   - `TelegramIntervalReviewRunNotifier` sends the intro message:
-    - `Первая / Вторая / ... сессия интервального повторения слов`
+    - `Р В РЎСџР В Р’ВµР РЋР вЂљР В Р вЂ Р В Р’В°Р РЋР РЏ / Р В РІР‚в„ўР РЋРІР‚С™Р В РЎвЂўР РЋР вЂљР В Р’В°Р РЋР РЏ / ... Р РЋР С“Р В Р’ВµР РЋР С“Р РЋР С“Р В РЎвЂР РЋР РЏ Р В РЎвЂР В Р вЂ¦Р РЋРІР‚С™Р В Р’ВµР РЋР вЂљР В Р вЂ Р В Р’В°Р В Р’В»Р РЋР Р‰Р В Р вЂ¦Р В РЎвЂўР В РЎвЂ“Р В РЎвЂў Р В РЎвЂ”Р В РЎвЂўР В Р вЂ Р РЋРІР‚С™Р В РЎвЂўР РЋР вЂљР В Р’ВµР В Р вЂ¦Р В РЎвЂР РЋР РЏ Р РЋР С“Р В Р’В»Р В РЎвЂўР В Р вЂ `
     - inline buttons:
-      - `Начать`
-      - `Отменить`
+      - `Р В РЎСљР В Р’В°Р РЋРІР‚РЋР В Р’В°Р РЋРІР‚С™Р РЋР Р‰`
+      - `Р В РЎвЂєР РЋРІР‚С™Р В РЎВР В Р’ВµР В Р вЂ¦Р В РЎвЂР РЋРІР‚С™Р РЋР Р‰`
   - `TelegramUpdateHandler` now also parses:
     - `interval_run:start:{id}`
     - `interval_run:cancel:{id}`
     - `interval_run:begin_quiz:{id}`
     - `interval_answer:{runId}:{itemId}:{optionIndex}`
   - `TelegramIntervalReviewRuntimeService` handles those callbacks:
-    - `Начать` moves the runtime run and planned session to `in_progress` and sends the full word list of the session
-    - `Начать квиз` deletes the word-list message and opens the first unanswered question
+    - `Р В РЎСљР В Р’В°Р РЋРІР‚РЋР В Р’В°Р РЋРІР‚С™Р РЋР Р‰` moves the runtime run and planned session to `in_progress` and sends the full word list of the session
+    - `Р В РЎСљР В Р’В°Р РЋРІР‚РЋР В Р’В°Р РЋРІР‚С™Р РЋР Р‰ Р В РЎвЂќР В Р вЂ Р В РЎвЂР В Р’В·` deletes the word-list message and opens the first unanswered question
     - answer callbacks reuse the shared `GameAnswerEvaluator::evaluateChoiceAnswer()` flow, send immediate feedback, and move to the next unanswered item
     - after the last answer, `TelegramIntervalReviewResultFinalizer`:
       - moves the current runtime run and planned session to `finished`
@@ -1207,8 +1224,8 @@
       - sends a per-session summary with the mistakes block
       - updates `words.remainder_had_mistake` for personal words
       - increments the parent plan progress
-      - sends `Интервальное повторение выбранных слов завершено.` after the sixth completed session
-    - `Отменить` cancels only the current interval session and leaves future sessions of the same plan untouched
+      - sends `Р В Р’ВР В Р вЂ¦Р РЋРІР‚С™Р В Р’ВµР РЋР вЂљР В Р вЂ Р В Р’В°Р В Р’В»Р РЋР Р‰Р В Р вЂ¦Р В РЎвЂўР В Р’Вµ Р В РЎвЂ”Р В РЎвЂўР В Р вЂ Р РЋРІР‚С™Р В РЎвЂўР РЋР вЂљР В Р’ВµР В Р вЂ¦Р В РЎвЂР В Р’Вµ Р В Р вЂ Р РЋРІР‚в„–Р В Р’В±Р РЋР вЂљР В Р’В°Р В Р вЂ¦Р В Р вЂ¦Р РЋРІР‚в„–Р РЋРІР‚В¦ Р РЋР С“Р В Р’В»Р В РЎвЂўР В Р вЂ  Р В Р’В·Р В Р’В°Р В Р вЂ Р В Р’ВµР РЋР вЂљР РЋРІвЂљВ¬Р В Р’ВµР В Р вЂ¦Р В РЎвЂў.` after the sixth completed session
+    - `Р В РЎвЂєР РЋРІР‚С™Р В РЎВР В Р’ВµР В Р вЂ¦Р В РЎвЂР РЋРІР‚С™Р РЋР Р‰` cancels only the current interval session and leaves future sessions of the same plan untouched
 - `/tg-bot` now reloads and shows the current state of the persisted interval review plan:
   - `active`
   - `paused`
@@ -1226,27 +1243,25 @@
     - `telegram_interval_review_sessions.status`
   - dispatch failures mark prepared interval sessions as `failed` instead of leaving half-prepared state without diagnostics
 - After Telegram authorization, the bot exposes a small reply-keyboard main menu:
-  - `Словари`
-  - `Поиск слов`
-  - `Выход`
-- `Словари` opens the authenticated Telegram dictionary browsing flow
-- `Поиск слов` starts a one-shot search dialog:
-  - the bot asks for a word or partial word
-  - the next user message is searched across all personal dictionaries by word and translation
+  - `Р В Р Р‹Р В Р’В»Р В РЎвЂўР В Р вЂ Р В Р’В°Р РЋР вЂљР В РЎвЂ`
+  - `Р В РЎСџР В РЎвЂўР В РЎвЂР РЋР С“Р В РЎвЂќ Р РЋР С“Р В Р’В»Р В РЎвЂўР В Р вЂ `
+  - `Р В РІР‚в„ўР РЋРІР‚в„–Р РЋРІР‚В¦Р В РЎвЂўР В РўвЂ`
+- `Р В Р Р‹Р В Р’В»Р В РЎвЂўР В Р вЂ Р В Р’В°Р РЋР вЂљР В РЎвЂ` opens the authenticated Telegram dictionary browsing flow
+- `Р В РЎСџР В РЎвЂўР В РЎвЂР РЋР С“Р В РЎвЂќ Р РЋР С“Р В Р’В»Р В РЎвЂўР В Р вЂ ` starts a one-shot search dialog:
+  - the next user message is searched across all accessible dictionaries by word and translation
   - the bot returns one combined text response with numbered results
   - the search state is cleared immediately after the response is sent
-- `Добавить слово` starts a multi-step Telegram dialog:
+- `Р В РІР‚СњР В РЎвЂўР В Р’В±Р В Р’В°Р В Р вЂ Р В РЎвЂР РЋРІР‚С™Р РЋР Р‰ Р РЋР С“Р В Р’В»Р В РЎвЂўР В Р вЂ Р В РЎвЂў` starts a multi-step Telegram dialog:
   - the bot shows the authenticated user's dictionaries as a numbered list with inline choice buttons
   - after dictionary selection, the next user message is treated as the source word with a 50-character limit
   - the word is translated through `TranslationServiceInterface`
   - the bot shows at most 6 translation choices: the first top result plus up to 5 alternatives
   - after translation selection, the bot shows all supported parts of speech as numbered inline choices
-  - both the translation-choice step and the part-of-speech step include an inline `Отмена` button that clears the temporary dialog state and returns the user to the standard 4-button main menu
+  - both the translation-choice step and the part-of-speech step include an inline `Р В РЎвЂєР РЋРІР‚С™Р В РЎВР В Р’ВµР В Р вЂ¦Р В Р’В°` button that clears the temporary dialog state and returns the user to the standard 4-button main menu
   - after the final choice, `SaveDictionaryWordService` persists the new word into the selected personal dictionary
 - `TelegramDictionaryMenuService` sends:
-  - the user's dictionaries as a numbered list (`1. Name — Language`)
+  - the user's owned and subscribed dictionaries as a numbered list (`1. Name РІР‚вЂќ Language`)
   - or an empty-state message with `https://wordkeeper.space` when the user has no dictionaries yet
-- Dictionary selection in Telegram uses inline callback buttons with numeric labels (`1`, `2`, `3`, ...)
 - `TelegramDictionaryViewService` shows the chosen dictionary page-by-page:
   - 20 words per page
   - each word includes only the available attributes:
@@ -1255,13 +1270,14 @@
     - translation
     - comment
 - Dictionary pagination uses a compact inline layout:
-  - `← Назад`
+  - `Р Р†РІР‚В РЎвЂ™ Р В РЎСљР В Р’В°Р В Р’В·Р В Р’В°Р В РўвЂ`
   - `X/Y`
-  - `Вперёд →`
-  - `К словарям`
+  - `Р В РІР‚в„ўР В РЎвЂ”Р В Р’ВµР РЋР вЂљР РЋРІР‚ВР В РўвЂ Р Р†РІР‚В РІР‚в„ў`
+  - `Р В РЎв„ў Р РЋР С“Р В Р’В»Р В РЎвЂўР В Р вЂ Р В Р’В°Р РЋР вЂљР РЋР РЏР В РЎВ`
 - Dictionary page navigation edits the existing Telegram message instead of spamming the chat with new messages
-- Dictionary callbacks always re-check dictionary ownership against the currently linked `users.tg_chat_id`, so a user cannot open another user's dictionary by forging callback data
+- Dictionary callbacks always re-check dictionary access against the currently linked `users.tg_chat_id`, so a user cannot open another user's dictionary by forging callback data
 - Telegram random-word settings are configured on `/tg-bot` and stored in `telegram_settings` plus child `telegram_random_word_sessions`
+- Telegram random-word settings may use both owned and subscribed dictionaries as source dictionaries
 - Each configured Telegram daily session stores its own `words_count` in the allowed `2..20` range, and `TelegramGameConfigFactory` passes that value into the shared `GameSessionConfigData`
 - `routes/console.php` schedules `telegram:dispatch-scheduled-sessions` every minute with `withoutOverlapping()`
 - `routes/console.php` also schedules `telegram:cleanup-stale-runs` every 15 minutes with `withoutOverlapping()`
@@ -1271,10 +1287,10 @@
   - `telegram_game_runs`
   - `telegram_game_run_items`
 - `TelegramGameRunNotifier` sends the intro Telegram message:
-  - `Пришло время повторить слова. Запланировано к повторению N слов.`
+  - `Р В РЎСџР РЋР вЂљР В РЎвЂР РЋРІвЂљВ¬Р В Р’В»Р В РЎвЂў Р В Р вЂ Р РЋР вЂљР В Р’ВµР В РЎВР РЋР РЏ Р В РЎвЂ”Р В РЎвЂўР В Р вЂ Р РЋРІР‚С™Р В РЎвЂўР РЋР вЂљР В РЎвЂР РЋРІР‚С™Р РЋР Р‰ Р РЋР С“Р В Р’В»Р В РЎвЂўР В Р вЂ Р В Р’В°. Р В РІР‚вЂќР В Р’В°Р В РЎвЂ”Р В Р’В»Р В Р’В°Р В Р вЂ¦Р В РЎвЂР РЋР вЂљР В РЎвЂўР В Р вЂ Р В Р’В°Р В Р вЂ¦Р В РЎвЂў Р В РЎвЂќ Р В РЎвЂ”Р В РЎвЂўР В Р вЂ Р РЋРІР‚С™Р В РЎвЂўР РЋР вЂљР В Р’ВµР В Р вЂ¦Р В РЎвЂР РЋР вЂ№ N Р РЋР С“Р В Р’В»Р В РЎвЂўР В Р вЂ .`
   - inline buttons:
-    - `Начать`
-    - `Отмена`
+    - `Р В РЎСљР В Р’В°Р РЋРІР‚РЋР В Р’В°Р РЋРІР‚С™Р РЋР Р‰`
+    - `Р В РЎвЂєР РЋРІР‚С™Р В РЎВР В Р’ВµР В Р вЂ¦Р В Р’В°`
 - Before a new scheduled run is created for a user, older unfinished Telegram runs with statuses `awaiting_start` or `in_progress` are automatically moved to `expired`
 - When such older runs are closed because a newer scheduled session time has arrived, Telegram sends an informational message explaining that the previous unfinished session was closed before the new intro message is sent
 - The Telegram webhook receives callback queries from those buttons
@@ -1283,15 +1299,15 @@
 - `TelegramGameRuntimeService` owns the Telegram question/answer loop and reuses `GameAnswerEvaluator` from the shared Remainder core instead of copying answer-check logic
 - `TelegramGameRuntimeService` delegates completed-run finalization to `TelegramGameResultFinalizer`
 - `TelegramGameQuestionSender` formats one Telegram question message with:
-  - progress line (`Вопрос X из N`)
+  - progress line (`Р В РІР‚в„ўР В РЎвЂўР В РЎвЂ”Р РЋР вЂљР В РЎвЂўР РЋР С“ X Р В РЎвЂР В Р’В· N`)
   - prompt text
   - optional part-of-speech label
   - 6 inline answer buttons
-- On `Отмена`:
+- On `Р В РЎвЂєР РЋРІР‚С™Р В РЎВР В Р’ВµР В Р вЂ¦Р В Р’В°`:
   - the run moves from `awaiting_start` to `cancelled`
   - `cancelled_at` is stored
   - inline buttons are removed from the intro message
-- On `Начать`:
+- On `Р В РЎСљР В Р’В°Р РЋРІР‚РЋР В Р’В°Р РЋРІР‚С™Р РЋР Р‰`:
   - the run moves from `awaiting_start` to `in_progress`
   - `started_at` is stored
   - inline buttons are removed from the intro message
@@ -1302,8 +1318,8 @@
   - the selected option text is evaluated through `GameAnswerEvaluator::evaluateChoiceAnswer()`
   - `telegram_game_run_items.user_answer`, `is_correct`, and `answered_at` are stored
   - the bot sends immediate feedback:
-    - `Корректно.`
-    - or `Некорректно. Правильный ответ: ...`
+    - `Р В РЎв„ўР В РЎвЂўР РЋР вЂљР РЋР вЂљР В Р’ВµР В РЎвЂќР РЋРІР‚С™Р В Р вЂ¦Р В РЎвЂў.`
+    - or `Р В РЎСљР В Р’ВµР В РЎвЂќР В РЎвЂўР РЋР вЂљР РЋР вЂљР В Р’ВµР В РЎвЂќР РЋРІР‚С™Р В Р вЂ¦Р В РЎвЂў. Р В РЎСџР РЋР вЂљР В Р’В°Р В Р вЂ Р В РЎвЂР В Р’В»Р РЋР Р‰Р В Р вЂ¦Р РЋРІР‚в„–Р В РІвЂћвЂ“ Р В РЎвЂўР РЋРІР‚С™Р В Р вЂ Р В Р’ВµР РЋРІР‚С™: ...`
   - if there is another unanswered item, the next question is sent immediately
   - if all items are answered:
     - the run stores `correct_answers` and `incorrect_answers`

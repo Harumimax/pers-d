@@ -7,12 +7,12 @@ use App\Http\Requests\Telegram\UpdateTelegramSettingsRequest;
 use App\Models\GameSession;
 use App\Models\ReadyDictionary;
 use App\Models\TelegramSetting;
+use App\Services\DictionarySubscriptions\DictionaryAccessService;
 use App\Services\Telegram\SaveTelegramSettingsService;
 use App\Support\PartOfSpeechCatalog;
 use App\Support\TimezoneOptions;
 use Illuminate\Http\RedirectResponse;
 use App\Services\Navigation\HeaderNavigationService;
-use App\Models\UserDictionary;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -31,11 +31,12 @@ class TgBotController extends Controller
             ])
             ->first();
 
-        $userDictionaries = UserDictionary::query()
-            ->where('user_id', $user->id)
+        $userDictionaries = app(DictionaryAccessService::class)
+            ->accessibleDictionariesQuery($user)
             ->withCount('words')
+            ->with('owner:id,email')
             ->orderBy('name')
-            ->get();
+            ->get(['user_dictionaries.id', 'user_dictionaries.user_id', 'user_dictionaries.name', 'user_dictionaries.language']);
 
         $readyDictionaries = ReadyDictionary::query()
             ->withCount('words')

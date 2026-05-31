@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\DictionarySubscription;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
@@ -162,6 +163,37 @@ class TelegramAddWordFlowTest extends TestCase
 
         Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/answerCallbackQuery')
             && (string) $request['text'] === 'Словарь не найден.');
+    }
+
+    public function test_user_cannot_pick_subscribed_dictionary_in_add_word_flow(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true], 200),
+        ]);
+
+        $owner = User::factory()->create();
+        $subscriber = User::factory()->create([
+            'tg_chat_id' => '1001',
+            'tg_linked_at' => now(),
+        ]);
+
+        $subscribedDictionary = UserDictionary::create([
+            'user_id' => $owner->id,
+            'name' => 'Shared dictionary',
+            'language' => 'English',
+        ]);
+
+        DictionarySubscription::query()->create([
+            'user_dictionary_id' => $subscribedDictionary->id,
+            'subscriber_user_id' => $subscriber->id,
+        ]);
+
+        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("tg_add_word:dictionary:{$subscribedDictionary->id}", 40101, 'cb-subscribed'))
+            ->assertOk();
+
+        $this->assertNull(app(TelegramAuthStateStore::class)->get('1001'));
+
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/answerCallbackQuery'));
     }
 
     public function test_user_can_cancel_add_word_flow_from_translation_step(): void

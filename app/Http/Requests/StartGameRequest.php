@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\GameSession;
+use App\Services\DictionarySubscriptions\DictionaryAccessService;
 use App\Support\PartOfSpeechCatalog;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -68,6 +69,21 @@ class StartGameRequest extends FormRequest
                     $validator->errors()->add('dictionary_ids', __('remainder.messages.start.demo_user_dictionaries'));
 
                     return;
+                }
+
+                if ($this->user() !== null && $this->input('dictionary_ids', []) !== []) {
+                    $accessibleDictionaryIds = app(DictionaryAccessService::class)->accessibleDictionaryIds($this->user());
+                    $selectedDictionaryIds = collect($this->input('dictionary_ids', []))
+                        ->map(static fn ($id): int => (int) $id)
+                        ->sort()
+                        ->values()
+                        ->all();
+
+                    if ($selectedDictionaryIds !== array_values(array_intersect($selectedDictionaryIds, $accessibleDictionaryIds))) {
+                        $validator->errors()->add('dictionary_ids', __('remainder.messages.start.not_owner'));
+
+                        return;
+                    }
                 }
 
                 if ($this->input('dictionary_ids', []) === [] && $this->input('ready_dictionary_ids', []) === []) {

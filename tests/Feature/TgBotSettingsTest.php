@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\ReadyDictionary;
+use App\Models\DictionarySubscription;
 use App\Models\TelegramSetting;
 use App\Models\User;
 use App\Models\UserDictionary;
@@ -286,6 +287,53 @@ class TgBotSettingsTest extends TestCase
             ])
             ->assertRedirect(route('tg-bot'))
             ->assertSessionHasErrors('sessions.0.user_dictionary_ids.0');
+    }
+
+    public function test_connected_user_can_save_subscribed_dictionary_in_telegram_settings(): void
+    {
+        $user = User::factory()->create([
+            'tg_chat_id' => '123456789',
+        ]);
+        $owner = User::factory()->create();
+
+        $subscribedDictionary = UserDictionary::create([
+            'user_id' => $owner->id,
+            'name' => 'Shared English',
+            'language' => 'English',
+        ]);
+
+        DictionarySubscription::query()->create([
+            'user_dictionary_id' => $subscribedDictionary->id,
+            'subscriber_user_id' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->put(route('tg-bot.update'), [
+                'timezone' => 'Europe/Moscow',
+                'random_words_enabled' => '1',
+                'sessions' => [
+                    [
+                        'send_time' => '09:15',
+                        'translation_direction' => 'foreign_to_ru',
+                        'words_count' => 12,
+                        'part_of_speech' => ['all'],
+                        'user_dictionary_ids' => [$subscribedDictionary->id],
+                        'ready_dictionary_ids' => [],
+                    ],
+                ],
+            ])
+            ->assertRedirect(route('tg-bot'))
+            ->assertSessionHas('tgBotSettingsStatus');
+
+        $setting = TelegramSetting::query()
+            ->with('randomWordSessions.userDictionaries')
+            ->where('user_id', $user->id)
+            ->firstOrFail();
+
+        $this->assertSame(
+            [$subscribedDictionary->id],
+            $setting->randomWordSessions->firstOrFail()->userDictionaries->pluck('id')->all()
+        );
     }
 
     public function test_connected_user_cannot_save_words_count_outside_allowed_range(): void
