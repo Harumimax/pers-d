@@ -444,7 +444,10 @@
                                                                         >
                                                                         <span>{{ __('remainder.settings.dictionaries.select_all') }}</span>
                                                                     </label>
-                                                                    <span class="tg-bot-select-filter tg-bot-select-filter--spacer" aria-hidden="true"></span>
+                                                                    <label class="tg-bot-select-filter tg-bot-select-filter--placeholder" aria-hidden="true">
+                                                                        <span class="tg-bot-select-filter__label">{{ __('remainder.settings.dictionaries.language_filter.label') }}</span>
+                                                                        <span class="tg-bot-select-filter__control"></span>
+                                                                    </label>
                                                                 </div>
 
                                                                 <div class="tg-bot-select-list">

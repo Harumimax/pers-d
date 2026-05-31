@@ -420,9 +420,7 @@
     margin-left: auto;
 }
 
-.tg-bot-select-filter--spacer {
-    min-width: 160px;
-    min-height: 42px;
+.tg-bot-select-filter--placeholder {
     visibility: hidden;
     pointer-events: none;
 }
@@ -458,9 +456,15 @@
 
 .tg-bot-select-list--scrollable,
 .tg-bot-interval__dictionary-list--scrollable {
-    max-height: 382px;
+    height: 365px;
     overflow-y: auto;
     padding-right: 6px;
+    flex: 0 0 auto;
+}
+
+.tg-bot-select-list--scrollable .tg-bot-select-card,
+.tg-bot-interval__dictionary-list--scrollable .tg-bot-interval__dictionary-button {
+    flex: 0 0 auto;
 }
 
 .tg-bot-select-card {
@@ -978,7 +982,7 @@
 
     .tg-bot-dictionary-toolbar-spacer,
     .tg-bot-interval__dictionary-toolbar-spacer,
-    .tg-bot-select-filter--spacer {
+    .tg-bot-select-filter--placeholder {
         display: none;
     }
 
