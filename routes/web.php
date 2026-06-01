@@ -10,6 +10,7 @@ use App\Http\Controllers\RemainderController;
 use App\Http\Controllers\TelegramAuthLinkController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\TgBotController;
+use App\Http\Controllers\TranslatorController;
 use App\Livewire\Dictionaries\Index;
 use App\Livewire\Dictionaries\Show;
 use App\Livewire\ReadyDictionaries\Show as ReadyDictionaryShow;
@@ -55,6 +56,8 @@ Route::middleware('auth')->group(function () {
         ->name('dashboard');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/translator', [TranslatorController::class, 'index'])->name('translator.index');
+    Route::post('/translator', [TranslatorController::class, 'store'])->name('translator.store');
     Route::get('/tg-bot', [TgBotController::class, 'index'])->name('tg-bot');
     Route::put('/tg-bot', [TgBotController::class, 'update'])->name('tg-bot.update');
     Route::patch('/tg-bot/random-words-status', [TgBotController::class, 'updateRandomWordsStatus'])
@@ -73,4 +76,3 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
-

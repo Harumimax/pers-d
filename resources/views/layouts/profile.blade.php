@@ -80,6 +80,12 @@
                     {{ __('common.links.tg_bot') }}
                 </a>
                 <a
+                    href="{{ route('translator.index') }}"
+                    class="profile-header-nav__item profile-header-nav__link {{ $activeNav === 'translator' ? 'profile-header-nav__link--active' : '' }}"
+                >
+                    {{ __('translator.menu') }}
+                </a>
+                <a
                     href="{{ route('profile.edit') }}"
                     class="profile-header-nav__item profile-header-nav__link {{ $activeNav === 'profile' ? 'profile-header-nav__link--active' : '' }}"
                 >
@@ -151,6 +157,12 @@
                         class="site-header__mobile-link {{ $activeNav === 'tg-bot' ? 'site-header__mobile-link--active' : '' }}"
                     >
                         {{ __('common.links.tg_bot') }}
+                    </a>
+                    <a
+                        href="{{ route('translator.index') }}"
+                        class="site-header__mobile-link {{ $activeNav === 'translator' ? 'site-header__mobile-link--active' : '' }}"
+                    >
+                        {{ __('translator.menu') }}
                     </a>
 
                     <a

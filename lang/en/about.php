@@ -6,7 +6,7 @@ return [
         'title' => 'A calm workspace for building your personal foreign-word dictionaries.',
         'image_alt' => 'Open dictionary book',
         'description_1' => 'WordKeeper is a personal vocabulary site for people who want one neat place to collect foreign words, keep translations close at hand, and organize learning by separate dictionaries. The product is intentionally focused: instead of spreading words across notes, chats, and browser tabs, you keep them in one structured space with clean navigation and a lightweight workflow.',
-        'description_2' => 'Right now the site already supports the core product loop: authenticated users can create personal dictionaries, add words manually or through assisted translation, assign part of speech, keep comments, share dictionaries through read-only subscriptions, launch Remainder practice sessions, work with prepared dictionaries, connect Telegram, search words and add new ones from the Telegram bot, receive scheduled Telegram practice sessions, and use the interface in Russian or English. The current focus is polishing the existing learning workflow, expanding prepared dictionary content, and improving the already available Telegram-based practice modes.',
+        'description_2' => 'Right now the site already supports the core product loop: authenticated users can create personal dictionaries, add words manually or through assisted translation, assign part of speech, keep comments, translate short texts, share dictionaries through read-only subscriptions, launch Remainder practice sessions, work with prepared dictionaries, connect Telegram, search words and add new ones from the Telegram bot, receive scheduled Telegram practice sessions, and use the interface in Russian or English. The current focus is polishing the existing learning workflow, expanding prepared dictionary content, and improving the already available Telegram-based practice modes.',
     ],
     'contact' => [
         'title' => 'Contact form',
@@ -70,6 +70,7 @@ return [
             'search_filter_sort' => 'Search, filter, sort, and paginate words inside a dictionary',
             'translation_suggestions' => 'Automatic translation suggestions during word creation',
             'translation_failover' => 'LibreTranslate as the primary translation provider with MyMemory fallback',
+            'text_translator' => 'Translate short texts up to 4500 characters on a dedicated Translator page',
             'dictionary_subscriptions' => 'Share dictionaries through email invitations and read-only subscriptions',
             'read_only_subscribed_usage' => 'Use subscribed dictionaries as read-only sources in web, Remainder, and Telegram flows',
             'delete_confirmations' => 'Delete dictionaries and words with confirmation dialogs',

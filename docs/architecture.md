@@ -30,6 +30,8 @@
 - Authenticated routes:
   - `/dashboard` -> redirects to dictionaries index
   - `/profile` -> `ProfileController`
+  - `GET /translator` -> `TranslatorController@index`
+  - `POST /translator` -> `TranslatorController@store`
   - `GET /tg-bot` -> `TgBotController@index`
   - `PUT /tg-bot` -> `TgBotController@update`
   - `POST /about/contact` -> `AboutContactController@store`
@@ -69,6 +71,11 @@
   - blocks settings persistence until the user is actually linked to the bot through `users.tg_chat_id`
   - delegates settings persistence to `SaveTelegramSettingsService`
   - reuses shared authenticated header/footer navigation through `HeaderNavigationService`
+- `App\Http\Controllers\TranslatorController`
+  - renders the authenticated text translator page
+  - validates translation direction and the 4500-character input limit through `TranslateTextRequest`
+  - delegates the external API call to a dedicated text translation abstraction
+  - returns the translated text to a read-only result field and shows a banner on provider failures
 - `App\Http\Controllers\TelegramWebhookController`
   - accepts Telegram webhook requests on a public endpoint
   - validates the URL secret against `config('services.telegram.webhook_secret')`
@@ -182,6 +189,7 @@
   - `resources/views/about.blade.php`
   - `resources/views/remainder.blade.php`
   - `resources/views/remainder-show.blade.php`
+  - `resources/views/translator/index.blade.php`
   - `resources/views/tg-bot.blade.php`
 - Additional TG bot Livewire view:
   - `resources/views/livewire/tg-bot/interval-review-configurator.blade.php`
@@ -208,6 +216,7 @@
   - `public/css/about.css`
   - `public/css/remainder.css`
   - `public/css/remainder-game.css`
+  - `public/css/translator.css`
 - Important design choice:
   - shared layouts do not query dictionaries directly
   - data needed by authenticated layouts is passed from controllers/Livewire through `HeaderNavigationService`
@@ -222,6 +231,12 @@
   - `LibreTranslateTranslationService`
   - `TranslationResult`
   - `TranslationSuggestion`
+- Dedicated text translation abstraction:
+  - `TextTranslationServiceInterface`
+  - `FailoverTextTranslationService`
+  - `MyMemoryTextTranslationService`
+  - `LibreTranslateTextTranslationService`
+  - used by the authenticated `/translator` page for short plain-text translations
 - Interface text localization uses standard Laravel lang files plus application locale set by middleware
 - About contact delivery currently uses a dedicated delivery abstraction over NotiSend Email API:
   - `StoreAboutContactRequest`

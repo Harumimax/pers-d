@@ -2,7 +2,7 @@
 
 WordKeeper is a focused vocabulary workspace for language learners.
 
-Users can collect foreign words in personal dictionaries, keep translations and notes together, and return to those words later in web review sessions or through the Telegram bot.
+Users can collect foreign words in personal dictionaries, keep translations and notes together, translate short texts, and return to those words later in web review sessions or through the Telegram bot.
 
 Website: [https://wordkeeper.space/](https://wordkeeper.space/)  
 Telegram bot: [https://t.me/WordKeeperBot_bot](https://t.me/WordKeeperBot_bot)
@@ -13,7 +13,7 @@ Telegram bot: [https://t.me/WordKeeperBot_bot](https://t.me/WordKeeperBot_bot)
 - Blade + Livewire 4
 - PostgreSQL
 - Telegram Bot API
-- LibreTranslate with MyMemory fallback for translation suggestions
+- LibreTranslate with MyMemory fallback for translation flows
 
 ## Current functionality
 
@@ -33,6 +33,10 @@ Telegram bot: [https://t.me/WordKeeperBot_bot](https://t.me/WordKeeperBot_bot)
   - LibreTranslate as the primary provider;
   - MyMemory as fallback when LibreTranslate is unavailable;
   - multiple translation suggestions;
+- text translator:
+  - authenticated-only Translator page in the header;
+  - translate short texts up to 4500 characters;
+  - choose RU / EN / SP direction before sending the request;
 - dictionary sharing:
   - send dictionary subscription invitations by email;
   - accept invitations through a secure token flow;

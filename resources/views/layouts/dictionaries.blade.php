@@ -79,6 +79,12 @@
                 >
                     {{ __('common.links.tg_bot') }}
                 </a>
+                <a
+                    href="{{ route('translator.index') }}"
+                    class="dictionaries-header-nav__item dictionaries-header-nav__link {{ request()->routeIs('translator.*') ? 'dictionaries-header-nav__link--active' : '' }}"
+                >
+                    {{ __('translator.menu') }}
+                </a>
                 <a href="{{ route('profile.edit') }}" class="dictionaries-header-nav__item dictionaries-header-nav__link">
                     {{ __('common.links.profile') }}
                 </a>
@@ -149,6 +155,12 @@
                         class="site-header__mobile-link {{ request()->routeIs('tg-bot') ? 'site-header__mobile-link--active' : '' }}"
                     >
                         {{ __('common.links.tg_bot') }}
+                    </a>
+                    <a
+                        href="{{ route('translator.index') }}"
+                        class="site-header__mobile-link {{ request()->routeIs('translator.*') ? 'site-header__mobile-link--active' : '' }}"
+                    >
+                        {{ __('translator.menu') }}
                     </a>
 
                     <a href="{{ route('profile.edit') }}" class="site-header__mobile-link">

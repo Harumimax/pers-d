@@ -20,6 +20,7 @@
                     <a href="{{ route('remainder') }}" class="header-actions__item header-actions__link">{{ __('common.links.remainder') }}</a>
                     <a href="{{ route('ready-dictionaries.index') }}" class="header-actions__item header-actions__link">{{ __('common.links.ready_dictionaries') }}</a>
                     <a href="{{ route('tg-bot') }}" class="header-actions__item header-actions__link">{{ __('common.links.tg_bot') }}</a>
+                    <a href="{{ route('translator.index') }}" class="header-actions__item header-actions__link">{{ __('translator.menu') }}</a>
                     <a href="{{ route('profile.edit') }}" class="header-actions__item header-actions__link">{{ __('common.links.profile') }}</a>
                     <form method="POST" action="{{ route('logout') }}" class="header-actions__item header-actions__form">
                         @csrf
@@ -41,6 +42,7 @@
                         <a href="{{ route('remainder') }}" class="site-header__mobile-link">{{ __('common.links.remainder') }}</a>
                         <a href="{{ route('ready-dictionaries.index') }}" class="site-header__mobile-link">{{ __('common.links.ready_dictionaries') }}</a>
                         <a href="{{ route('tg-bot') }}" class="site-header__mobile-link">{{ __('common.links.tg_bot') }}</a>
+                        <a href="{{ route('translator.index') }}" class="site-header__mobile-link">{{ __('translator.menu') }}</a>
                         <a href="{{ route('profile.edit') }}" class="site-header__mobile-link">{{ __('common.links.profile') }}</a>
 
                         <form method="POST" action="{{ route('logout') }}" class="site-header__mobile-form">
