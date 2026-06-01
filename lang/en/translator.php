@@ -2,7 +2,6 @@
 
 return [
     'menu' => 'Translator',
-    'eyebrow' => 'Text translation',
     'title' => 'Translate short texts inside WordKeeper.',
     'description' => 'Use the current translation provider stack to translate a phrase, sentence, or short text up to 4500 characters.',
     'form' => [
@@ -14,7 +13,7 @@ return [
         'input_placeholder' => 'Type or paste your text here...',
         'result_label' => 'Translation result',
         'result_placeholder' => 'The translated text will appear here.',
-        'limit' => 'Up to :count characters',
+        'characters_counter_suffix' => 'characters out of :limit',
         'submit' => 'Translate',
     ],
     'messages' => [

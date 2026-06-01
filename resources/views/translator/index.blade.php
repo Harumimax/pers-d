@@ -8,7 +8,6 @@
     <main class="translator-main">
         <div class="translator-container">
             <header class="translator-header">
-                <p class="translator-eyebrow">{{ __('translator.eyebrow') }}</p>
                 <h1 class="translator-title">{{ __('translator.title') }}</h1>
                 <p class="translator-description">{{ __('translator.description') }}</p>
             </header>
@@ -31,7 +30,12 @@
             @endif
 
             <section class="translator-card">
-                <form method="POST" action="{{ route('translator.store') }}" class="translator-form">
+                <form
+                    method="POST"
+                    action="{{ route('translator.store') }}"
+                    class="translator-form"
+                    x-data="{ charCount: {{ mb_strlen(old('text', $formData['text'])) }} }"
+                >
                     @csrf
 
                     <div class="translator-direction-row">
@@ -61,7 +65,10 @@
                     <div class="translator-field">
                         <div class="translator-field__header">
                             <label for="translator-input" class="translator-label">{{ __('translator.form.input_label') }}</label>
-                            <span class="translator-counter">{{ __('translator.form.limit', ['count' => 4500]) }}</span>
+                            <span class="translator-counter">
+                                <span x-text="charCount"></span>
+                                {{ __('translator.form.characters_counter_suffix', ['limit' => 4500]) }}
+                            </span>
                         </div>
                         <textarea
                             id="translator-input"
@@ -69,6 +76,7 @@
                             class="translator-textarea"
                             maxlength="4500"
                             placeholder="{{ __('translator.form.input_placeholder') }}"
+                            x-on:input="charCount = $event.target.value.length"
                         >{{ old('text', $formData['text']) }}</textarea>
                     </div>
 

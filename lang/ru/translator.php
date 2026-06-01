@@ -14,7 +14,7 @@ return [
         'input_placeholder' => 'Введите или вставьте текст сюда...',
         'result_label' => 'Результат перевода',
         'result_placeholder' => 'Здесь появится переведённый текст.',
-        'limit' => 'До :count символов',
+        'characters_counter_suffix' => 'символов из :limit',
         'submit' => 'Перевести',
     ],
     'messages' => [

@@ -1,10 +1,10 @@
 .translator-main {
-    padding: 56px 0 72px;
+    padding: 40px 0 56px;
 }
 
 .translator-container {
     width: 100%;
-    max-width: 1040px;
+    max-width: 1280px;
     margin: 0 auto;
     padding: 0 32px;
 }
@@ -12,22 +12,13 @@
 .translator-header {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    margin-bottom: 28px;
-}
-
-.translator-eyebrow {
-    margin: 0;
-    font-size: 0.9rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--primary-color);
+    gap: 10px;
+    margin-bottom: 22px;
 }
 
 .translator-title {
     margin: 0;
-    font-size: 2.8rem;
+    font-size: 2.45rem;
     line-height: 1.08;
     letter-spacing: -0.02em;
     color: var(--text-color);
@@ -35,15 +26,15 @@
 
 .translator-description {
     margin: 0;
-    max-width: 720px;
-    font-size: 1.02rem;
-    line-height: 1.6;
+    max-width: 840px;
+    font-size: 1rem;
+    line-height: 1.55;
     color: var(--muted-color);
 }
 
 .translator-alert {
-    margin-bottom: 18px;
-    padding: 16px 18px;
+    margin-bottom: 16px;
+    padding: 14px 16px;
     border-radius: 16px;
     border: 1px solid transparent;
     font-size: 0.96rem;
@@ -72,13 +63,13 @@
     border-radius: 20px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.96) 100%);
     box-shadow: 0 16px 44px rgba(15, 23, 42, 0.05);
-    padding: 28px;
+    padding: 24px;
 }
 
 .translator-form {
     display: flex;
     flex-direction: column;
-    gap: 22px;
+    gap: 16px;
 }
 
 .translator-direction-row {
@@ -90,7 +81,7 @@
 .translator-field {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
 .translator-field__header {
@@ -107,7 +98,8 @@
 }
 
 .translator-counter {
-    font-size: 0.88rem;
+    font-size: 0.9rem;
+    font-weight: 600;
     color: var(--muted-color);
 }
 
@@ -128,15 +120,16 @@
 }
 
 .translator-textarea {
-    min-height: 220px;
-    padding: 18px;
+    min-height: clamp(140px, 18vh, 180px);
+    padding: 16px;
     font-size: 1rem;
-    line-height: 1.6;
+    line-height: 1.55;
     resize: vertical;
 }
 
 .translator-textarea--result {
     background: #f8fafc;
+    min-height: clamp(140px, 18vh, 170px);
 }
 
 .translator-select:focus,
@@ -153,7 +146,7 @@
 
 .translator-submit-btn {
     min-width: 220px;
-    min-height: 56px;
+    min-height: 52px;
     border-radius: 14px;
     font-size: 1rem;
 }
@@ -164,13 +157,13 @@
     }
 
     .translator-title {
-        font-size: 2.3rem;
+        font-size: 2.2rem;
     }
 }
 
 @media (max-width: 640px) {
     .translator-main {
-        padding: 38px 0 56px;
+        padding: 32px 0 48px;
     }
 
     .translator-container {
@@ -195,7 +188,7 @@
     }
 
     .translator-textarea {
-        min-height: 180px;
+        min-height: 160px;
     }
 
     .translator-submit-btn {
