@@ -54,10 +54,13 @@ class PrepareGameService
 
         if ($sessionConfig->usesChoiceMode()) {
             $availableAnswers = $availableWords
-                ->map(function (array $word) use ($sessionConfig): string {
-                    return $sessionConfig->direction === GameSession::DIRECTION_FOREIGN_TO_RU
-                        ? $word['translation']
-                        : $word['word'];
+                ->map(function (array $word) use ($sessionConfig): array {
+                    return [
+                        'answer' => $sessionConfig->direction === GameSession::DIRECTION_FOREIGN_TO_RU
+                            ? $word['translation']
+                            : $word['word'],
+                        'part_of_speech' => $word['part_of_speech'],
+                    ];
                 })
                 ->values();
 

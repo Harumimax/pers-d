@@ -43,7 +43,10 @@ class CreateTelegramGameRunService
         $warnings = [];
 
         $availableAnswers = $availableWords
-            ->map(fn (array $word): string => $config->direction === 'foreign_to_ru' ? $word['translation'] : $word['word'])
+            ->map(fn (array $word): array => [
+                'answer' => $config->direction === 'foreign_to_ru' ? $word['translation'] : $word['word'],
+                'part_of_speech' => $word['part_of_speech'],
+            ])
             ->values();
 
         $choicePayload = $this->choiceOptionsBuilder->build($itemPayloads, $availableAnswers);

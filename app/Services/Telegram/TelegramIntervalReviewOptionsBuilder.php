@@ -29,12 +29,12 @@ class TelegramIntervalReviewOptionsBuilder
     }
 
     /**
-     * @return Collection<int, string>
+     * @return Collection<int, array{answer:string,part_of_speech:?string}>
      */
     private function buildAnswerPool(User $user, string $language): Collection
     {
         $userAnswers = Word::query()
-            ->select('words.translation')
+            ->select('words.translation', 'words.part_of_speech')
             ->join('user_dictionary_word', 'user_dictionary_word.word_id', '=', 'words.id')
             ->join('user_dictionaries', 'user_dictionaries.id', '=', 'user_dictionary_word.user_dictionary_id')
             ->leftJoin('dictionary_subscriptions', function ($join) use ($user): void {
@@ -46,19 +46,29 @@ class TelegramIntervalReviewOptionsBuilder
                     ->orWhereNotNull('dictionary_subscriptions.id');
             })
             ->where('user_dictionaries.language', $language)
-            ->distinct()
-            ->pluck('words.translation');
+            ->get()
+            ->map(static fn (Word $word): array => [
+                'answer' => trim((string) $word->translation),
+                'part_of_speech' => $word->part_of_speech !== null && trim((string) $word->part_of_speech) !== ''
+                    ? (string) $word->part_of_speech
+                    : null,
+            ]);
 
         $readyAnswers = ReadyDictionaryWord::query()
-            ->select('ready_dictionary_words.translation')
+            ->select('ready_dictionary_words.translation', 'ready_dictionary_words.part_of_speech')
             ->join('ready_dictionaries', 'ready_dictionaries.id', '=', 'ready_dictionary_words.ready_dictionary_id')
             ->where('ready_dictionaries.language', $language)
-            ->pluck('ready_dictionary_words.translation');
+            ->get()
+            ->map(static fn (ReadyDictionaryWord $word): array => [
+                'answer' => trim((string) $word->translation),
+                'part_of_speech' => $word->part_of_speech !== null && trim((string) $word->part_of_speech) !== ''
+                    ? (string) $word->part_of_speech
+                    : null,
+            ]);
 
         return $userAnswers
             ->merge($readyAnswers)
-            ->map(static fn ($answer): string => trim((string) $answer))
-            ->filter()
+            ->filter(static fn (array $answer): bool => $answer['answer'] !== '')
             ->values();
     }
 }

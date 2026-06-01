@@ -12,18 +12,27 @@ class ChoiceOptionsBuilder
 
     /**
      * @param Collection<int, array<string, mixed>> $itemPayloads
-     * @param Collection<int, string> $availableAnswers
+     * @param Collection<int, string|array{answer:string,part_of_speech:?string}> $availableAnswers
      * @return array{items: Collection<int, array<string, mixed>>, warnings: array<int, string>}
      */
     public function build(Collection $itemPayloads, Collection $availableAnswers): array
     {
         $normalizedAnswerMap = $availableAnswers
             ->map(function ($answer): array {
-                $answer = (string) $answer;
+                if (is_array($answer)) {
+                    $value = (string) ($answer['answer'] ?? '');
+                    $partOfSpeech = isset($answer['part_of_speech']) && trim((string) $answer['part_of_speech']) !== ''
+                        ? (string) $answer['part_of_speech']
+                        : null;
+                } else {
+                    $value = (string) $answer;
+                    $partOfSpeech = null;
+                }
 
                 return [
-                    'normalized' => $this->normalizeAnswer($answer),
-                    'original' => $answer,
+                    'normalized' => $this->normalizeAnswer($value),
+                    'original' => $value,
+                    'part_of_speech' => $partOfSpeech,
                 ];
             })
             ->filter(static fn (array $answer): bool => $answer['normalized'] !== '')
@@ -51,13 +60,47 @@ class ChoiceOptionsBuilder
             ->map(function (array $item) use ($normalizedAnswerMap): array {
                 $correctAnswer = (string) $item['correct_answer'];
                 $normalizedCorrectAnswer = $this->normalizeAnswer($correctAnswer);
+                $correctPartOfSpeech = isset($item['part_of_speech_snapshot']) && trim((string) $item['part_of_speech_snapshot']) !== ''
+                    ? (string) $item['part_of_speech_snapshot']
+                    : null;
 
-                $distractors = $normalizedAnswerMap
+                $allDistractors = $normalizedAnswerMap
                     ->reject(static fn (array $candidate): bool => $candidate['normalized'] === $normalizedCorrectAnswer)
-                    ->pluck('original')
-                    ->shuffle()
-                    ->take(self::OPTIONS_TARGET_COUNT - 1)
                     ->values();
+
+                $samePartOfSpeechDistractors = $correctPartOfSpeech !== null
+                    ? $allDistractors
+                        ->filter(static fn (array $candidate): bool => $candidate['part_of_speech'] === $correctPartOfSpeech)
+                        ->values()
+                    : collect();
+
+                if ($samePartOfSpeechDistractors->count() >= self::OPTIONS_TARGET_COUNT - 1) {
+                    $distractors = $samePartOfSpeechDistractors
+                        ->shuffle()
+                        ->take(self::OPTIONS_TARGET_COUNT - 1)
+                        ->pluck('original')
+                        ->values();
+                } else {
+                    $preferredDistractors = $samePartOfSpeechDistractors
+                        ->shuffle()
+                        ->take(self::OPTIONS_TARGET_COUNT - 1)
+                        ->values();
+
+                    $fallbackDistractors = $allDistractors
+                        ->reject(function (array $candidate) use ($preferredDistractors): bool {
+                            return $preferredDistractors->contains(
+                                static fn (array $selected): bool => $selected['normalized'] === $candidate['normalized']
+                            );
+                        })
+                        ->shuffle()
+                        ->take((self::OPTIONS_TARGET_COUNT - 1) - $preferredDistractors->count())
+                        ->values();
+
+                    $distractors = $preferredDistractors
+                        ->concat($fallbackDistractors)
+                        ->pluck('original')
+                        ->values();
+                }
 
                 $options = $distractors
                     ->push($correctAnswer)
