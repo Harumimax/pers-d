@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\TranslateTextRequest;
 use App\Services\Navigation\HeaderNavigationService;
-use App\Services\Translation\TextTranslationServiceInterface;
+use App\Services\Translation\TranslatorTextTranslationServiceInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
@@ -24,7 +24,7 @@ class TranslatorController extends Controller
 
     public function store(
         TranslateTextRequest $request,
-        TextTranslationServiceInterface $textTranslationService,
+        TranslatorTextTranslationServiceInterface $textTranslationService,
         HeaderNavigationService $headerNavigationService,
     ): View {
         $validated = $request->validated();

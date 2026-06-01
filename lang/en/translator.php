@@ -17,7 +17,7 @@ return [
         'submit' => 'Translate',
     ],
     'messages' => [
-        'failed' => 'We could not translate this text right now. Please try again a little later.',
+        'failed' => 'LibreTranslate is temporarily unavailable. Please try again later.',
         'validation_failed' => 'Please fix the highlighted validation issues and try again.',
     ],
 ];

@@ -7,6 +7,8 @@ use App\Services\AboutContact\NotiSendAboutContactDeliveryService;
 use App\Services\Translation\FailoverTextTranslationService;
 use App\Services\Translation\FailoverTranslationService;
 use App\Services\Translation\TextTranslationServiceInterface;
+use App\Services\Translation\TranslatorTextTranslationService;
+use App\Services\Translation\TranslatorTextTranslationServiceInterface;
 use App\Services\Translation\TranslationServiceInterface;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -23,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(AboutContactDeliveryServiceInterface::class, NotiSendAboutContactDeliveryService::class);
         $this->app->bind(TranslationServiceInterface::class, FailoverTranslationService::class);
         $this->app->bind(TextTranslationServiceInterface::class, FailoverTextTranslationService::class);
+        $this->app->bind(TranslatorTextTranslationServiceInterface::class, TranslatorTextTranslationService::class);
     }
 
     /**

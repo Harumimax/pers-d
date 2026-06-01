@@ -74,7 +74,7 @@
 - `App\Http\Controllers\TranslatorController`
   - renders the authenticated text translator page
   - validates translation direction and the 4500-character input limit through `TranslateTextRequest`
-  - delegates the external API call to a dedicated text translation abstraction
+  - delegates the external API call to a dedicated translator-only text translation abstraction
   - returns the translated text to a read-only result field and shows a banner on provider failures
 - `App\Http\Controllers\TelegramWebhookController`
   - accepts Telegram webhook requests on a public endpoint
@@ -236,7 +236,12 @@
   - `FailoverTextTranslationService`
   - `MyMemoryTextTranslationService`
   - `LibreTranslateTextTranslationService`
-  - used by the authenticated `/translator` page for short plain-text translations
+  - reserved for generic text translation flows that may still use failover behavior
+- Translator page direct translation abstraction:
+  - `TranslatorTextTranslationServiceInterface`
+  - `TranslatorTextTranslationService`
+  - always calls `LibreTranslateTextTranslationService` directly
+  - intentionally ignores the cached `libretranslate unhealthy` marker and never falls back to MyMemory for `/translator`
 - Interface text localization uses standard Laravel lang files plus application locale set by middleware
 - About contact delivery currently uses a dedicated delivery abstraction over NotiSend Email API:
   - `StoreAboutContactRequest`
@@ -1114,7 +1119,7 @@
 - This is intended to suppress obvious English/Spanish noise from MyMemory
 - Additional semantic noise filtering may still be needed later
 - LibreTranslate suggestions are normalized from `translatedText` plus `alternatives`, deduplicated, and returned through the same `TranslationResult` / `TranslationSuggestion` contract
-- Failover health behavior currently uses a cached `libretranslate unhealthy` circuit-breaker window; after a transport failure LibreTranslate is skipped for 60 minutes and translations go straight to MyMemory
+- Failover health behavior currently uses a cached `libretranslate unhealthy` circuit-breaker window; after a transport failure LibreTranslate is skipped for 10 minutes and translations go straight to MyMemory
 
 ## Remainder Game Flow
 - Settings page (`/remainder`) uses Blade + Alpine for configuration UI

@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use App\Services\Translation\TextTranslationServiceInterface;
+use App\Services\Translation\TranslatorTextTranslationServiceInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
 use RuntimeException;
@@ -34,13 +34,13 @@ class TranslatorPageTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $translator = Mockery::mock(TextTranslationServiceInterface::class);
+        $translator = Mockery::mock(TranslatorTextTranslationServiceInterface::class);
         $translator->shouldReceive('translateText')
             ->once()
             ->with('Hello world', 'en', 'ru')
             ->andReturn('Привет, мир');
 
-        $this->app->instance(TextTranslationServiceInterface::class, $translator);
+        $this->app->instance(TranslatorTextTranslationServiceInterface::class, $translator);
 
         $this->actingAs($user)
             ->post(route('translator.store'), [
@@ -72,12 +72,12 @@ class TranslatorPageTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $translator = Mockery::mock(TextTranslationServiceInterface::class);
+        $translator = Mockery::mock(TranslatorTextTranslationServiceInterface::class);
         $translator->shouldReceive('translateText')
             ->once()
             ->andThrow(new RuntimeException('Provider is down'));
 
-        $this->app->instance(TextTranslationServiceInterface::class, $translator);
+        $this->app->instance(TranslatorTextTranslationServiceInterface::class, $translator);
 
         $this->actingAs($user)
             ->post(route('translator.store'), [
@@ -86,7 +86,7 @@ class TranslatorPageTest extends TestCase
                 'text' => 'Hello world',
             ])
             ->assertOk()
-            ->assertSee('We could not translate this text right now. Please try again a little later.');
+            ->assertSee('LibreTranslate is temporarily unavailable. Please try again later.');
     }
 
     public function test_translator_page_is_localized_to_russian(): void

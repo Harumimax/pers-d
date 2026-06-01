@@ -51,7 +51,7 @@ return [
     'translation' => [
         'primary_provider' => env('TRANSLATION_PRIMARY_PROVIDER', 'libretranslate'),
         'fallback_provider' => env('TRANSLATION_FALLBACK_PROVIDER', 'mymemory'),
-        'libretranslate_unhealthy_ttl_minutes' => env('TRANSLATION_LIBRETRANSLATE_UNHEALTHY_TTL_MINUTES', 60),
+        'libretranslate_unhealthy_ttl_minutes' => env('TRANSLATION_LIBRETRANSLATE_UNHEALTHY_TTL_MINUTES', 10),
     ],
 
     'notisend' => [
