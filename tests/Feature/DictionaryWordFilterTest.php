@@ -127,6 +127,8 @@ class DictionaryWordFilterTest extends TestCase
             ->assertOk()
             ->assertSee('apple')
             ->assertSee('book')
+            ->assertSee('Pronounce')
+            ->assertSee('data-pronounce-button', false)
             ->assertSee('The red dot means you previously made a mistake with this word in the Remainder game.');
 
         $this->assertGreaterThanOrEqual(1, substr_count($response->getContent(), 'aria-label="Previous Remainder mistake"'));

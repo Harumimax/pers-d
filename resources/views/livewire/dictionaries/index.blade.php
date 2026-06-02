@@ -121,8 +121,9 @@
                     <thead>
                         <tr>
                             <th class="word-list-table__word-heading" style="width: 30%;">{{ __('dictionaries.index.search.results.table.word') }}</th>
+                            <th data-pronounce-heading style="width: 6%; text-align: center;">{{ __('dictionaries.index.search.results.table.pronounce') }}</th>
                             <th style="width: 22%;">{{ __('dictionaries.index.search.results.table.translation') }}</th>
-                            <th style="width: 28%;">{{ __('dictionaries.index.search.results.table.comment') }}</th>
+                            <th style="width: 22%;">{{ __('dictionaries.index.search.results.table.comment') }}</th>
                             <th style="width: 12%;">{{ __('dictionaries.index.search.results.table.added') }}</th>
                             <th style="width: 8%; text-align: center;">{{ __('dictionaries.index.search.results.table.action') }}</th>
                         </tr>
@@ -133,6 +134,11 @@
                                 $languageKey = $searchResult->dictionary_language !== null
                                     ? 'dictionaries.index.languages.' . strtolower($searchResult->dictionary_language)
                                     : 'dictionaries.index.languages.not_specified';
+                                $pronounceLocale = match (strtolower($searchResult->dictionary_language ?? '')) {
+                                    'english' => 'en-US',
+                                    'spanish' => 'es-ES',
+                                    default => null,
+                                };
                             @endphp
                             <tr wire:key="dictionary-search-result-{{ $searchResult->dictionary_id }}-{{ $searchResult->word_id }}">
                                 <td>
@@ -157,6 +163,21 @@
                                             </div>
                                         </div>
                                     </div>
+                                </td>
+                                <td class="word-list-pronounce-cell">
+                                    @if ($pronounceLocale !== null)
+                                        <button
+                                            type="button"
+                                            class="word-list-pronounce-btn"
+                                            title="{{ __('dictionaries.show.word_list.pronounce.tooltip') }}"
+                                            aria-label="{{ __('dictionaries.show.word_list.pronounce.aria', ['word' => $searchResult->word]) }}"
+                                            data-pronounce-button
+                                            data-pronounce-word="{{ $searchResult->word }}"
+                                            data-pronounce-lang="{{ $pronounceLocale }}"
+                                        >
+                                            <span class="word-list-pronounce-btn__icon" aria-hidden="true">🔊</span>
+                                        </button>
+                                    @endif
                                 </td>
                                 <td>
                                     <div class="word-list-translation">{{ $searchResult->translation }}</div>
@@ -194,6 +215,11 @@
                         $languageKey = $searchResult->dictionary_language !== null
                             ? 'dictionaries.index.languages.' . strtolower($searchResult->dictionary_language)
                             : 'dictionaries.index.languages.not_specified';
+                        $pronounceLocale = match (strtolower($searchResult->dictionary_language ?? '')) {
+                            'english' => 'en-US',
+                            'spanish' => 'es-ES',
+                            default => null,
+                        };
                     @endphp
                     <article class="word-list-mobile-card" wire:key="dictionary-search-mobile-result-{{ $searchResult->dictionary_id }}-{{ $searchResult->word_id }}">
                         <div class="word-list-mobile-card__header">
@@ -210,6 +236,19 @@
                                 <div class="word-list-word-content">
                                     <div class="word-list-mobile-card__title-line">
                                         <span class="word-list-main">{{ $searchResult->word }}</span>
+                                        @if ($pronounceLocale !== null)
+                                            <button
+                                                type="button"
+                                                class="word-list-pronounce-btn word-list-pronounce-btn--inline"
+                                                title="{{ __('dictionaries.show.word_list.pronounce.tooltip') }}"
+                                                aria-label="{{ __('dictionaries.show.word_list.pronounce.aria', ['word' => $searchResult->word]) }}"
+                                                data-pronounce-button
+                                                data-pronounce-word="{{ $searchResult->word }}"
+                                                data-pronounce-lang="{{ $pronounceLocale }}"
+                                            >
+                                                <span class="word-list-pronounce-btn__icon" aria-hidden="true">🔊</span>
+                                            </button>
+                                        @endif
                                         <span class="word-list-mobile-card__separator">&mdash;</span>
                                         <span class="word-list-translation">{{ $searchResult->translation }}</span>
                                     </div>

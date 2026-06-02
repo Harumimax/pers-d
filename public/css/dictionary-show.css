@@ -532,11 +532,77 @@
     text-align: center;
 }
 
+.word-list-pronounce-cell {
+    text-align: center;
+}
+
+html.speech-synthesis-unsupported [data-pronounce-heading],
+html.speech-synthesis-unsupported .word-list-pronounce-cell {
+    display: none;
+}
+
 .word-list-actions {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
+}
+
+.word-list-pronounce-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: #2563eb;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.word-list-pronounce-btn.is-speech-ready {
+    display: inline-flex;
+}
+
+.word-list-pronounce-btn:hover {
+    background: rgba(37, 99, 235, 0.12);
+    color: #1d4ed8;
+}
+
+.word-list-pronounce-btn:focus-visible {
+    outline: 2px solid rgba(37, 99, 235, 0.35);
+    outline-offset: 2px;
+}
+
+.word-list-pronounce-btn__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    line-height: 1;
+    transition: transform 0.2s ease;
+}
+
+.word-list-pronounce-btn.is-speaking {
+    background: rgba(37, 99, 235, 0.16);
+    color: #1e40af;
+}
+
+.word-list-pronounce-btn.is-speaking .word-list-pronounce-btn__icon {
+    animation: wordPronouncePulse 0.9s ease-in-out infinite;
+}
+
+@keyframes wordPronouncePulse {
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.18);
+    }
 }
 
 .word-list-mobile-card {
@@ -572,6 +638,11 @@
     flex-wrap: wrap;
     align-items: baseline;
     gap: 6px;
+}
+
+.word-list-pronounce-btn--inline {
+    margin-left: auto;
+    flex: 0 0 auto;
 }
 
 .word-list-mobile-card__separator {
@@ -1178,6 +1249,7 @@
     }
 
     .word-list-mobile-card__actions .word-list-edit-btn,
+    .word-list-mobile-card__actions .word-list-pronounce-btn,
     .word-list-mobile-card__actions .word-list-transfer-btn,
     .word-list-mobile-card__actions .word-list-delete-btn,
     .word-list-mobile-card__actions .word-list-edit-accept-btn,
@@ -1187,6 +1259,7 @@
     }
 
     .word-list-edit-btn,
+    .word-list-pronounce-btn,
     .word-list-transfer-btn,
     .word-list-delete-btn {
         width: 44px;

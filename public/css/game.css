@@ -201,6 +201,27 @@
     letter-spacing: 0.14em;
     font-size: 0.82rem;
     font-weight: 800;
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+    transition: background-image 0.25s ease, transform 0.25s ease;
+}
+
+.game-progress-panel__preview-image span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.64);
+    color: #fff;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.2);
+}
+
+.game-progress-panel__preview-image.has-photo {
+    border-color: rgba(15, 23, 42, 0.42);
+    transform: translateY(-1px);
 }
 
 @media (max-width: 1100px) {

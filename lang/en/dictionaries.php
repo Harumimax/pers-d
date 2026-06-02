@@ -88,6 +88,7 @@ return [
                 'empty' => 'No such words were found in your dictionaries.',
                 'table' => [
                     'word' => 'Word',
+                    'pronounce' => 'Pronounce',
                     'translation' => 'Translation',
                     'comment' => 'Comment',
                     'added' => 'Added',
@@ -155,6 +156,7 @@ return [
             'empty' => 'No words yet. Add your first word using the form above.',
             'table' => [
                 'word' => 'Word',
+                'pronounce' => 'Pronounce',
                 'translation' => 'Translation',
                 'comment' => 'Comment',
                 'added' => 'Added',
@@ -180,6 +182,10 @@ return [
                 'aria' => 'Edit word :name',
                 'accept' => 'Apply',
                 'cancel' => 'Cancel',
+            ],
+            'pronounce' => [
+                'tooltip' => 'Pronounce word',
+                'aria' => 'Pronounce word :word',
             ],
         ],
     ],

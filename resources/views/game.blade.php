@@ -76,9 +76,15 @@
 
                         <div class="game-progress-panel__preview" data-game-progress-preview>
                             <div class="game-progress-panel__preview-image">
-                                <span>{{ __('game.progress.preview_label', ['number' => 1]) }}</span>
+                                <span data-game-progress-label-template="{{ __('game.progress.preview_label', ['number' => '__NUMBER__']) }}">
+                                    {{ __('game.progress.preview_label', ['number' => 1]) }}
+                                </span>
                             </div>
                         </div>
+
+                        @if ($progressSlideImages !== [])
+                            <script type="application/json" data-game-progress-slides-json>@json($progressSlideImages)</script>
+                        @endif
                     </div>
                 </aside>
             </section>

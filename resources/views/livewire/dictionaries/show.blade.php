@@ -332,8 +332,9 @@
                         <thead>
                             <tr>
                                 <th class="word-list-table__word-heading" style="width: 28%;">{{ __('dictionaries.show.word_list.table.word') }}</th>
+                                <th data-pronounce-heading style="width: 6%; text-align: center;">{{ __('dictionaries.show.word_list.table.pronounce') }}</th>
                                 <th style="width: 22%;">{{ __('dictionaries.show.word_list.table.translation') }}</th>
-                                <th style="width: 30%;">{{ __('dictionaries.show.word_list.table.comment') }}</th>
+                                <th style="width: 24%;">{{ __('dictionaries.show.word_list.table.comment') }}</th>
                                 <th style="width: 12%;">{{ __('dictionaries.show.word_list.table.added') }}</th>
                                 @unless ($isReadOnly)
                                     <th style="width: 8%; text-align: center;">{{ __('dictionaries.show.word_list.table.action') }}</th>
@@ -344,6 +345,11 @@
                             @foreach ($words as $wordItem)
                                 @php
                                     $wordLanguageKey = $dictionary->language !== null ? 'dictionaries.index.languages.' . strtolower($dictionary->language) : 'dictionaries.index.languages.not_specified';
+                                    $pronounceLocale = match (strtolower($dictionary->language ?? '')) {
+                                        'english' => 'en-US',
+                                        'spanish' => 'es-ES',
+                                        default => null,
+                                    };
                                 @endphp
                                 <tr wire:key="word-row-{{ $wordItem->id }}-{{ $wordItem->pivot->created_at?->timestamp ?? 'na' }}">
                                     <td>
@@ -385,6 +391,21 @@
                                                 @endif
                                             </div>
                                         </div>
+                                    </td>
+                                    <td class="word-list-pronounce-cell">
+                                        @if ($pronounceLocale !== null)
+                                            <button
+                                                type="button"
+                                                class="word-list-pronounce-btn"
+                                                title="{{ __('dictionaries.show.word_list.pronounce.tooltip') }}"
+                                                aria-label="{{ __('dictionaries.show.word_list.pronounce.aria', ['word' => $wordItem->word]) }}"
+                                                data-pronounce-button
+                                                data-pronounce-word="{{ $wordItem->word }}"
+                                                data-pronounce-lang="{{ $pronounceLocale }}"
+                                            >
+                                                <span class="word-list-pronounce-btn__icon" aria-hidden="true">🔊</span>
+                                            </button>
+                                        @endif
                                     </td>
                                     <td>
                                         @if ($editingWordId === $wordItem->id)
@@ -490,6 +511,11 @@
                     @foreach ($words as $wordItem)
                         @php
                             $wordLanguageKey = $dictionary->language !== null ? 'dictionaries.index.languages.' . strtolower($dictionary->language) : 'dictionaries.index.languages.not_specified';
+                            $pronounceLocale = match (strtolower($dictionary->language ?? '')) {
+                                'english' => 'en-US',
+                                'spanish' => 'es-ES',
+                                default => null,
+                            };
                         @endphp
                         <article class="word-list-mobile-card" wire:key="word-mobile-card-{{ $wordItem->id }}-{{ $wordItem->pivot->created_at?->timestamp ?? 'na' }}">
                             <div class="word-list-mobile-card__header">
@@ -506,6 +532,19 @@
                                     <div class="word-list-word-content">
                                         <div class="word-list-mobile-card__title-line">
                                             <span class="word-list-main">{{ $wordItem->word }}</span>
+                                            @if ($pronounceLocale !== null)
+                                                <button
+                                                    type="button"
+                                                    class="word-list-pronounce-btn word-list-pronounce-btn--inline"
+                                                    title="{{ __('dictionaries.show.word_list.pronounce.tooltip') }}"
+                                                    aria-label="{{ __('dictionaries.show.word_list.pronounce.aria', ['word' => $wordItem->word]) }}"
+                                                    data-pronounce-button
+                                                    data-pronounce-word="{{ $wordItem->word }}"
+                                                    data-pronounce-lang="{{ $pronounceLocale }}"
+                                                >
+                                                    <span class="word-list-pronounce-btn__icon" aria-hidden="true">🔊</span>
+                                                </button>
+                                            @endif
                                             @if ($editingWordId !== $wordItem->id)
                                                 <span class="word-list-mobile-card__separator">&mdash;</span>
                                                 <span class="word-list-translation">{{ $wordItem->translation }}</span>

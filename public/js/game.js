@@ -14,6 +14,21 @@
     const loseRestartButton = page.querySelector('[data-game-lose-restart-button]');
     const livesBadge = page.querySelector('[data-game-lives]');
     const progressPreview = page.querySelector('[data-game-progress-preview]');
+    const progressSlidesJson = page.querySelector('[data-game-progress-slides-json]');
+
+    let progressSlideImages = [];
+
+    if (progressSlidesJson) {
+        try {
+            const parsedSlides = JSON.parse(progressSlidesJson.textContent || '[]');
+
+            if (Array.isArray(parsedSlides)) {
+                progressSlideImages = parsedSlides.filter((slide) => typeof slide === 'string' && slide !== '');
+            }
+        } catch (error) {
+            progressSlideImages = [];
+        }
+    }
 
     if (!(canvas instanceof HTMLCanvasElement)) {
         return;
@@ -239,10 +254,28 @@
 
     function syncProgressUI() {
         if (progressPreview) {
-            const previewCard = progressPreview.querySelector('.game-progress-panel__preview-image span');
+            const previewImage = progressPreview.querySelector('.game-progress-panel__preview-image');
+            const previewCard = previewImage?.querySelector('span');
+
+            if (previewImage) {
+                const slideIndex = Math.max(0, Math.min(progressSlideImages.length - 1, state.activeSlide - 1));
+                const slideImage = progressSlideImages[slideIndex] ?? null;
+
+                if (slideImage) {
+                    previewImage.style.backgroundImage = `linear-gradient(180deg, rgba(15, 23, 42, 0.12), rgba(15, 23, 42, 0.24)), url("${slideImage}")`;
+                    previewImage.classList.add('has-photo');
+                } else {
+                    previewImage.style.backgroundImage = '';
+                    previewImage.classList.remove('has-photo');
+                }
+            }
 
             if (previewCard) {
-                previewCard.textContent = `Slide ${state.activeSlide}`;
+                const template = previewCard.getAttribute('data-game-progress-label-template');
+
+                previewCard.textContent = template
+                    ? template.replace('__NUMBER__', String(state.activeSlide))
+                    : `Slide ${state.activeSlide}`;
             }
         }
     }

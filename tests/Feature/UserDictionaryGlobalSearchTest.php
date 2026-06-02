@@ -46,6 +46,7 @@ class UserDictionaryGlobalSearchTest extends TestCase
             ->set('searchQuery', 'apple')
             ->call('searchWords')
             ->assertSee('Search results')
+            ->assertSee('Pronounce')
             ->assertSee('pineapple')
             ->assertDontSee('window');
     }
