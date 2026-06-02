@@ -48,6 +48,14 @@
 
                         <div class="game-status-screen is-hidden" data-game-win-screen aria-hidden="true">
                             <div class="game-status-screen__card">
+                                @if ($finishImageUrl !== null)
+                                    <img
+                                        src="{{ $finishImageUrl }}"
+                                        alt="{{ __('game.win.title') }}"
+                                        class="game-status-screen__image"
+                                    >
+                                @endif
+
                                 <h2 class="game-status-screen__title">{{ __('game.win.title') }}</h2>
                                 <p class="game-status-screen__description">{{ __('game.win.description') }}</p>
 
@@ -76,9 +84,13 @@
 
                         <div class="game-progress-panel__preview" data-game-progress-preview>
                             <div class="game-progress-panel__preview-image">
-                                <span data-game-progress-label-template="{{ __('game.progress.preview_label', ['number' => '__NUMBER__']) }}">
-                                    {{ __('game.progress.preview_label', ['number' => 1]) }}
-                                </span>
+                                <img
+                                    src=""
+                                    alt="{{ __('game.progress.title') }}"
+                                    class="game-progress-panel__preview-photo"
+                                    data-game-progress-image
+                                    hidden
+                                >
                             </div>
                         </div>
 

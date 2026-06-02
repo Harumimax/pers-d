@@ -28,7 +28,7 @@ return [
     ],
     'win' => [
         'title' => 'Level complete',
-        'description' => 'You reached the finish. The mini-game is now a full start-to-finish run.',
+        'description' => 'You reached the finish. Ready for another run?',
         'action' => 'Play again',
     ],
     'lose' => [

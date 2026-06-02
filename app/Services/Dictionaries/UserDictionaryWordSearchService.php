@@ -35,7 +35,6 @@ class UserDictionaryWordSearchService
         $normalizedSearchTerm = mb_strtolower($searchTerm);
 
         return Word::query()
-            ->select('words.*')
             ->withProgressForUser($user)
             ->join('user_dictionary_word', 'user_dictionary_word.word_id', '=', 'words.id')
             ->join('user_dictionaries', 'user_dictionaries.id', '=', 'user_dictionary_word.user_dictionary_id')
@@ -62,7 +61,6 @@ class UserDictionaryWordSearchService
                 'words.translation',
                 'words.comment',
                 'words.part_of_speech',
-                'user_remainder_had_mistake',
                 'user_dictionary_word.created_at as attached_at',
             ])
             ->distinct()

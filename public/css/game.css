@@ -117,6 +117,15 @@
     box-shadow: 0 24px 40px -34px rgba(15, 23, 42, 0.55);
 }
 
+.game-status-screen__image {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0 0 18px;
+    border-radius: 18px;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+}
+
 .game-start-screen__title,
 .game-status-screen__title {
     margin: 0 0 12px;
@@ -188,35 +197,20 @@
 }
 
 .game-progress-panel__preview-image {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 240px;
+    display: block;
+    width: 100%;
     border: 2px solid #0f172a;
     border-radius: 22px;
     background:
         linear-gradient(135deg, #ffffff 0%, #f1f5f9 50%, #cbd5e1 100%);
-    color: #0f172a;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    font-size: 0.82rem;
-    font-weight: 800;
-    background-size: cover;
-    background-position: center;
     overflow: hidden;
-    transition: background-image 0.25s ease, transform 0.25s ease;
+    transition: transform 0.25s ease, border-color 0.25s ease;
 }
 
-.game-progress-panel__preview-image span {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 40px;
-    padding: 0 14px;
-    border-radius: 999px;
-    background: rgba(15, 23, 42, 0.64);
-    color: #fff;
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.2);
+.game-progress-panel__preview-photo {
+    display: block;
+    width: 100%;
+    height: auto;
 }
 
 .game-progress-panel__preview-image.has-photo {
@@ -227,10 +221,6 @@
 @media (max-width: 1100px) {
     .game-shell {
         grid-template-columns: 1fr;
-    }
-
-    .game-progress-panel__preview-image {
-        min-height: 180px;
     }
 }
 

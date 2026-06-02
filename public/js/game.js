@@ -128,6 +128,7 @@
                 { x: 3490, y: canvas.height - 246, width: 174, height: 16, type: 'platform' },
                 { x: 3750, y: canvas.height - 330, width: 132, height: 16, type: 'platform' },
                 { x: 3965, y: canvas.height - 212, width: 160, height: 16, type: 'platform' },
+                { x: 3828, y: canvas.height - FLOOR_HEIGHT - 72, width: 54, height: 72, type: 'crate' },
                 { x: 4270, y: canvas.height - 286, width: 152, height: 16, type: 'platform' },
                 { x: 4540, y: canvas.height - 190, width: 142, height: 16, type: 'platform' },
             ],
@@ -255,27 +256,21 @@
     function syncProgressUI() {
         if (progressPreview) {
             const previewImage = progressPreview.querySelector('.game-progress-panel__preview-image');
-            const previewCard = previewImage?.querySelector('span');
+            const previewPhoto = progressPreview.querySelector('[data-game-progress-image]');
 
-            if (previewImage) {
+            if (previewImage && previewPhoto instanceof HTMLImageElement) {
                 const slideIndex = Math.max(0, Math.min(progressSlideImages.length - 1, state.activeSlide - 1));
                 const slideImage = progressSlideImages[slideIndex] ?? null;
 
                 if (slideImage) {
-                    previewImage.style.backgroundImage = `linear-gradient(180deg, rgba(15, 23, 42, 0.12), rgba(15, 23, 42, 0.24)), url("${slideImage}")`;
+                    previewPhoto.src = slideImage;
+                    previewPhoto.hidden = false;
                     previewImage.classList.add('has-photo');
                 } else {
-                    previewImage.style.backgroundImage = '';
+                    previewPhoto.src = '';
+                    previewPhoto.hidden = true;
                     previewImage.classList.remove('has-photo');
                 }
-            }
-
-            if (previewCard) {
-                const template = previewCard.getAttribute('data-game-progress-label-template');
-
-                previewCard.textContent = template
-                    ? template.replace('__NUMBER__', String(state.activeSlide))
-                    : `Slide ${state.activeSlide}`;
             }
         }
     }
@@ -514,11 +509,6 @@
             }
         });
 
-        if (player.y + player.height >= level.height) {
-            player.y = level.height - player.height;
-            player.vy = 0;
-            player.onGround = true;
-        }
     }
 
     function isIntersecting(rectA, rectB) {
@@ -817,6 +807,24 @@
             }
 
             const isFloor = platform.type === 'floor';
+            const isCrate = platform.type === 'crate';
+
+            if (isCrate) {
+                context.fillStyle = '#111111';
+                context.fillRect(screenX, platform.y, platform.width, platform.height);
+
+                context.strokeStyle = '#64748b';
+                context.lineWidth = 2;
+                context.strokeRect(screenX + 1, platform.y + 1, platform.width - 2, platform.height - 2);
+
+                context.beginPath();
+                context.moveTo(screenX + 8, platform.y + 8);
+                context.lineTo(screenX + platform.width - 8, platform.y + platform.height - 8);
+                context.moveTo(screenX + platform.width - 8, platform.y + 8);
+                context.lineTo(screenX + 8, platform.y + platform.height - 8);
+                context.stroke();
+                return;
+            }
 
             context.fillStyle = isFloor ? '#111111' : '#1f2937';
             context.fillRect(screenX, platform.y, platform.width, platform.height);
