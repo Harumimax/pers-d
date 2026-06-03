@@ -603,6 +603,32 @@ class DictionaryWordFilterTest extends TestCase
             ->call('selectAutoTranslationByIndex', 2)
             ->assertSet('autoTranslation', 'Р В Р’В Р РЋРІР‚С”Р В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р СћРІР‚ВР В Р’В Р вЂ™Р’ВµР В Р’В Р вЂ™Р’В» Р В Р’В Р РЋРІР‚ВР В Р’В Р В РІР‚В¦Р В Р’В Р СћРІР‚ВР В Р’В Р вЂ™Р’ВµР В Р’В Р РЋРІР‚СњР В Р Р‹Р В РЎвЂњР В Р’В Р вЂ™Р’В° Р В Р’В Р РЋРІР‚вЂќР В Р’В Р РЋРІР‚СћР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р Р‹Р В РІР‚С™Р В Р’В Р вЂ™Р’ВµР В Р’В Р вЂ™Р’В±Р В Р’В Р РЋРІР‚ВР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р вЂ™Р’ВµР В Р’В Р вЂ™Р’В»Р В Р Р‹Р В Р вЂ°Р В Р Р‹Р В РЎвЂњР В Р’В Р РЋРІР‚СњР В Р’В Р РЋРІР‚ВР В Р Р‹Р Р†Р вЂљР’В¦ Р В Р Р‹Р Р†Р вЂљР’В Р В Р’В Р вЂ™Р’ВµР В Р’В Р В РІР‚В¦');
     }
+
+    public function test_switching_auto_translation_chip_replaces_manual_translation_edits(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English',
+            'language' => 'English',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['dictionary' => $dictionary])
+            ->set('showCreateForm', true)
+            ->set('autoSuggestions', [
+                ['text' => 'доброе утро', 'label' => 'top result'],
+                ['text' => 'здравствуйте', 'label' => 'alternative'],
+                ['text' => 'утреннее приветствие', 'label' => 'alternative'],
+            ])
+            ->set('autoTranslated', true)
+            ->set('autoTranslation', 'доброе утро')
+            ->set('autoTranslation', 'доброе утро, друг')
+            ->call('selectAutoTranslationByIndex', 1)
+            ->assertSet('autoTranslation', 'здравствуйте')
+            ->call('selectAutoTranslationByIndex', 2)
+            ->assertSet('autoTranslation', 'утреннее приветствие');
+    }
     public function test_translate_automatically_filters_out_mixed_latin_and_cyrillic_suggestions(): void
     {
         Http::fake([

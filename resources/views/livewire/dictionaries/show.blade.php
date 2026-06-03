@@ -225,8 +225,14 @@
                         @if ($autoTranslated)
                             <div class="dictionary-show__translate-result">
                             <div class="dictionaries-field">
-                                <label class="dictionaries-label">{{ __('dictionaries.show.fields.selected_translation') }}</label>
-                                <div class="dictionary-show__selected-translation">{{ $autoTranslation !== '' ? $autoTranslation : __('dictionaries.show.translation.selected_translation_empty') }}</div>
+                                <label for="auto-selected-translation" class="dictionaries-label">{{ __('dictionaries.show.fields.selected_translation') }}</label>
+                                <input
+                                    id="auto-selected-translation"
+                                    type="text"
+                                    class="dictionaries-input"
+                                    placeholder="{{ __('dictionaries.show.translation.selected_translation_empty') }}"
+                                    wire:model.defer="autoTranslation"
+                                >
                                 @error('autoTranslation')
                                     <p class="dictionaries-error">{{ $message }}</p>
                                 @enderror
