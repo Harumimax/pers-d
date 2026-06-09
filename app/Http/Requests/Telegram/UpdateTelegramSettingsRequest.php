@@ -27,6 +27,7 @@ class UpdateTelegramSettingsRequest extends FormRequest
                     'send_time' => trim((string) ($normalized['send_time'] ?? '')),
                     'translation_direction' => trim((string) ($normalized['translation_direction'] ?? '')),
                     'words_count' => (int) ($normalized['words_count'] ?? 10),
+                    'use_favorites' => filter_var($normalized['use_favorites'] ?? false, FILTER_VALIDATE_BOOL),
                     'part_of_speech' => collect($normalized['part_of_speech'] ?? [])
                         ->map(fn ($value) => trim((string) $value))
                         ->filter()
@@ -74,6 +75,7 @@ class UpdateTelegramSettingsRequest extends FormRequest
                 ]),
             ],
             'sessions.*.words_count' => ['required', 'integer', 'min:2', 'max:20'],
+            'sessions.*.use_favorites' => ['required', 'boolean'],
             'sessions.*.part_of_speech' => ['nullable', 'array'],
             'sessions.*.part_of_speech.*' => [
                 'string',
@@ -106,8 +108,9 @@ class UpdateTelegramSettingsRequest extends FormRequest
                 $readyDictionaryIds = collect($session['ready_dictionary_ids'] ?? [])
                     ->filter()
                     ->all();
+                $useFavorites = filter_var($session['use_favorites'] ?? false, FILTER_VALIDATE_BOOL);
 
-                if ($userDictionaryIds === [] && $readyDictionaryIds === []) {
+                if ($userDictionaryIds === [] && $readyDictionaryIds === [] && ! $useFavorites) {
                     $validator->errors()->add(
                         "sessions.{$index}.user_dictionary_ids",
                         __('tg-bot.validation.session_requires_dictionary', ['number' => $index + 1])
@@ -135,6 +138,7 @@ class UpdateTelegramSettingsRequest extends FormRequest
             'sessions.*.send_time' => __('tg-bot.form.sessions.fields.send_time'),
             'sessions.*.translation_direction' => __('tg-bot.form.sessions.fields.translation_direction'),
             'sessions.*.words_count' => __('tg-bot.form.sessions.fields.words_count'),
+            'sessions.*.use_favorites' => __('dictionaries.index.favorites.name'),
             'sessions.*.part_of_speech' => __('tg-bot.form.sessions.fields.part_of_speech'),
             'sessions.*.user_dictionary_ids' => __('tg-bot.form.sessions.fields.user_dictionaries'),
             'sessions.*.ready_dictionary_ids' => __('tg-bot.form.sessions.fields.ready_dictionaries'),

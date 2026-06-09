@@ -3,6 +3,9 @@
 namespace Tests\Feature;
 
 use App\Livewire\TgBot\IntervalReviewConfigurator;
+use App\Models\FavoriteWord;
+use App\Models\ReadyDictionary;
+use App\Models\ReadyDictionaryWord;
 use App\Models\TelegramIntervalReviewPlan;
 use App\Models\User;
 use App\Models\UserDictionary;
@@ -83,6 +86,47 @@ class TgBotIntervalReviewPersistenceTest extends TestCase
         $this->assertSame(TelegramIntervalReviewPlan::STATUS_PAUSED, $plan->status);
         $this->assertSame('10:15', $plan->start_time);
         $this->assertCount(6, $plan->sessions);
+    }
+
+    public function test_user_can_select_word_from_favorites_in_interval_review(): void
+    {
+        $user = User::factory()->create();
+        $readyDictionary = ReadyDictionary::factory()->create([
+            'name' => 'Ready Travel',
+            'language' => 'English',
+        ]);
+        $readyWord = ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $readyDictionary->id,
+            'word' => 'airport',
+            'translation' => 'Р°СЌСЂРѕРїРѕСЂС‚',
+            'part_of_speech' => 'noun',
+        ]);
+
+        FavoriteWord::query()->create([
+            'user_id' => $user->id,
+            'source_dictionary_type' => FavoriteWord::SOURCE_DICTIONARY_READY,
+            'source_dictionary_id' => $readyDictionary->id,
+            'source_word_type' => FavoriteWord::SOURCE_WORD_READY,
+            'source_word_id' => $readyWord->id,
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(IntervalReviewConfigurator::class, ['timezone' => 'Europe/Moscow'])
+            ->assertSee('Favorite Words')
+            ->call('openDictionary', 'favorite', \App\Services\Favorites\FavoriteWordsService::VIRTUAL_DICTIONARY_ID)
+            ->assertSet('modalSource', 'favorite')
+            ->call('selectAllVisibleWords')
+            ->call('applyPlan')
+            ->assertSee('Interval review plan saved.');
+
+        $plan = TelegramIntervalReviewPlan::query()
+            ->with('words')
+            ->where('user_id', $user->id)
+            ->firstOrFail();
+
+        $this->assertSame('ready', $plan->words->firstOrFail()->source_type);
+        $this->assertSame($readyDictionary->id, $plan->words->firstOrFail()->source_dictionary_id);
+        $this->assertSame($readyWord->id, $plan->words->firstOrFail()->source_word_id);
     }
 
     public function test_toggling_saved_plan_switch_pauses_and_resumes_plan(): void

@@ -17,6 +17,7 @@ class SaveTelegramSettingsService
      *         send_time:string,
      *         translation_direction:string,
      *         words_count:int,
+     *         use_favorites?:bool,
      *         part_of_speech?:array<int,string>,
      *         user_dictionary_ids?:array<int,int>,
      *         ready_dictionary_ids?:array<int,int>
@@ -42,6 +43,7 @@ class SaveTelegramSettingsService
                     'send_time' => $sessionPayload['send_time'],
                     'translation_direction' => $sessionPayload['translation_direction'],
                     'words_count' => (int) $sessionPayload['words_count'],
+                    'use_favorites' => (bool) ($sessionPayload['use_favorites'] ?? false),
                 ]);
 
                 $partsOfSpeech = collect($sessionPayload['part_of_speech'] ?? [])

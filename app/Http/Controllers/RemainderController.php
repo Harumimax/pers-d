@@ -6,6 +6,7 @@ use App\Http\Requests\StartGameRequest;
 use App\Models\GameSession;
 use App\Models\ReadyDictionary;
 use App\Services\DictionarySubscriptions\DictionaryAccessService;
+use App\Services\Favorites\FavoriteWordsService;
 use App\Services\Navigation\HeaderNavigationService;
 use App\Services\Remainder\PrepareGameService;
 use Illuminate\Http\RedirectResponse;
@@ -26,6 +27,9 @@ class RemainderController extends Controller
         $dictionaryAccessService = app(DictionaryAccessService::class);
 
         return view('remainder', [
+            'favoriteDictionary' => $user !== null
+                ? app(FavoriteWordsService::class)->virtualDictionarySummaryForUser($user)
+                : null,
             'remainderDictionaries' => $user !== null
                 ? $dictionaryAccessService->accessibleDictionariesQuery($user)
                     ->withCount('words')

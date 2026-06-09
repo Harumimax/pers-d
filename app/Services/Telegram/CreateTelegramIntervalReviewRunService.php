@@ -51,6 +51,7 @@ class CreateTelegramIntervalReviewRunService
                 direction: GameSession::DIRECTION_FOREIGN_TO_RU,
                 dictionaryIds: [],
                 readyDictionaryIds: [],
+                useFavorites: false,
                 partsOfSpeech: ['all'],
                 requestedWordsCount: $selectedWords->count(),
             );

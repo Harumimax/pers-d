@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Livewire\Dictionaries\Index;
+use App\Models\FavoriteWord;
 use App\Models\ReadyDictionary;
 use App\Models\User;
 use App\Models\UserDictionary;
@@ -61,6 +62,41 @@ class UserDictionaryCrudTest extends TestCase
         $response->assertOk();
         $response->assertSee('English Core');
         $response->assertSee('Spanish Travel');
+    }
+
+    public function test_dictionaries_index_page_renders_favorites_first_in_user_dropdown(): void
+    {
+        $user = User::factory()->create();
+
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English Core',
+            'language' => 'English',
+        ]);
+
+        $word = Word::create([
+            'word' => 'apple',
+            'translation' => 'СЏР±Р»РѕРєРѕ',
+            'part_of_speech' => 'noun',
+            'comment' => null,
+        ]);
+
+        $dictionary->words()->attach($word->id);
+
+        FavoriteWord::query()->create([
+            'user_id' => $user->id,
+            'source_dictionary_type' => FavoriteWord::SOURCE_DICTIONARY_USER,
+            'source_dictionary_id' => $dictionary->id,
+            'source_word_type' => FavoriteWord::SOURCE_WORD_USER,
+            'source_word_id' => $word->id,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dictionaries.index'));
+
+        $response->assertOk();
+        $response->assertSee('Favorite Words');
+        $response->assertSee(route('dictionaries.favorites'), false);
+        $response->assertSee('English Core');
     }
 
     public function test_dictionaries_index_page_renders_dropdown_with_ready_dictionaries(): void

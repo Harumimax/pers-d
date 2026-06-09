@@ -297,8 +297,40 @@
 
     <section class="dictionaries-container dictionaries-list" aria-label="{{ __('dictionaries.index.title') }}">
         @php
-            $hasAnyDictionaries = $ownedDictionaries->isNotEmpty() || $subscribedDictionaries->isNotEmpty();
+            $hasAnyDictionaries = true;
         @endphp
+
+        <article class="dictionary-card {{ $favoriteDictionary['is_clickable'] ? 'dictionary-card--clickable dictionary-card--favorites' : 'dictionary-card--favorites dictionary-card--disabled' }}" wire:key="favorite-dictionary-card">
+            @if ($favoriteDictionary['is_clickable'])
+                <a
+                    href="{{ route('dictionaries.favorites') }}"
+                    class="dictionary-card__overlay-link"
+                    aria-label="{{ __('dictionaries.index.favorites.open_aria') }}"
+                ></a>
+            @endif
+
+            <div class="dictionary-card__content">
+                <div class="dictionary-card__badge-row">
+                    <span class="dictionary-card__badge dictionary-card__badge--favorites">{{ __('dictionaries.index.favorites.badge') }}</span>
+                </div>
+
+                <h2 class="dictionary-card__title">
+                    @if ($favoriteDictionary['is_clickable'])
+                        <a href="{{ route('dictionaries.favorites') }}">{{ $favoriteDictionary['name'] }}</a>
+                    @else
+                        {{ $favoriteDictionary['name'] }}
+                    @endif
+                </h2>
+
+                <p class="dictionary-card__meta">
+                    @if ($favoriteDictionary['count'] > 0)
+                        {{ trans_choice('dictionaries.index.favorites.count', $favoriteDictionary['count'], ['count' => $favoriteDictionary['count']]) }}
+                    @else
+                        {{ __('dictionaries.index.favorites.empty_count') }}
+                    @endif
+                </p>
+            </div>
+        </article>
 
         @foreach ($ownedDictionaries as $dictionary)
             @php

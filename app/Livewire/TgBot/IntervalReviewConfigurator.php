@@ -10,12 +10,14 @@ use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
 use App\Services\DictionarySubscriptions\DictionaryAccessService;
+use App\Services\Favorites\FavoriteWordsService;
 use App\Services\Telegram\TelegramIntervalReviewPlanService;
 use App\Services\Telegram\TelegramIntervalReviewSchedulePreviewService;
 use App\Support\PartOfSpeechCatalog;
 use App\Support\TimezoneOptions;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Fluent;
 use Livewire\Component;
 
 class IntervalReviewConfigurator extends Component
@@ -57,6 +59,7 @@ class IntervalReviewConfigurator extends Component
             'languageOptions' => $this->languageOptions(),
             'timezoneOptions' => TimezoneOptions::build(),
             'readyDictionaryLanguageOptions' => $this->readyDictionaryLanguageOptions(),
+            'favoriteDictionary' => $this->favoriteDictionary(),
             'userDictionaries' => $this->userDictionaries(),
             'readyDictionaries' => $this->readyDictionaries(),
             'partOfSpeechOptions' => PartOfSpeechCatalog::dictionaryFilterLabels(),
@@ -70,7 +73,7 @@ class IntervalReviewConfigurator extends Component
 
     public function openDictionary(string $source, int $dictionaryId): void
     {
-        if (! in_array($source, ['user', 'ready'], true)) {
+        if (! in_array($source, ['user', 'ready', 'favorite'], true)) {
             return;
         }
 
@@ -405,6 +408,21 @@ class IntervalReviewConfigurator extends Component
     }
 
     /**
+     * @return array{name:string,count:int,is_clickable:bool,slug:string}|null
+     */
+    private function favoriteDictionary(): ?array
+    {
+        /** @var User|null $user */
+        $user = auth()->user();
+
+        if (! $user instanceof User) {
+            return null;
+        }
+
+        return app(FavoriteWordsService::class)->virtualDictionarySummaryForUser($user, $this->selectedLanguage);
+    }
+
+    /**
      * @return \Illuminate\Support\Collection<int, ReadyDictionary>
      */
     private function readyDictionaries()
@@ -421,10 +439,24 @@ class IntervalReviewConfigurator extends Component
         return $query->get();
     }
 
-    private function modalDictionary(): UserDictionary|ReadyDictionary|null
+    private function modalDictionary(): UserDictionary|ReadyDictionary|Fluent|null
     {
         if (! $this->modalOpen || $this->modalDictionaryId === null) {
             return null;
+        }
+
+        if ($this->modalSource === 'favorite') {
+            $favoriteDictionary = $this->favoriteDictionary();
+
+            if ($favoriteDictionary === null) {
+                return null;
+            }
+
+            return new Fluent([
+                'id' => app(FavoriteWordsService::class)->virtualDictionaryId(),
+                'name' => $favoriteDictionary['name'],
+                'language' => $this->selectedLanguage,
+            ]);
         }
 
         if ($this->modalSource === 'user') {
@@ -466,6 +498,47 @@ class IntervalReviewConfigurator extends Component
         }
 
         $search = mb_strtolower(trim($this->modalSearch));
+
+        if ($this->modalSource === 'favorite') {
+            /** @var User $user */
+            $user = auth()->user();
+            $search = mb_strtolower(trim($this->modalSearch));
+            $favoriteWords = app(FavoriteWordsService::class)
+                ->favoriteWordCandidates(
+                    $user,
+                    $this->selectedLanguage,
+                    $this->modalPartOfSpeech === PartOfSpeechCatalog::ALL ? ['all'] : [$this->modalPartOfSpeech],
+                )
+                ->filter(function (array $word) use ($search): bool {
+                    if ($search === '') {
+                        return true;
+                    }
+
+                    return str_contains(mb_strtolower($word['word']), $search)
+                        || str_contains(mb_strtolower($word['translation']), $search)
+                        || str_contains(mb_strtolower((string) ($word['comment'] ?? '')), $search);
+                })
+                ->sortBy('word', SORT_NATURAL | SORT_FLAG_CASE)
+                ->values()
+                ->map(fn (array $word): array => $this->normalizeFavoriteWord($word))
+                ->values();
+
+            $total = $favoriteWords->count();
+            $lastPage = max(1, (int) ceil($total / self::WORDS_PER_PAGE));
+            $currentPage = max(1, min($this->modalPage, $lastPage));
+            $items = $favoriteWords
+                ->slice(($currentPage - 1) * self::WORDS_PER_PAGE, self::WORDS_PER_PAGE)
+                ->values();
+
+            return [
+                'items' => $items->all(),
+                'current_page' => $currentPage,
+                'last_page' => $lastPage,
+                'total' => $total,
+                'from' => $total === 0 ? 0 : (($currentPage - 1) * self::WORDS_PER_PAGE) + 1,
+                'to' => min($currentPage * self::WORDS_PER_PAGE, $total),
+            ];
+        }
 
         if ($dictionary instanceof UserDictionary) {
             $query = $dictionary->words()->select('words.*');
@@ -569,6 +642,32 @@ class IntervalReviewConfigurator extends Component
             'comment' => $word->comment !== null && trim((string) $word->comment) !== ''
                 ? (string) $word->comment
                 : null,
+        ];
+    }
+
+    /**
+     * @param array{source:string,word_id:int|null,source_word_id:int,word:string,translation:string,part_of_speech:?string,comment:?string,remainder_had_mistake:bool,dictionary_id:int,dictionary_name:string,language:?string} $word
+     * @return array<string, mixed>
+     */
+    private function normalizeFavoriteWord(array $word): array
+    {
+        $source = $word['source'];
+        $selectionKey = "{$source}:{$word['dictionary_id']}:{$word['source_word_id']}:{$word['word']}:{$word['translation']}";
+
+        return [
+            'selection_key' => $selectionKey,
+            'source' => $source,
+            'source_label' => __('dictionaries.index.favorites.name'),
+            'dictionary_id' => $word['dictionary_id'],
+            'dictionary_name' => $word['dictionary_name'],
+            'language' => (string) ($word['language'] ?? $this->selectedLanguage),
+            'word_id' => $word['source_word_id'],
+            'word' => $word['word'],
+            'translation' => $word['translation'],
+            'part_of_speech' => $word['part_of_speech'] !== null
+                ? PartOfSpeechCatalog::label((string) $word['part_of_speech'])
+                : null,
+            'comment' => $word['comment'],
         ];
     }
 

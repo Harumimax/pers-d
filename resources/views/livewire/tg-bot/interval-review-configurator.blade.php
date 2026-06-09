@@ -133,8 +133,22 @@
                             <span class="tg-bot-interval__dictionary-toolbar-spacer" aria-hidden="true"></span>
                         </div>
 
-                        @if ($userDictionaries->isNotEmpty())
+                        @if ($favoriteDictionary !== null || $userDictionaries->isNotEmpty())
                             <div class="tg-bot-interval__dictionary-list">
+                                @if ($favoriteDictionary !== null)
+                                    <button
+                                        type="button"
+                                        class="tg-bot-interval__dictionary-button"
+                                        wire:click="openDictionary('favorite', {{ \App\Services\Favorites\FavoriteWordsService::VIRTUAL_DICTIONARY_ID }})"
+                                        @disabled($favoriteDictionary['count'] === 0)
+                                    >
+                                        <span class="tg-bot-interval__dictionary-name">{{ $favoriteDictionary['name'] }}</span>
+                                        <span class="tg-bot-interval__dictionary-meta">
+                                            {{ trans_choice('remainder.settings.dictionaries.words_count', $favoriteDictionary['count'], ['count' => $favoriteDictionary['count']]) }}
+                                        </span>
+                                    </button>
+                                @endif
+
                                 @foreach ($userDictionaries as $dictionary)
                                     @php
                                         $languageKey = $dictionary->language !== null

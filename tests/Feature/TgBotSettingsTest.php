@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\FavoriteWord;
 use App\Models\ReadyDictionary;
 use App\Models\DictionarySubscription;
 use App\Models\TelegramSetting;
 use App\Models\User;
 use App\Models\UserDictionary;
+use App\Models\Word;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -52,6 +54,7 @@ class TgBotSettingsTest extends TestCase
             ->assertSee('Interval review of words')
             ->assertSee('Sessions per day')
             ->assertSee('Words per session')
+            ->assertSee('Favorite Words')
             ->assertSee('Select all dictionaries')
             ->assertSee('Dictionary language')
             ->assertSee('All')
@@ -85,6 +88,7 @@ class TgBotSettingsTest extends TestCase
                         'send_time' => '09:15',
                         'translation_direction' => 'foreign_to_ru',
                         'words_count' => 12,
+                        'use_favorites' => true,
                         'part_of_speech' => ['all'],
                         'user_dictionary_ids' => [$userDictionary->id],
                         'ready_dictionary_ids' => [$readyDictionary->id],
@@ -93,6 +97,7 @@ class TgBotSettingsTest extends TestCase
                         'send_time' => '18:45',
                         'translation_direction' => 'ru_to_foreign',
                         'words_count' => 7,
+                        'use_favorites' => false,
                         'part_of_speech' => ['verb', 'adjective'],
                         'user_dictionary_ids' => [$userDictionary->id],
                         'ready_dictionary_ids' => [],
@@ -123,6 +128,7 @@ class TgBotSettingsTest extends TestCase
         $this->assertSame('09:15', $firstSession->send_time);
         $this->assertSame('foreign_to_ru', $firstSession->translation_direction);
         $this->assertSame(12, $firstSession->words_count);
+        $this->assertTrue((bool) $firstSession->use_favorites);
         $this->assertCount(0, $firstSession->partsOfSpeech);
         $this->assertSame([$userDictionary->id], $firstSession->userDictionaries->pluck('id')->all());
         $this->assertSame([$readyDictionary->id], $firstSession->readyDictionaries->pluck('id')->all());
@@ -131,7 +137,64 @@ class TgBotSettingsTest extends TestCase
         $this->assertSame('18:45', $secondSession->send_time);
         $this->assertSame('ru_to_foreign', $secondSession->translation_direction);
         $this->assertSame(7, $secondSession->words_count);
+        $this->assertFalse((bool) $secondSession->use_favorites);
         $this->assertEqualsCanonicalizing(['verb', 'adjective'], $secondSession->partsOfSpeech->pluck('part_of_speech')->all());
+    }
+
+    public function test_connected_user_can_save_favorites_only_session_in_telegram_settings(): void
+    {
+        $user = User::factory()->create([
+            'tg_chat_id' => '123456789',
+        ]);
+
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English Core',
+            'language' => 'English',
+        ]);
+
+        $word = Word::query()->create([
+            'word' => 'apple',
+            'translation' => 'СЏР±Р»РѕРєРѕ',
+            'part_of_speech' => 'noun',
+        ]);
+        $dictionary->words()->attach($word->id);
+
+        FavoriteWord::query()->create([
+            'user_id' => $user->id,
+            'source_dictionary_type' => FavoriteWord::SOURCE_DICTIONARY_USER,
+            'source_dictionary_id' => $dictionary->id,
+            'source_word_type' => FavoriteWord::SOURCE_WORD_USER,
+            'source_word_id' => $word->id,
+        ]);
+
+        $this->actingAs($user)
+            ->put(route('tg-bot.update'), [
+                'timezone' => 'Europe/Moscow',
+                'random_words_enabled' => '1',
+                'sessions' => [
+                    [
+                        'send_time' => '09:15',
+                        'translation_direction' => 'foreign_to_ru',
+                        'words_count' => 5,
+                        'use_favorites' => true,
+                        'part_of_speech' => ['all'],
+                        'user_dictionary_ids' => [],
+                        'ready_dictionary_ids' => [],
+                    ],
+                ],
+            ])
+            ->assertRedirect(route('tg-bot'))
+            ->assertSessionHas('tgBotSettingsStatus');
+
+        $session = TelegramSetting::query()
+            ->where('user_id', $user->id)
+            ->firstOrFail()
+            ->randomWordSessions()
+            ->firstOrFail();
+
+        $this->assertTrue((bool) $session->use_favorites);
+        $this->assertSame(0, $session->userDictionaries()->count());
     }
 
     public function test_connected_user_can_toggle_random_words_status_without_saving_full_form(): void

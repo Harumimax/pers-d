@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Livewire\Remainder\Show;
+use App\Models\FavoriteWord;
 use App\Models\GameSession;
 use App\Models\GameSessionItem;
 use App\Models\ReadyDictionary;
@@ -88,6 +89,36 @@ class RemainderGameTest extends TestCase
         $this->assertDatabaseMissing('user_dictionary_word', [
             'word_id' => $items->first()->word_id,
         ]);
+    }
+
+    public function test_authenticated_user_can_start_game_from_favorite_words_only(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = $this->createDictionaryForUser($user, 'English Core', 'English');
+        $word = $this->attachWord($dictionary, 'apple', 'СЏР±Р»РѕРєРѕ', 'noun', true);
+
+        FavoriteWord::query()->create([
+            'user_id' => $user->id,
+            'source_dictionary_type' => FavoriteWord::SOURCE_DICTIONARY_USER,
+            'source_dictionary_id' => $dictionary->id,
+            'source_word_type' => FavoriteWord::SOURCE_WORD_USER,
+            'source_word_id' => $word->id,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_MANUAL,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'use_favorites' => 1,
+            'parts_of_speech' => ['all'],
+            'words_count' => 1,
+        ]);
+
+        $gameSession = GameSession::query()->firstOrFail();
+
+        $response->assertRedirect(route('remainder.sessions.show', $gameSession));
+        $this->assertSame([$word->id], $gameSession->items()->pluck('word_id')->all());
+        $this->assertSame([], $gameSession->config_snapshot['dictionary_ids']);
+        $this->assertTrue((bool) $gameSession->config_snapshot['use_favorites']);
     }
 
     public function test_guest_can_start_demo_game_from_ready_dictionary_only(): void

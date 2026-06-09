@@ -7,6 +7,7 @@ use App\Models\ReadyDictionaryWord;
 use App\Models\User;
 use App\Models\Word;
 use App\Services\DictionarySubscriptions\DictionaryAccessService;
+use App\Services\Favorites\FavoriteWordsService;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
@@ -14,6 +15,7 @@ class GameWordSelectionService
 {
     public function __construct(
         private readonly DictionaryAccessService $dictionaryAccessService,
+        private readonly FavoriteWordsService $favoriteWordsService,
     ) {
     }
 
@@ -83,8 +85,31 @@ class GameWordSelectionService
                 ]);
         }
 
+        $favoriteWords = collect();
+
+        if ($user !== null && $config->useFavorites) {
+            $favoriteWords = $this->favoriteWordsService
+                ->favoriteWordCandidates($user, null, $config->partsOfSpeech)
+                ->map(static fn (array $word): array => [
+                    'source' => $word['source'],
+                    'word_id' => $word['word_id'],
+                    'word' => $word['word'],
+                    'translation' => $word['translation'],
+                    'part_of_speech' => $word['part_of_speech'],
+                    'comment' => $word['comment'],
+                    'remainder_had_mistake' => $word['remainder_had_mistake'],
+                ]);
+        }
+
         return $userWords
+            ->concat($favoriteWords)
             ->concat($readyWords)
+            ->unique(static fn (array $word): string => implode(':', [
+                $word['source'],
+                (string) ($word['word_id'] ?? 0),
+                $word['word'],
+                $word['translation'],
+            ]))
             ->values();
     }
 

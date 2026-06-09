@@ -14,6 +14,7 @@ class GameSessionConfigData
         public readonly string $direction,
         public readonly array $dictionaryIds,
         public readonly array $readyDictionaryIds,
+        public readonly bool $useFavorites,
         public readonly array $partsOfSpeech,
         public readonly int $requestedWordsCount,
     ) {
@@ -29,6 +30,7 @@ class GameSessionConfigData
             direction: (string) $config['direction'],
             dictionaryIds: self::normalizeIntegerIds($config['dictionary_ids'] ?? []),
             readyDictionaryIds: self::normalizeIntegerIds($config['ready_dictionary_ids'] ?? []),
+            useFavorites: (bool) ($config['use_favorites'] ?? false),
             partsOfSpeech: self::normalizePartsOfSpeech($config['parts_of_speech'] ?? []),
             requestedWordsCount: (int) $config['words_count'],
         );

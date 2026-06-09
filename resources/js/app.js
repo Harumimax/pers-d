@@ -91,7 +91,11 @@ const initializeWordPronunciation = () => {
                 && button.dataset.pronounceWord
                 && button.dataset.pronounceLang;
 
-            button.hidden = !canPronounce;
+            if (canPronounce) {
+                button.hidden = false;
+                button.removeAttribute('hidden');
+            }
+
             button.classList.toggle('is-speech-ready', Boolean(canPronounce));
 
             if (!canPronounce) {
@@ -111,7 +115,6 @@ const initializeWordPronunciation = () => {
             event.preventDefault();
 
             if (!supportsSpeechSynthesis) {
-                target.hidden = true;
                 target.classList.remove('is-speech-ready');
                 return;
             }
@@ -182,7 +185,25 @@ const initializeWordPronunciation = () => {
         observer.observe(document.body, {
             childList: true,
             subtree: true,
+            attributes: true,
+            attributeFilter: ['data-pronounce-word', 'data-pronounce-lang', 'hidden', 'class'],
         });
+
+        document.addEventListener('livewire:init', () => {
+            if (typeof window.Livewire?.hook !== 'function') {
+                return;
+            }
+
+            window.Livewire.hook('morphed', () => {
+                syncButtons();
+            });
+
+            window.Livewire.hook('commit', ({ succeed }) => {
+                succeed(() => {
+                    syncButtons();
+                });
+            });
+        }, { once: true });
 
         document.addEventListener('visibilitychange', () => {
             if (document.hidden && supportsSpeechSynthesis && window.speechSynthesis.speaking) {

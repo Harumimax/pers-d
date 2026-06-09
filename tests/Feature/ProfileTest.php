@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Jobs\SendAboutContactMessageJob;
 use App\Models\AboutContactMessage;
+use App\Models\FavoriteWord;
 use App\Models\GameSession;
 use App\Models\ReadyDictionary;
 use App\Models\ReadyDictionaryWord;
@@ -677,20 +678,44 @@ class ProfileTest extends TestCase
             'language' => 'Spanish',
         ]);
 
+        $favoriteSourceDictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'Favorite Source',
+            'language' => 'English',
+        ]);
+        $favoriteWord = Word::create([
+            'word' => 'apple',
+            'translation' => 'СЏР±Р»РѕРєРѕ',
+            'part_of_speech' => 'noun',
+            'comment' => null,
+        ]);
+        $favoriteSourceDictionary->words()->attach($favoriteWord->id);
+        FavoriteWord::query()->create([
+            'user_id' => $user->id,
+            'source_dictionary_type' => FavoriteWord::SOURCE_DICTIONARY_USER,
+            'source_dictionary_id' => $favoriteSourceDictionary->id,
+            'source_word_type' => FavoriteWord::SOURCE_WORD_USER,
+            'source_word_id' => $favoriteWord->id,
+        ]);
+
         $this->actingAs($user)
             ->get('/profile')
             ->assertOk()
+            ->assertSee('Favorite Words')
             ->assertSee('English Core')
             ->assertSee('Spanish Travel')
             ->assertSee('Travel Starter')
+            ->assertSee(route('dictionaries.favorites'), false)
             ->assertSee(route('ready-dictionaries.show', $readyDictionary), false);
 
         $this->actingAs($user)
             ->get('/about')
             ->assertOk()
+            ->assertSee('Favorite Words')
             ->assertSee('English Core')
             ->assertSee('Spanish Travel')
             ->assertSee('Travel Starter')
+            ->assertSee(route('dictionaries.favorites'), false)
             ->assertSee(route('ready-dictionaries.show', $readyDictionary), false);
     }
 

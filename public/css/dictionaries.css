@@ -377,6 +377,11 @@
     color: #155e75;
 }
 
+.dictionary-card__badge--favorites {
+    background: rgba(250, 204, 21, 0.16);
+    color: #a16207;
+}
+
 .dictionary-card__edit-form {
     display: flex;
     align-items: center;
@@ -547,6 +552,15 @@
     border-style: dashed;
     border-color: rgba(21, 94, 117, 0.25);
     background: linear-gradient(180deg, rgba(247, 253, 255, 0.96) 0%, rgba(255, 255, 255, 0.96) 100%);
+}
+
+.dictionary-card--favorites {
+    background: linear-gradient(180deg, rgba(255, 251, 235, 0.96) 0%, rgba(255, 255, 255, 0.96) 100%);
+    border-color: rgba(234, 179, 8, 0.24);
+}
+
+.dictionary-card--disabled {
+    opacity: 0.88;
 }
 
 .dictionary-card--empty {

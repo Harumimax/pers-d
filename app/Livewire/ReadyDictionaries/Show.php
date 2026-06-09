@@ -7,6 +7,7 @@ use App\Models\ReadyDictionaryWord;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Services\Dictionaries\CopyWordToUserDictionaryService;
+use App\Services\Favorites\FavoriteWordsService;
 use App\Services\Navigation\HeaderNavigationService;
 use App\Support\PartOfSpeechCatalog;
 use Illuminate\Contracts\View\View;
@@ -30,6 +31,8 @@ class Show extends Component
     public string $sort = self::SORT_NEWEST;
     public ?string $transferBannerType = null;
     public ?string $transferBannerMessage = null;
+    /** @var array<int, bool> */
+    public array $favoriteWordMap = [];
 
     public function mount(ReadyDictionary $readyDictionary): void
     {
@@ -68,8 +71,18 @@ class Show extends Component
             $wordsQuery->orderByDesc('created_at');
         }
 
+        $words = $wordsQuery->paginate(20);
+
+        $this->favoriteWordMap = $user instanceof User
+            ? app(FavoriteWordsService::class)->readyDictionaryFavoriteStateMap(
+                $user,
+                $this->readyDictionary,
+                $words->getCollection()->pluck('id')->all(),
+            )
+            : [];
+
         return view('livewire.ready-dictionaries.show', [
-            'words' => $wordsQuery->paginate(20),
+            'words' => $words,
             'totalWordsCount' => $totalWordsCount,
             'partOfSpeechFilterOptions' => PartOfSpeechCatalog::dictionaryFilterLabels(),
             'partOfSpeechDisplayMap' => PartOfSpeechCatalog::labels(),
@@ -146,6 +159,20 @@ class Show extends Component
             'word' => $readyDictionaryWord->word,
             'dictionary' => $userDictionary->name,
         ]);
+    }
+
+    public function toggleFavoriteWord(int $readyDictionaryWordId, FavoriteWordsService $favoriteWordsService): void
+    {
+        $user = $this->currentUser();
+        $readyDictionaryWord = $this->readyDictionary->words()
+            ->whereKey($readyDictionaryWordId)
+            ->first();
+
+        abort_if(! $readyDictionaryWord instanceof ReadyDictionaryWord, 404);
+
+        $isFavorite = $favoriteWordsService->toggleReadyDictionaryWord($user, $this->readyDictionary, $readyDictionaryWord);
+
+        $this->favoriteWordMap[$readyDictionaryWordId] = $isFavorite;
     }
 
     private function currentUser(): User

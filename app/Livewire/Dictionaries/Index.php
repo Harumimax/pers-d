@@ -7,6 +7,7 @@ use App\Models\UserDictionary;
 use App\Models\Word;
 use App\Services\DictionarySubscriptions\CreateDictionaryShareInvitationService;
 use App\Services\DictionarySubscriptions\SendDictionaryShareInvitationService;
+use App\Services\Favorites\FavoriteWordsService;
 use App\Services\Navigation\HeaderNavigationService;
 use App\Services\Dictionaries\UserDictionaryWordSearchService;
 use App\Support\PartOfSpeechCatalog;
@@ -257,6 +258,11 @@ class Index extends Component
                 ->pluck('words.id')
                 ->all();
 
+            \App\Models\FavoriteWord::query()
+                ->where('source_dictionary_type', \App\Models\FavoriteWord::SOURCE_DICTIONARY_USER)
+                ->where('source_dictionary_id', $dictionary->id)
+                ->delete();
+
             $dictionary->delete();
 
             if ($wordIds !== []) {
@@ -349,8 +355,10 @@ class Index extends Component
         $searchResults = $this->searchResults($user);
 
         $headerNavigation = app(HeaderNavigationService::class)->forUser($user);
+        $favoriteDictionary = app(FavoriteWordsService::class)->virtualDictionarySummaryForUser($user);
 
         return view('livewire.dictionaries.index', [
+            'favoriteDictionary' => $favoriteDictionary,
             'ownedDictionaries' => $ownedDictionaries,
             'subscribedDictionaries' => $subscribedDictionaries,
             'searchResults' => $searchResults,

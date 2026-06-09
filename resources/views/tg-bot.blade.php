@@ -18,6 +18,7 @@
                         'send_time' => (string) ($normalized['send_time'] ?? '09:00'),
                         'translation_direction' => (string) ($normalized['translation_direction'] ?? \App\Models\GameSession::DIRECTION_FOREIGN_TO_RU),
                         'words_count' => max(2, min(20, (int) ($normalized['words_count'] ?? 10))),
+                        'use_favorites' => filter_var($normalized['use_favorites'] ?? false, FILTER_VALIDATE_BOOL),
                         'part_of_speech' => collect($normalized['part_of_speech'] ?? [\App\Support\PartOfSpeechCatalog::ALL])
                             ->map(fn ($value) => (string) $value)
                             ->filter()
@@ -150,6 +151,7 @@
                                         partOfSpeechAllValue: @js(\App\Support\PartOfSpeechCatalog::ALL),
                                         maxSessions: 5,
                                         availableUserDictionaryIds: @js($userDictionaries->pluck('id')->map(fn ($id) => (int) $id)->values()->all()),
+                                        favoriteDictionaryCount: @js((int) ($favoriteDictionary['count'] ?? 0)),
                                         readyDictionaryOptions: @js($readyDictionaryOptions),
                                         sessions: @js($initialTelegramSettings['sessions']),
                                         async updateRandomWordsStatus(nextValue) {
@@ -195,6 +197,7 @@
                                                 send_time: '09:00',
                                                 translation_direction: 'foreign_to_ru',
                                                 words_count: 10,
+                                                use_favorites: false,
                                                 part_of_speech: [this.partOfSpeechAllValue],
                                                 user_dictionary_ids: [],
                                                 ready_dictionary_ids: [],
@@ -245,6 +248,13 @@
                                         hasSelection(session, key, id) {
                                             return session[key].includes(id);
                                         },
+                                        toggleFavorites(session) {
+                                            if (this.favoriteDictionaryCount === 0) {
+                                                return;
+                                            }
+
+                                            session.use_favorites = !session.use_favorites;
+                                        },
                                         filteredReadyDictionaryIds(languageFilter) {
                                             return this.readyDictionaryOptions
                                                 .filter(option => languageFilter === 'all' || option.language === languageFilter)
@@ -255,6 +265,25 @@
                                         },
                                         areAllSelected(session, key, availableIds) {
                                             return availableIds.length > 0 && availableIds.every(id => session[key].includes(id));
+                                        },
+                                        areAllUserSourcesSelected(session) {
+                                            const dictionariesSelected = this.availableUserDictionaryIds.length === 0
+                                                || this.areAllSelected(session, 'user_dictionary_ids', this.availableUserDictionaryIds);
+                                            const favoritesSelected = this.favoriteDictionaryCount === 0 || session.use_favorites;
+
+                                            return dictionariesSelected && favoritesSelected;
+                                        },
+                                        toggleAllUserSources(session) {
+                                            if (this.areAllUserSourcesSelected(session)) {
+                                                session.user_dictionary_ids = session.user_dictionary_ids.filter(id => !this.availableUserDictionaryIds.includes(id));
+                                                session.use_favorites = false;
+                                                return;
+                                            }
+
+                                            session.user_dictionary_ids = [...new Set([...session.user_dictionary_ids, ...this.availableUserDictionaryIds])];
+                                            if (this.favoriteDictionaryCount > 0) {
+                                                session.use_favorites = true;
+                                            }
                                         },
                                         toggleAllSelections(session, key, availableIds) {
                                             if (this.areAllSelected(session, key, availableIds)) {
@@ -433,14 +462,14 @@
                                                                 <span class="tg-bot-dictionary-toolbar-spacer" aria-hidden="true"></span>
                                                             </div>
 
-                                                            @if ($userDictionaries->isNotEmpty())
+                                                            @if (($favoriteDictionary['count'] ?? 0) > 0 || $userDictionaries->isNotEmpty())
                                                                 <div class="tg-bot-select-toolbar">
                                                                     <label class="tg-bot-select-all">
                                                                         <input
                                                                             type="checkbox"
                                                                             class="tg-bot-select-all__input"
-                                                                            :checked="areAllSelected(session, 'user_dictionary_ids', availableUserDictionaryIds)"
-                                                                            @change="toggleAllSelections(session, 'user_dictionary_ids', availableUserDictionaryIds)"
+                                                                            :checked="areAllUserSourcesSelected(session)"
+                                                                            @change="toggleAllUserSources(session)"
                                                                         >
                                                                         <span>{{ __('remainder.settings.dictionaries.select_all') }}</span>
                                                                     </label>
@@ -451,6 +480,28 @@
                                                                 </div>
 
                                                                 <div class="tg-bot-select-list">
+                                                                    <label
+                                                                        class="tg-bot-select-card"
+                                                                        :class="{ 'tg-bot-select-card--active': session.use_favorites }"
+                                                                    >
+                                                                        <input
+                                                                            type="hidden"
+                                                                            :name="`sessions[${index}][use_favorites]`"
+                                                                            :value="session.use_favorites ? 1 : 0"
+                                                                        >
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            class="sr-only"
+                                                                            :checked="session.use_favorites"
+                                                                            @change="toggleFavorites(session)"
+                                                                            :disabled="favoriteDictionaryCount === 0"
+                                                                        >
+                                                                        <span class="tg-bot-select-card__name">{{ $favoriteDictionary['name'] }}</span>
+                                                                        <span class="tg-bot-select-card__meta">
+                                                                            {{ trans_choice('remainder.settings.dictionaries.words_count', $favoriteDictionary['count'], ['count' => $favoriteDictionary['count']]) }}
+                                                                        </span>
+                                                                    </label>
+
                                                                     @foreach ($userDictionaries as $dictionary)
                                                                         @php
                                                                             $dictionaryLanguageKey = $dictionary->language !== null
@@ -479,6 +530,11 @@
                                                                     @endforeach
                                                                 </div>
                                                             @else
+                                                                <input
+                                                                    type="hidden"
+                                                                    :name="`sessions[${index}][use_favorites]`"
+                                                                    :value="session.use_favorites ? 1 : 0"
+                                                                >
                                                                 <p class="tg-bot-form__hint">{{ __('tg-bot.form.sessions.empty_user_dictionaries') }}</p>
                                                             @endif
                                                         </div>

@@ -11,6 +11,7 @@ use App\Http\Controllers\TelegramAuthLinkController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\TgBotController;
 use App\Http\Controllers\TranslatorController;
+use App\Livewire\Dictionaries\Favorites as FavoriteWordsShow;
 use App\Livewire\Dictionaries\Index;
 use App\Livewire\Dictionaries\Show;
 use App\Livewire\ReadyDictionaries\Show as ReadyDictionaryShow;
@@ -68,6 +69,7 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:about-contact')
         ->name('about.contact.store');
     Route::get('/dictionaries', Index::class)->name('dictionaries.index');
+    Route::get('/dictionaries/favorites', FavoriteWordsShow::class)->name('dictionaries.favorites');
     Route::get('/dictionaries/{dictionary}', Show::class)->name('dictionaries.show');
     Route::post('/dictionaries/{dictionary}/share-invitations', [DictionaryShareInvitationController::class, 'store'])
         ->name('dictionary-share-invitations.store');

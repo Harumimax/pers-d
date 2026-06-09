@@ -33,8 +33,17 @@
                         {{ __('common.links.dictionaries') }}
                     </a>
 
-                    @if (($headerDictionaries ?? collect())->isNotEmpty())
+                    @if ((($headerFavoriteDictionary['is_clickable'] ?? false) === true) || ($headerDictionaries ?? collect())->isNotEmpty())
                         <div class="profile-header-nav__menu" aria-label="Your dictionaries">
+                            @if (($headerFavoriteDictionary['is_clickable'] ?? false) === true)
+                            <a
+                                href="{{ route('dictionaries.favorites') }}"
+                                class="profile-header-nav__menu-link"
+                            >
+                                {{ $headerFavoriteDictionary['name'] }}
+                            </a>
+                            @endif
+
                             @foreach ($headerDictionaries as $headerDictionary)
                             <a
                                 href="{{ route('dictionaries.show', $headerDictionary) }}"

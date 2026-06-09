@@ -683,7 +683,8 @@ html.speech-synthesis-unsupported .word-list-pronounce-cell {
 
 .word-list-edit-btn,
 .word-list-transfer-btn,
-.word-list-delete-btn {
+.word-list-delete-btn,
+.word-list-favorite-btn {
     width: 40px;
     height: 40px;
     border: 0;
@@ -701,14 +702,34 @@ html.speech-synthesis-unsupported .word-list-pronounce-cell {
     color: #64748b;
 }
 
+.word-list-favorite-btn {
+    color: #94a3b8;
+    background: transparent;
+    font-size: 1.28rem;
+    line-height: 1;
+}
+
 .word-list-edit-btn:hover,
 .word-list-transfer-btn:hover {
     background: rgba(100, 116, 139, 0.12);
     color: #475569;
 }
 
+.word-list-favorite-btn:hover {
+    background: rgba(250, 204, 21, 0.14);
+    color: #d97706;
+}
+
 .word-list-delete-btn:hover {
     background: rgba(239, 68, 68, 0.08);
+}
+
+.word-list-favorite-btn--active {
+    color: #eab308;
+}
+
+.word-list-favorite-btn--active:hover {
+    color: #ca8a04;
 }
 
 .word-list-transfer-picker {
@@ -1251,6 +1272,7 @@ html.speech-synthesis-unsupported .word-list-pronounce-cell {
     .word-list-mobile-card__actions .word-list-edit-btn,
     .word-list-mobile-card__actions .word-list-pronounce-btn,
     .word-list-mobile-card__actions .word-list-transfer-btn,
+    .word-list-mobile-card__actions .word-list-favorite-btn,
     .word-list-mobile-card__actions .word-list-delete-btn,
     .word-list-mobile-card__actions .word-list-edit-accept-btn,
     .word-list-mobile-card__actions .word-list-edit-cancel-btn {
@@ -1261,6 +1283,7 @@ html.speech-synthesis-unsupported .word-list-pronounce-cell {
     .word-list-edit-btn,
     .word-list-pronounce-btn,
     .word-list-transfer-btn,
+    .word-list-favorite-btn,
     .word-list-delete-btn {
         width: 44px;
         height: 44px;

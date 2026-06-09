@@ -8,6 +8,7 @@ use App\Models\GameSession;
 use App\Models\ReadyDictionary;
 use App\Models\TelegramSetting;
 use App\Services\DictionarySubscriptions\DictionaryAccessService;
+use App\Services\Favorites\FavoriteWordsService;
 use App\Services\Telegram\SaveTelegramSettingsService;
 use App\Support\PartOfSpeechCatalog;
 use App\Support\TimezoneOptions;
@@ -54,6 +55,7 @@ class TgBotController extends Controller
                 GameSession::DIRECTION_RU_TO_FOREIGN => __('tg-bot.form.directions.ru_to_foreign'),
             ],
             'partOfSpeechOptions' => PartOfSpeechCatalog::labelsWithAll(),
+            'favoriteDictionary' => app(FavoriteWordsService::class)->virtualDictionarySummaryForUser($user),
             'userDictionaries' => $userDictionaries,
             'readyDictionaries' => $readyDictionaries,
             'telegramSettingsFormData' => $this->buildFormData($telegramSetting),
@@ -119,6 +121,7 @@ class TgBotController extends Controller
                 'translation_direction' => $session->translation_direction,
                 'words_count' => max(2, min(20, (int) ($session->words_count ?? 10))),
                 'part_of_speech' => $this->formatPartOfSpeechSelection($session->partsOfSpeech),
+                'use_favorites' => (bool) $session->use_favorites,
                 'user_dictionary_ids' => $session->userDictionaries->pluck('id')->map(fn ($id) => (int) $id)->values()->all(),
                 'ready_dictionary_ids' => $session->readyDictionaries->pluck('id')->map(fn ($id) => (int) $id)->values()->all(),
             ])
@@ -139,6 +142,7 @@ class TgBotController extends Controller
             'translation_direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
             'words_count' => 10,
             'part_of_speech' => [PartOfSpeechCatalog::ALL],
+            'use_favorites' => false,
             'user_dictionary_ids' => [],
             'ready_dictionary_ids' => [],
         ];

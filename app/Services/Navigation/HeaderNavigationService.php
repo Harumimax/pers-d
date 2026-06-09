@@ -5,6 +5,7 @@ namespace App\Services\Navigation;
 use App\Models\ReadyDictionary;
 use App\Models\User;
 use App\Models\UserDictionary;
+use App\Services\Favorites\FavoriteWordsService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 
@@ -13,12 +14,16 @@ class HeaderNavigationService
     /**
      * @return array{
      *     headerDictionaries: Collection<int, UserDictionary>,
-     *     headerReadyDictionaries: Collection<int, ReadyDictionary>
+     *     headerReadyDictionaries: Collection<int, ReadyDictionary>,
+     *     headerFavoriteDictionary:?array{name:string,slug:string,count:int,is_clickable:bool}
      * }
      */
     public function forUser(?User $user): array
     {
         return [
+            'headerFavoriteDictionary' => $user !== null
+                ? app(FavoriteWordsService::class)->virtualDictionarySummaryForUser($user)
+                : null,
             'headerDictionaries' => $this->userDictionaries($user),
             'headerReadyDictionaries' => $this->readyDictionaries(),
         ];

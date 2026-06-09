@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
 use App\Services\DictionarySubscriptions\DictionaryAccessService;
+use App\Services\Favorites\FavoriteWordsService;
 use App\Services\Navigation\HeaderNavigationService;
 use App\Support\PartOfSpeechCatalog;
 use App\Services\Translation\TranslationServiceInterface;
@@ -61,6 +62,8 @@ class Show extends Component
     public string $editingWordComment = '';
     public bool $readOnly = false;
     public string $dictionaryOwnerEmail = '';
+    /** @var array<int, bool> */
+    public array $favoriteWordMap = [];
 
     public function mount(UserDictionary $dictionary, DictionaryAccessService $dictionaryAccessService): void
     {
@@ -106,6 +109,13 @@ class Show extends Component
         }
 
         $words = $wordsQuery->paginate(20);
+        $this->favoriteWordMap = ! $this->readOnly
+            ? app(FavoriteWordsService::class)->userDictionaryFavoriteStateMap(
+                $user,
+                $this->dictionary,
+                $words->getCollection()->pluck('id')->all(),
+            )
+            : [];
 
         return view('livewire.dictionaries.show', [
             'words' => $words,
@@ -426,6 +436,13 @@ class Show extends Component
 
         abort_if(! $isAttached, 403);
 
+        \App\Models\FavoriteWord::query()
+            ->where('source_dictionary_type', \App\Models\FavoriteWord::SOURCE_DICTIONARY_USER)
+            ->where('source_dictionary_id', $this->dictionary->id)
+            ->where('source_word_type', \App\Models\FavoriteWord::SOURCE_WORD_USER)
+            ->where('source_word_id', $wordId)
+            ->delete();
+
         $this->dictionary->words()->detach($wordId);
         Word::query()->whereKey($wordId)->delete();
 
@@ -438,6 +455,16 @@ class Show extends Component
         if ($currentPage > $maxPage) {
             $this->setPage($maxPage);
         }
+    }
+
+    public function toggleFavoriteWord(int $wordId, FavoriteWordsService $favoriteWordsService): void
+    {
+        $this->assertCanManage();
+
+        $word = $this->attachedWord($wordId);
+        $isFavorite = $favoriteWordsService->toggleUserDictionaryWord($this->currentUser(), $this->dictionary, $word);
+
+        $this->favoriteWordMap[$wordId] = $isFavorite;
     }
 
     private function partOfSpeechOptions(): array

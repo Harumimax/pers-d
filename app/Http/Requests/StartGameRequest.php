@@ -29,6 +29,7 @@ class StartGameRequest extends FormRequest
             'words_count' => is_numeric($this->input('words_count')) ? (int) $this->input('words_count') : $this->input('words_count'),
             'dictionary_ids' => $dictionaryIds,
             'ready_dictionary_ids' => $readyDictionaryIds,
+            'use_favorites' => $this->boolean('use_favorites'),
             'parts_of_speech' => $partsOfSpeech === [] ? ['all'] : $partsOfSpeech,
         ]);
     }
@@ -51,6 +52,7 @@ class StartGameRequest extends FormRequest
             'dictionary_ids.*' => ['integer', 'distinct'],
             'ready_dictionary_ids' => ['nullable', 'array'],
             'ready_dictionary_ids.*' => ['integer', 'distinct', Rule::exists('ready_dictionaries', 'id')],
+            'use_favorites' => ['required', 'boolean'],
             'parts_of_speech' => ['required', 'array', 'min:1'],
             'parts_of_speech.*' => ['string', Rule::in(PartOfSpeechCatalog::valuesWithAll())],
             'words_count' => ['required', 'integer', 'min:1', 'max:20'],
@@ -65,7 +67,7 @@ class StartGameRequest extends FormRequest
                     return;
                 }
 
-                if ($this->user() === null && $this->input('dictionary_ids', []) !== []) {
+                if ($this->user() === null && ($this->input('dictionary_ids', []) !== [] || $this->boolean('use_favorites'))) {
                     $validator->errors()->add('dictionary_ids', __('remainder.messages.start.demo_user_dictionaries'));
 
                     return;
@@ -86,7 +88,11 @@ class StartGameRequest extends FormRequest
                     }
                 }
 
-                if ($this->input('dictionary_ids', []) === [] && $this->input('ready_dictionary_ids', []) === []) {
+                if (
+                    $this->input('dictionary_ids', []) === []
+                    && $this->input('ready_dictionary_ids', []) === []
+                    && ! $this->boolean('use_favorites')
+                ) {
                     $validator->errors()->add('dictionary_ids', __('remainder.messages.start.choose_dictionary'));
                 }
             },

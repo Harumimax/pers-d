@@ -482,6 +482,16 @@
                                                 @else
                                                     <button
                                                         type="button"
+                                                        class="word-list-favorite-btn {{ ($favoriteWordMap[$wordItem->id] ?? false) ? 'word-list-favorite-btn--active' : '' }}"
+                                                        wire:click="toggleFavoriteWord({{ $wordItem->id }})"
+                                                        aria-label="{{ __('dictionaries.show.word_list.favorite.aria', ['word' => $wordItem->word]) }}"
+                                                        title="{{ ($favoriteWordMap[$wordItem->id] ?? false) ? __('dictionaries.show.word_list.favorite.remove_title') : __('dictionaries.show.word_list.favorite.add_title') }}"
+                                                    >
+                                                        <span aria-hidden="true">{{ ($favoriteWordMap[$wordItem->id] ?? false) ? '★' : '☆' }}</span>
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
                                                         class="word-list-edit-btn"
                                                         wire:click="startEditingWord({{ $wordItem->id }})"
                                                         aria-label="{{ __('dictionaries.show.word_list.edit.aria', ['name' => $wordItem->word]) }}"
@@ -650,6 +660,16 @@
                                         </div>
                                     @else
                                         <div class="word-list-actions">
+                                            <button
+                                                type="button"
+                                                class="word-list-favorite-btn {{ ($favoriteWordMap[$wordItem->id] ?? false) ? 'word-list-favorite-btn--active' : '' }}"
+                                                wire:click="toggleFavoriteWord({{ $wordItem->id }})"
+                                                aria-label="{{ __('dictionaries.show.word_list.favorite.aria', ['word' => $wordItem->word]) }}"
+                                                title="{{ ($favoriteWordMap[$wordItem->id] ?? false) ? __('dictionaries.show.word_list.favorite.remove_title') : __('dictionaries.show.word_list.favorite.add_title') }}"
+                                            >
+                                                <span aria-hidden="true">{{ ($favoriteWordMap[$wordItem->id] ?? false) ? '★' : '☆' }}</span>
+                                            </button>
+
                                             <button
                                                 type="button"
                                                 class="word-list-edit-btn"

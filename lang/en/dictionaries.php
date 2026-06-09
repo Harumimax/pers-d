@@ -27,6 +27,18 @@ return [
             'created' => 'Created :date',
         ],
         'words_count' => '{1} :count word|[2,*] :count words',
+        'favorites' => [
+            'name' => 'Favorite Words',
+            'badge' => 'Favorites',
+            'open_aria' => 'Open Favorite Words',
+            'count' => '{1} :count favorite word|[2,*] :count favorite words',
+            'empty_count' => 'No favorite words yet: 0',
+            'subtitle' => '{1} :count favorite word saved here|[2,*] :count favorite words saved here',
+            'empty' => 'No favorite words yet.',
+            'open_source_aria' => 'Open source dictionary :dictionary for word :word',
+            'remove_aria' => 'Remove word :word from favorites',
+            'remove_title' => 'Remove from favorites',
+        ],
         'empty' => [
             'title' => 'No dictionaries yet',
             'text' => 'Create your first dictionary to start organizing words.',
@@ -186,6 +198,11 @@ return [
             'pronounce' => [
                 'tooltip' => 'Pronounce word',
                 'aria' => 'Pronounce word :word',
+            ],
+            'favorite' => [
+                'aria' => 'Toggle favorite for word :word',
+                'add_title' => 'Add to favorites',
+                'remove_title' => 'Remove from favorites',
             ],
         ],
     ],

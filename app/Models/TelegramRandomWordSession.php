@@ -15,7 +15,15 @@ class TelegramRandomWordSession extends Model
         'send_time',
         'translation_direction',
         'words_count',
+        'use_favorites',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'use_favorites' => 'boolean',
+        ];
+    }
 
     public function telegramSetting(): BelongsTo
     {

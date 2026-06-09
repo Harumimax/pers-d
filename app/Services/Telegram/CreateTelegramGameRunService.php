@@ -71,6 +71,7 @@ class CreateTelegramGameRunService
                     'actual_words_count' => $selectedWords->count(),
                     'dictionary_ids' => $config->dictionaryIds,
                     'ready_dictionary_ids' => $config->readyDictionaryIds,
+                    'use_favorites' => $config->useFavorites,
                     'parts_of_speech' => $config->partsOfSpeech,
                     'warnings' => $warnings,
                     'options_target_count' => 6,

@@ -124,6 +124,18 @@
                                     </td>
                                     <td class="word-list-action-cell">
                                         <div class="word-list-actions">
+                                            @auth
+                                                <button
+                                                    type="button"
+                                                    class="word-list-favorite-btn {{ ($favoriteWordMap[$wordItem->id] ?? false) ? 'word-list-favorite-btn--active' : '' }}"
+                                                    wire:click="toggleFavoriteWord({{ $wordItem->id }})"
+                                                    aria-label="{{ __('dictionaries.show.word_list.favorite.aria', ['word' => $wordItem->word]) }}"
+                                                    title="{{ ($favoriteWordMap[$wordItem->id] ?? false) ? __('dictionaries.show.word_list.favorite.remove_title') : __('dictionaries.show.word_list.favorite.add_title') }}"
+                                                >
+                                                    <span aria-hidden="true">{{ ($favoriteWordMap[$wordItem->id] ?? false) ? '★' : '☆' }}</span>
+                                                </button>
+                                            @endauth
+
                                             <div class="word-list-transfer-picker">
                                                 <button
                                                     type="button"
@@ -218,6 +230,18 @@
 
                             <div class="word-list-mobile-card__actions">
                                 <div class="word-list-actions">
+                                    @auth
+                                        <button
+                                            type="button"
+                                            class="word-list-favorite-btn {{ ($favoriteWordMap[$wordItem->id] ?? false) ? 'word-list-favorite-btn--active' : '' }}"
+                                            wire:click="toggleFavoriteWord({{ $wordItem->id }})"
+                                            aria-label="{{ __('dictionaries.show.word_list.favorite.aria', ['word' => $wordItem->word]) }}"
+                                            title="{{ ($favoriteWordMap[$wordItem->id] ?? false) ? __('dictionaries.show.word_list.favorite.remove_title') : __('dictionaries.show.word_list.favorite.add_title') }}"
+                                        >
+                                            <span aria-hidden="true">{{ ($favoriteWordMap[$wordItem->id] ?? false) ? '★' : '☆' }}</span>
+                                        </button>
+                                    @endauth
+
                                     <div class="word-list-transfer-picker">
                                         <button
                                             type="button"

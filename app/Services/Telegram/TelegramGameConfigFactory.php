@@ -17,6 +17,7 @@ class TelegramGameConfigFactory
             direction: (string) $session->translation_direction,
             dictionaryIds: $session->userDictionaries->pluck('id')->map(static fn ($id): int => (int) $id)->sort()->values()->all(),
             readyDictionaryIds: $session->readyDictionaries->pluck('id')->map(static fn ($id): int => (int) $id)->sort()->values()->all(),
+            useFavorites: (bool) $session->use_favorites,
             partsOfSpeech: $this->partsOfSpeech($session),
             requestedWordsCount: $this->wordsCount($session),
         );

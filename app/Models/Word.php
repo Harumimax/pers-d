@@ -42,6 +42,12 @@ class Word extends Model
         return $this->hasMany(UserWordProgress::class);
     }
 
+    public function favoriteMarks(): HasMany
+    {
+        return $this->hasMany(FavoriteWord::class, 'source_word_id')
+            ->where('source_word_type', FavoriteWord::SOURCE_WORD_USER);
+    }
+
     public function scopeWithProgressForUser(Builder $query, User|int $user): Builder
     {
         $userId = $user instanceof User ? (int) $user->getKey() : (int) $user;

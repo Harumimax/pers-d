@@ -21,7 +21,7 @@ class PrepareGameService
     }
 
     /**
-     * @param array{mode:string,direction:string,dictionary_ids:array<int,int|string>,ready_dictionary_ids?:array<int,int|string>,parts_of_speech:array<int,string>,words_count:int} $config
+     * @param array{mode:string,direction:string,dictionary_ids:array<int,int|string>,ready_dictionary_ids?:array<int,int|string>,use_favorites?:bool,parts_of_speech:array<int,string>,words_count:int} $config
      * @return array{gameSession: GameSession, notice: string|null}
      */
     public function prepare(?User $user, array $config): array

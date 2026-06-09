@@ -15,6 +15,7 @@ class GameSessionConfigDataTest extends TestCase
             'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
             'dictionary_ids' => ['5', 2, '5'],
             'ready_dictionary_ids' => ['9', '3', 9],
+            'use_favorites' => true,
             'parts_of_speech' => [' noun ', 'verb', 'noun'],
             'words_count' => '7',
         ]);
@@ -23,6 +24,7 @@ class GameSessionConfigDataTest extends TestCase
         $this->assertSame(GameSession::DIRECTION_FOREIGN_TO_RU, $config->direction);
         $this->assertSame([2, 5], $config->dictionaryIds);
         $this->assertSame([3, 9], $config->readyDictionaryIds);
+        $this->assertTrue($config->useFavorites);
         $this->assertSame(['noun', 'verb'], $config->partsOfSpeech);
         $this->assertSame(7, $config->requestedWordsCount);
         $this->assertTrue($config->usesChoiceMode());
@@ -50,6 +52,7 @@ class GameSessionConfigDataTest extends TestCase
 
         $this->assertSame(['all'], $emptyConfig->partsOfSpeech);
         $this->assertSame(['all'], $allConfig->partsOfSpeech);
+        $this->assertFalse($emptyConfig->useFavorites);
         $this->assertFalse($emptyConfig->usesChoiceMode());
     }
 }

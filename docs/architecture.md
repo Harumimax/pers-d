@@ -36,6 +36,7 @@
   - `PUT /tg-bot` -> `TgBotController@update`
   - `POST /about/contact` -> `AboutContactController@store`
   - `/dictionaries` -> `App\Livewire\Dictionaries\Index`
+  - `/dictionaries/favorites` -> `App\Livewire\Dictionaries\Favorites`, renders the virtual authenticated `Favorite Words` dictionary
   - `/dictionaries/{dictionary}` -> `App\Livewire\Dictionaries\Show`
   - `POST /dictionaries/{dictionary}/share-invitations` -> `DictionaryShareInvitationController@store`, creates and sends a new dictionary subscription invitation
   - `POST /dictionary-subscriptions/{token}/accept` -> `DictionaryShareInvitationController@accept`, accepts a pending invitation for the authenticated matching email
@@ -108,6 +109,7 @@
 ### Livewire Components
 - `App\Livewire\Dictionaries\Index`
   - lists current user dictionaries, combining owned dictionaries and subscribed dictionaries in one screen
+  - renders the virtual `Favorite Words` system dictionary as the first card on the screen
   - renders a global word search across all dictionaries available to the current user, including subscribed dictionaries
   - creates dictionaries
   - deletes dictionaries with confirmation modal state
@@ -121,9 +123,14 @@
   - supports search, sorting, and part-of-speech filtering
   - supports manual word creation only for the dictionary owner
   - supports automatic translation flow only for the dictionary owner
+  - lets the owner toggle personal dictionary words into or out of the authenticated user's favorites list
   - deletes words with confirmation modal state only for the dictionary owner
   - blocks create, edit, and delete actions for subscribers at both the UI layer and Livewire action layer
   - passes `headerDictionaries` into the shared dictionaries layout
+- `App\Livewire\Dictionaries\Favorites`
+  - renders the virtual authenticated `Favorite Words` dictionary page
+  - lists favorite items gathered from both personal dictionaries and prepared dictionaries
+  - supports search, sorting, part-of-speech filtering, pronunciation, source-dictionary navigation, and removing items from favorites
 - `App\Services\Dictionaries\UserDictionaryWordSearchService`
   - provides the shared search query for user dictionary words
   - performs case-insensitive partial matching by `words.word` and `words.translation`
@@ -137,6 +144,10 @@
   - links one subscriber user to one owner dictionary in read-only mode
 - `DictionaryShareInvitation`
   - stores the future email-based subscription invitation token flow
+- `FavoriteWord`
+  - stores one user-specific favorite mark for a concrete source dictionary item
+  - supports both personal dictionary words and ready dictionary words without copying content
+  - keeps `Favorite Words` as a virtual system dictionary rather than a real duplicated dictionary
 - `UserWordProgress`
   - stores learner-specific flags per `user_id + word_id`
   - is the new source of truth for `remainder_had_mistake`
@@ -158,11 +169,18 @@
   - centralizes owner-vs-subscriber access checks for dictionaries
   - exposes reusable query helpers for all dictionaries available to the current user
   - exposes reusable query helpers for all dictionaries available to the current user
+- `App\Services\Favorites\FavoriteWordsService`
+  - adds and removes favorite marks for personal dictionary words
+  - adds and removes favorite marks for ready dictionary words
+  - validates that the source word really belongs to the chosen source dictionary
+  - provides the count and virtual dictionary summary for the virtual `Favorite Words` system entry
+  - exposes favorite-word candidate queries so `Remainder`, Telegram random words, and Telegram interval review can treat favorites as a read-only word source without duplicating words
 - `App\Livewire\ReadyDictionaries\Show`
   - shows one developer-managed ready dictionary
   - lists ready dictionary words with pagination
   - supports read-only search, sorting, and part-of-speech filtering
   - allows guests to browse ready dictionary words as demo content
+  - lets authenticated users toggle prepared-dictionary words into or out of favorites
   - does not expose word creation, editing, or deletion actions
   - copying ready words into personal dictionaries remains available only to authenticated users and only into owned dictionaries and only into owned dictionaries
 - `App\Livewire\Remainder\Show`
@@ -1167,6 +1185,11 @@
   - Telegram dictionary search
   - Telegram scheduled random-word sessions
   - Telegram interval review
+- `Favorite Words` is also a first-class virtual read-only source in:
+  - `/dictionaries` as a system dictionary page
+  - `/remainder` as the first item in `My dictionaries`
+  - `/tg-bot` random-word settings as the first item in `My dictionaries`
+  - `/tg-bot` interval review as the first item in `My dictionaries`
 - subscribed dictionaries never become write targets:
   - not in web dictionary editing
   - not in ready-word transfer targets
@@ -1298,6 +1321,7 @@
 - Dictionary callbacks always re-check dictionary access against the currently linked `users.tg_chat_id`, so a user cannot open another user's dictionary by forging callback data
 - Telegram random-word settings are configured on `/tg-bot` and stored in `telegram_settings` plus child `telegram_random_word_sessions`
 - Telegram random-word settings may use both owned and subscribed dictionaries as source dictionaries
+- Each configured Telegram daily session also stores `use_favorites`, so the virtual `Favorite Words` source can participate without pretending to be a real `user_dictionaries.id`
 - Each configured Telegram daily session stores its own `words_count` in the allowed `2..20` range, and `TelegramGameConfigFactory` passes that value into the shared `GameSessionConfigData`
 - `routes/console.php` schedules `telegram:dispatch-scheduled-sessions` every minute with `withoutOverlapping()`
 - `routes/console.php` also schedules `telegram:cleanup-stale-runs` every 15 minutes with `withoutOverlapping()`

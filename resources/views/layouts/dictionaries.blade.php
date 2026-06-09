@@ -20,7 +20,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles
     </head>
-    @php($dictionariesNavActive = request()->routeIs('dictionaries.index') || request()->routeIs('dictionaries.show'))
+    @php($dictionariesNavActive = request()->routeIs('dictionaries.index') || request()->routeIs('dictionaries.show') || request()->routeIs('dictionaries.favorites'))
     <body class="dictionaries-shell">
         <x-site-header
             nav-class="dictionaries-header-nav"
@@ -36,8 +36,17 @@
                         {{ __('common.links.dictionaries') }}
                     </a>
 
-                    @if (($headerDictionaries ?? collect())->isNotEmpty())
+                    @if ((($headerFavoriteDictionary['is_clickable'] ?? false) === true) || ($headerDictionaries ?? collect())->isNotEmpty())
                         <div class="dictionaries-header-nav__menu" aria-label="Your dictionaries">
+                            @if (($headerFavoriteDictionary['is_clickable'] ?? false) === true)
+                            <a
+                                href="{{ route('dictionaries.favorites') }}"
+                                class="dictionaries-header-nav__menu-link"
+                            >
+                                {{ $headerFavoriteDictionary['name'] }}
+                            </a>
+                            @endif
+
                             @foreach ($headerDictionaries as $headerDictionary)
                             <a
                                 href="{{ route('dictionaries.show', $headerDictionary) }}"

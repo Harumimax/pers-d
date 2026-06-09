@@ -8,10 +8,12 @@
     @php
         $isDemoMode = auth()->guest();
         $partOfSpeechLabels = \App\Support\PartOfSpeechCatalog::labelsWithAll();
+        $favoriteDictionaryCount = is_array($favoriteDictionary) ? (int) ($favoriteDictionary['count'] ?? 0) : 0;
         $initialDictionaryIds = collect(old('dictionary_ids', []))
             ->map(fn ($id) => (int) $id)
             ->filter()
             ->values();
+        $initialUseFavorites = filter_var(old('use_favorites', false), FILTER_VALIDATE_BOOL);
         $initialReadyDictionaryIds = collect(old('ready_dictionary_ids', []))
             ->map(fn ($id) => (int) $id)
             ->filter()
@@ -66,6 +68,7 @@
                     direction: @js(old('direction', 'foreign_to_ru')),
                     dictionaryIds: @js($dictionaryIds->all()),
                     readyDictionaryOptions: @js($readyDictionaryOptions->all()),
+                    useFavorites: @js($initialUseFavorites),
                     selectedDictionaries: @js($initialDictionaryIds->all()),
                     selectedReadyDictionaries: @js($initialReadyDictionaryIds->all()),
                     readyDictionaryLanguageFilter: 'all',
@@ -82,16 +85,30 @@
                     isDictionarySelected(id) {
                         return this.selectedDictionaries.includes(id);
                     },
+                    toggleFavorites() {
+                        if (! @js($favoriteDictionaryCount > 0)) {
+                            return;
+                        }
+
+                        this.useFavorites = !this.useFavorites;
+                    },
                     areAllDictionariesSelected() {
-                        return this.dictionaryIds.length > 0 && this.dictionaryIds.every(id => this.selectedDictionaries.includes(id));
+                        const dictionariesSelected = this.dictionaryIds.length === 0 || this.dictionaryIds.every(id => this.selectedDictionaries.includes(id));
+                        const favoritesSelected = ! @js($favoriteDictionaryCount > 0) || this.useFavorites;
+
+                        return dictionariesSelected && favoritesSelected;
                     },
                     toggleAllDictionaries() {
                         if (this.areAllDictionariesSelected()) {
                             this.selectedDictionaries = this.selectedDictionaries.filter(id => !this.dictionaryIds.includes(id));
+                            this.useFavorites = false;
                             return;
                         }
 
                         this.selectedDictionaries = [...new Set([...this.selectedDictionaries, ...this.dictionaryIds])];
+                        if (@js($favoriteDictionaryCount > 0)) {
+                            this.useFavorites = true;
+                        }
                     },
                     toggleReadyDictionary(id) {
                         if (this.selectedReadyDictionaries.includes(id)) {
@@ -159,6 +176,7 @@
                     resetSettings() {
                         this.gameType = this.defaultGameType;
                         this.direction = this.defaultDirection;
+                        this.useFavorites = false;
                         this.selectedDictionaries = [];
                         this.selectedReadyDictionaries = [];
                         this.selectedPartsOfSpeech = ['all'];
@@ -170,6 +188,7 @@
 
                 <input type="hidden" name="mode" :value="gameType">
                 <input type="hidden" name="direction" :value="direction">
+                <input type="hidden" name="use_favorites" :value="useFavorites ? 1 : 0">
 
                 <template x-for="dictionaryId in selectedDictionaries" :key="`dictionary-${dictionaryId}`">
                     <input type="hidden" name="dictionary_ids[]" :value="dictionaryId">
@@ -275,7 +294,7 @@
                         <div class="remainder-dictionary-column">
                             <h4 class="remainder-dictionary-column__title">{{ __('remainder.settings.dictionaries.user_title') }}</h4>
 
-                            @if ($remainderDictionaries->isNotEmpty())
+                            @if (($favoriteDictionary !== null) || $remainderDictionaries->isNotEmpty())
                                 <div class="remainder-dictionary-toolbar">
                                     <label class="remainder-dictionary-select-all">
                                         <input
@@ -294,6 +313,24 @@
                                 </div>
 
                                 <div class="remainder-dictionary-list" role="list" aria-label="{{ __('remainder.settings.dictionaries.available_aria') }}">
+                                    @if ($favoriteDictionary !== null)
+                                        <button
+                                            type="button"
+                                            class="remainder-dictionary-item"
+                                            :class="{ 'remainder-dictionary-item--active': useFavorites }"
+                                            @click="toggleFavorites()"
+                                            @disabled($favoriteDictionaryCount === 0)
+                                        >
+                                            <span class="remainder-dictionary-item__main">
+                                                <span class="remainder-dictionary-item__name">{{ $favoriteDictionary['name'] }}</span>
+                                                <span class="remainder-dictionary-item__meta">
+                                                    {{ trans_choice('remainder.settings.dictionaries.words_count', $favoriteDictionary['count'], ['count' => $favoriteDictionary['count']]) }}
+                                                </span>
+                                            </span>
+                                            <span class="remainder-dictionary-item__status" aria-hidden="true"></span>
+                                        </button>
+                                    @endif
+
                                     @foreach ($remainderDictionaries as $dictionary)
                                         @php
                                             $dictionaryLanguageKey = $dictionary->language !== null

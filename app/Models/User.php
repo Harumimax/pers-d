@@ -59,6 +59,11 @@ class User extends Authenticatable
         return $this->hasMany(UserWordProgress::class);
     }
 
+    public function favoriteWords(): HasMany
+    {
+        return $this->hasMany(FavoriteWord::class);
+    }
+
     public function gameSessions(): HasMany
     {
         return $this->hasMany(GameSession::class);
