@@ -1,7 +1,7 @@
 @extends('layouts.profile', ['activeNav' => 'translator'])
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/translator.css') }}">
+    <link rel="stylesheet" href="{{ \App\Support\VersionedAsset::url('css/translator.css') }}">
 @endpush
 
 @section('content')

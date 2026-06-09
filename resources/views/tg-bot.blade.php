@@ -1,8 +1,8 @@
 @extends('layouts.profile', ['activeNav' => 'tg-bot'])
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/dictionaries.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/tg-bot.css') }}">
+    <link rel="stylesheet" href="{{ \App\Support\VersionedAsset::url('css/dictionaries.css') }}">
+    <link rel="stylesheet" href="{{ \App\Support\VersionedAsset::url('css/tg-bot.css') }}">
 @endpush
 
 @section('content')

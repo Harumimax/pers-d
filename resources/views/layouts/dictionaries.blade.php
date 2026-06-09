@@ -12,10 +12,10 @@
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-        <link rel="stylesheet" href="{{ asset('css/welcome.css') }}">
-        <link rel="stylesheet" href="{{ asset('css/dictionaries.css') }}">
-        <link rel="stylesheet" href="{{ asset('css/dictionary-show.css') }}">
-        <link rel="stylesheet" href="{{ asset('css/footer.css') }}">
+        <link rel="stylesheet" href="{{ \App\Support\VersionedAsset::url('css/welcome.css') }}">
+        <link rel="stylesheet" href="{{ \App\Support\VersionedAsset::url('css/dictionaries.css') }}">
+        <link rel="stylesheet" href="{{ \App\Support\VersionedAsset::url('css/dictionary-show.css') }}">
+        <link rel="stylesheet" href="{{ \App\Support\VersionedAsset::url('css/footer.css') }}">
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles

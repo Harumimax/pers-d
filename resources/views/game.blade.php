@@ -1,7 +1,7 @@
 @extends('layouts.profile', ['activeNav' => 'game'])
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/game.css') }}">
+    <link rel="stylesheet" href="{{ \App\Support\VersionedAsset::url('css/game.css') }}">
 @endpush
 
 @section('content')

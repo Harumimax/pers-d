@@ -1,7 +1,7 @@
 @extends('layouts.profile', ['activeNav' => 'remainder'])
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/remainder.css') }}">
+    <link rel="stylesheet" href="{{ \App\Support\VersionedAsset::url('css/remainder.css') }}">
 @endpush
 
 @section('content')

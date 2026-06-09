@@ -1,7 +1,7 @@
 @extends('layouts.profile', ['activeNav' => 'about'])
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/about.css') }}">
+    <link rel="stylesheet" href="{{ \App\Support\VersionedAsset::url('css/about.css') }}">
 @endpush
 
 @section('content')
