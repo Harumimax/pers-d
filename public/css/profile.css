@@ -139,6 +139,11 @@
     display: none !important;
 }
 
+.profile-statistics-heading {
+    display: flex;
+    align-items: center;
+}
+
 .profile-title-toggle {
     width: 100%;
     display: flex;
@@ -188,6 +193,71 @@
 .profile-statistics-card {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.96) 100%);
     box-shadow: 0 14px 36px rgba(15, 23, 42, 0.05);
+}
+
+.profile-statistics-highlights {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.profile-stat-card {
+    padding: 22px 20px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 18px;
+    background:
+        radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 42%),
+        linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.profile-stat-card__value {
+    margin: 0;
+    font-size: 2.7rem;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    color: var(--text-color);
+}
+
+.profile-stat-card__label {
+    margin: 14px 0 0;
+    font-size: 0.98rem;
+    line-height: 1.45;
+    font-weight: 700;
+    color: var(--muted-color);
+}
+
+.profile-statistics-advanced {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.profile-advanced-toggle {
+    width: 100%;
+    min-height: 52px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 0 18px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--text-color);
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.profile-advanced-toggle:hover,
+.profile-advanced-toggle:focus-visible {
+    border-color: rgba(30, 58, 138, 0.26);
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.08);
+    outline: none;
 }
 
 .profile-card--danger {
@@ -491,6 +561,10 @@
         font-size: 2.3rem;
     }
 
+    .profile-statistics-highlights {
+        grid-template-columns: 1fr;
+    }
+
     .profile-title-toggle {
         gap: 14px;
     }
@@ -575,6 +649,18 @@
     .profile-title-toggle__icon {
         width: 22px;
         height: 22px;
+    }
+
+    .profile-stat-card {
+        padding: 18px 16px;
+    }
+
+    .profile-stat-card__value {
+        font-size: 2.25rem;
+    }
+
+    .profile-advanced-toggle {
+        padding: 0 16px;
     }
 
     .profile-section__title {

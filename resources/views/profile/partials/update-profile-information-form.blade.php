@@ -23,7 +23,6 @@
                 class="profile-input"
                 value="{{ old('name', $user->name) }}"
                 required
-                autofocus
                 autocomplete="name"
             >
             <x-input-error class="profile-error" :messages="$errors->get('name')" />

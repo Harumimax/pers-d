@@ -2,8 +2,16 @@
 
 return [
     'statistics' => [
-        'title' => 'Remainder Statistic',
+        'title' => 'Learning Statistics',
+        'advanced_button' => 'Advanced Statistics',
+        'cards' => [
+            'accuracy' => 'Accuracy',
+            'words_practiced' => 'Words Practiced',
+            'sessions_completed' => 'Sessions Completed',
+        ],
         'rows' => [
+            'total_dictionaries' => 'Total dictionaries you own',
+            'total_dictionary_words' => 'Total words added to your dictionaries',
             'completed_sessions' => 'Completed sessions',
             'first_completed_session' => 'First completed session',
             'last_completed_session' => 'Last completed session',

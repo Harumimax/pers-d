@@ -4,6 +4,7 @@ namespace App\Services\Profile;
 
 use App\Models\GameSession;
 use App\Models\TelegramGameRun;
+use App\Models\UserDictionary;
 use Illuminate\Support\Facades\DB;
 
 class RemainderStatisticsService
@@ -63,12 +64,23 @@ class RemainderStatisticsService
             ? round(($correctAnswers / $totalWords) * 100, 1)
             : null;
 
+        $totalOwnedDictionaries = UserDictionary::query()
+            ->where('user_id', $userId)
+            ->count();
+
+        $totalOwnedDictionaryWords = DB::table('user_dictionary_word')
+            ->join('user_dictionaries', 'user_dictionaries.id', '=', 'user_dictionary_word.user_dictionary_id')
+            ->where('user_dictionaries.user_id', $userId)
+            ->count();
+
         return [
             'sessions_count' => $sessionsCount,
             'first_finished_at' => $this->minDateTime($summary?->first_finished_at, $telegramSummary?->first_finished_at),
             'last_finished_at' => $this->maxDateTime($summary?->last_finished_at, $telegramSummary?->last_finished_at),
             'preferred_mode' => $this->preferredModeLabel($finishedSessionsQuery, $userId, $sessionsCount),
             'preferred_direction' => $this->preferredDirectionLabel($finishedSessionsQuery, $userId, $sessionsCount),
+            'total_dictionaries' => $totalOwnedDictionaries,
+            'total_dictionary_words' => $totalOwnedDictionaryWords,
             'total_words' => $totalWords,
             'incorrect_answers' => $incorrectAnswers,
             'correct_answers' => $correctAnswers,
@@ -197,6 +209,8 @@ class RemainderStatisticsService
             'last_finished_at' => null,
             'preferred_mode' => null,
             'preferred_direction' => null,
+            'total_dictionaries' => 0,
+            'total_dictionary_words' => 0,
             'total_words' => 0,
             'incorrect_answers' => 0,
             'correct_answers' => 0,

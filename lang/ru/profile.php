@@ -2,8 +2,16 @@
 
 return [
     'statistics' => [
-        'title' => 'Статистика Remainder',
+        'title' => 'Статистика обучения',
+        'advanced_button' => 'Расширенная статистика',
+        'cards' => [
+            'accuracy' => 'Точность ответов',
+            'words_practiced' => 'Слов пройдено',
+            'sessions_completed' => 'Сессий завершено',
+        ],
         'rows' => [
+            'total_dictionaries' => 'Всего ваших словарей',
+            'total_dictionary_words' => 'Всего добавлено слов в ваши словари',
             'completed_sessions' => 'Завершённые сессии',
             'first_completed_session' => 'Первая завершённая сессия',
             'last_completed_session' => 'Последняя завершённая сессия',

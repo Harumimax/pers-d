@@ -720,6 +720,49 @@ class ProfileTest extends TestCase
         $user = User::factory()->create();
         $otherUser = User::factory()->create();
 
+        $firstDictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English Core',
+            'language' => 'English',
+        ]);
+
+        $secondDictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'Spanish Travel',
+            'language' => 'Spanish',
+        ]);
+
+        $otherDictionary = UserDictionary::create([
+            'user_id' => $otherUser->id,
+            'name' => 'Other Dictionary',
+            'language' => 'German',
+        ]);
+
+        $sharedWord = Word::create([
+            'word' => 'apple',
+            'translation' => 'яблоко',
+            'part_of_speech' => 'noun',
+            'comment' => null,
+        ]);
+
+        $secondWord = Word::create([
+            'word' => 'book',
+            'translation' => 'книга',
+            'part_of_speech' => 'noun',
+            'comment' => null,
+        ]);
+
+        $thirdWord = Word::create([
+            'word' => 'casa',
+            'translation' => 'дом',
+            'part_of_speech' => 'noun',
+            'comment' => null,
+        ]);
+
+        $firstDictionary->words()->attach([$sharedWord->id, $secondWord->id]);
+        $secondDictionary->words()->attach($thirdWord->id);
+        $otherDictionary->words()->attach($sharedWord->id);
+
         GameSession::create([
             'user_id' => $user->id,
             'mode' => GameSession::MODE_MANUAL,
@@ -829,7 +872,15 @@ class ProfileTest extends TestCase
         $this->actingAs($user)
             ->get('/profile')
             ->assertOk()
-            ->assertSee('Remainder Statistic')
+            ->assertSee('Learning Statistics')
+            ->assertSee('Advanced Statistics')
+            ->assertSee('Accuracy')
+            ->assertSee('Words Practiced')
+            ->assertSee('Sessions Completed')
+            ->assertSee('Total dictionaries you own')
+            ->assertSee('Total words added to your dictionaries')
+            ->assertSee('2')
+            ->assertSee('3')
             ->assertSee('Completed sessions')
             ->assertSee('4')
             ->assertSee('01 Apr 2026')
