@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Services\AboutContact\AboutContactDeliveryServiceInterface;
+use App\Services\Examples\ExampleProviderInterface;
+use App\Services\Examples\TatoebaExampleProvider;
 use App\Services\AboutContact\NotiSendAboutContactDeliveryService;
 use App\Services\Translation\FailoverTextTranslationService;
 use App\Services\Translation\FailoverTranslationService;
@@ -23,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(AboutContactDeliveryServiceInterface::class, NotiSendAboutContactDeliveryService::class);
+        $this->app->bind(ExampleProviderInterface::class, TatoebaExampleProvider::class);
         $this->app->bind(TranslationServiceInterface::class, FailoverTranslationService::class);
         $this->app->bind(TextTranslationServiceInterface::class, FailoverTextTranslationService::class);
         $this->app->bind(TranslatorTextTranslationServiceInterface::class, TranslatorTextTranslationService::class);

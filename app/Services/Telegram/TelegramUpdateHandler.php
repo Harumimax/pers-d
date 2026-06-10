@@ -9,6 +9,7 @@ use App\Models\UserDictionary;
 use App\Services\Dictionaries\SaveDictionaryWordService;
 use App\Services\Dictionaries\UserDictionaryWordSearchService;
 use App\Services\Translation\TranslationServiceInterface;
+use App\Support\DictionaryLanguageCode;
 use App\Support\PartOfSpeechCatalog;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
@@ -20,11 +21,6 @@ class TelegramUpdateHandler
 {
     private const ADD_WORD_MAX_LENGTH = 50;
     private const TARGET_LANGUAGE = 'ru';
-    private const DICTIONARY_LANGUAGE_CODES = [
-        'English' => 'en',
-        'Spanish' => 'es',
-    ];
-
     public function __construct(
         private readonly TelegramBotService $bot,
         private readonly TelegramAuthStateStore $stateStore,
@@ -1162,9 +1158,7 @@ class TelegramUpdateHandler
 
     private function sourceLanguageCode(UserDictionary $dictionary): ?string
     {
-        $language = trim((string) $dictionary->language);
-
-        return self::DICTIONARY_LANGUAGE_CODES[$language] ?? null;
+        return DictionaryLanguageCode::fromDictionaryLanguage($dictionary->language);
     }
 
     private function extractChatId(array $message): ?string

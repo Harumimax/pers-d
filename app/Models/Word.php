@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Word extends Model
 {
@@ -46,6 +47,13 @@ class Word extends Model
     {
         return $this->hasMany(FavoriteWord::class, 'source_word_id')
             ->where('source_word_type', FavoriteWord::SOURCE_WORD_USER);
+    }
+
+    public function examples(): MorphMany
+    {
+        return $this->morphMany(WordExample::class, 'exampleable')
+            ->orderBy('sort_order')
+            ->orderBy('id');
     }
 
     public function scopeWithProgressForUser(Builder $query, User|int $user): Builder

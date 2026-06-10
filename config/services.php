@@ -68,4 +68,11 @@ return [
         'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
     ],
 
+    'tatoeba' => [
+        'base_url' => env('TATOEBA_BASE_URL', 'https://api.tatoeba.org'),
+        'timeout' => env('TATOEBA_TIMEOUT', 10),
+        'examples_per_word' => env('TATOEBA_EXAMPLES_PER_WORD', 3),
+        'requests_per_second' => env('TATOEBA_REQUESTS_PER_SECOND', 1),
+    ],
+
 ];

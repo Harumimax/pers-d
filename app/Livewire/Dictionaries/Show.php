@@ -5,16 +5,17 @@ namespace App\Livewire\Dictionaries;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
+use App\Services\Dictionaries\SaveDictionaryWordService;
 use App\Services\DictionarySubscriptions\DictionaryAccessService;
 use App\Services\Favorites\FavoriteWordsService;
 use App\Services\Navigation\HeaderNavigationService;
-use App\Support\PartOfSpeechCatalog;
 use App\Services\Translation\TranslationServiceInterface;
+use App\Support\DictionaryLanguageCode;
+use App\Support\PartOfSpeechCatalog;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
@@ -31,11 +32,6 @@ class Show extends Component
     private const TARGET_LANGUAGE = 'ru';
     private const CONTROL_CHARACTER_PATTERN = '/[\p{Cc}\p{Cf}]/u';
     private const ZERO_WIDTH_CHARACTER_PATTERN = '/[\x{200B}\x{200C}\x{200D}\x{2060}\x{FEFF}]/u';
-    private const DICTIONARY_LANGUAGE_CODES = [
-        'English' => 'en',
-        'Spanish' => 'es',
-    ];
-
     public UserDictionary $dictionary;
     public string $word = '';
     public string $partOfSpeech = '';
@@ -83,6 +79,7 @@ class Show extends Component
         $totalWordsCount = $this->dictionary->words()->count();
         $wordsQuery = $this->dictionary->words()
             ->select('words.*')
+            ->with('examples')
             ->withProgressForUser($user);
         $partOfSpeechOptions = $this->partOfSpeechOptions();
         $searchTerm = trim($this->search);
@@ -489,16 +486,13 @@ class Show extends Component
         string $translationValue,
         ?string $commentValue,
     ): void {
-        DB::transaction(function () use ($wordValue, $partOfSpeechValue, $translationValue, $commentValue): void {
-            $word = Word::create([
-                'word' => $wordValue,
-                'part_of_speech' => $partOfSpeechValue,
-                'translation' => $translationValue,
-                'comment' => $commentValue,
-            ]);
-
-            $this->dictionary->words()->attach($word->id);
-        });
+        app(SaveDictionaryWordService::class)->save(
+            $this->dictionary,
+            $wordValue,
+            $translationValue,
+            $partOfSpeechValue,
+            $commentValue,
+        );
     }
 
     private function sanitizeTextInput(?string $value): string
@@ -510,9 +504,7 @@ class Show extends Component
 
     private function sourceLanguageCode(): ?string
     {
-        $language = trim((string) $this->dictionary->language);
-
-        return self::DICTIONARY_LANGUAGE_CODES[$language] ?? null;
+        return DictionaryLanguageCode::fromDictionaryLanguage($this->dictionary->language);
     }
 
     private function assertCanManage(): void

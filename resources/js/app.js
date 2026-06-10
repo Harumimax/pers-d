@@ -227,12 +227,117 @@ const initializeWordPronunciation = () => {
     syncButtons();
 };
 
+const initializeWordExampleHints = () => {
+    const selector = '[data-word-example-trigger]';
+
+    const closeAll = (except = null) => {
+        document.querySelectorAll('.word-example-hint').forEach((container) => {
+            if (!(container instanceof HTMLElement) || container === except) {
+                return;
+            }
+
+            const trigger = container.querySelector('[data-word-example-trigger]');
+            const popover = container.querySelector('[data-word-example-popover]');
+
+            container.classList.remove('is-open');
+
+            if (trigger instanceof HTMLButtonElement) {
+                trigger.setAttribute('aria-expanded', 'false');
+            }
+
+            if (popover instanceof HTMLElement) {
+                popover.hidden = true;
+            }
+        });
+    };
+
+    const syncHints = () => {
+        document.querySelectorAll('.word-example-hint').forEach((container) => {
+            if (!(container instanceof HTMLElement)) {
+                return;
+            }
+
+            const popover = container.querySelector('[data-word-example-popover]');
+            const trigger = container.querySelector('[data-word-example-trigger]');
+
+            if (!(popover instanceof HTMLElement) || !(trigger instanceof HTMLButtonElement)) {
+                return;
+            }
+
+            const isOpen = container.classList.contains('is-open');
+            popover.hidden = !isOpen;
+            trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+    };
+
+    if (document.body.dataset.wordExampleHintsBound !== 'true') {
+        document.addEventListener('click', (event) => {
+            const trigger = event.target instanceof Element ? event.target.closest(selector) : null;
+
+            if (trigger instanceof HTMLButtonElement) {
+                event.preventDefault();
+
+                const container = trigger.closest('.word-example-hint');
+
+                if (!(container instanceof HTMLElement)) {
+                    return;
+                }
+
+                const willOpen = !container.classList.contains('is-open');
+                closeAll(willOpen ? container : null);
+                container.classList.toggle('is-open', willOpen);
+
+                const popover = container.querySelector('[data-word-example-popover]');
+
+                if (popover instanceof HTMLElement) {
+                    popover.hidden = !willOpen;
+                }
+
+                trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                return;
+            }
+
+            if (!(event.target instanceof Element) || !event.target.closest('.word-example-hint')) {
+                closeAll();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeAll();
+            }
+        });
+
+        document.addEventListener('livewire:init', () => {
+            if (typeof window.Livewire?.hook !== 'function') {
+                return;
+            }
+
+            window.Livewire.hook('morphed', () => {
+                syncHints();
+            });
+
+            window.Livewire.hook('commit', ({ succeed }) => {
+                succeed(() => {
+                    syncHints();
+                });
+            });
+        }, { once: true });
+
+        document.body.dataset.wordExampleHintsBound = 'true';
+    }
+
+    syncHints();
+};
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         initializeSiteHeader();
         initializeWordPronunciation();
+        initializeWordExampleHints();
     }, { once: true });
 } else {
     initializeSiteHeader();
     initializeWordPronunciation();
+    initializeWordExampleHints();
 }

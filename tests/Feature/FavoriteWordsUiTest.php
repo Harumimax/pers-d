@@ -43,11 +43,12 @@ class FavoriteWordsUiTest extends TestCase
 
         $word = Word::query()->create([
             'word' => 'apple',
-            'translation' => 'яблоко',
+            'translation' => 'Р РЋР РЏР В Р’В±Р В Р’В»Р В РЎвЂўР В РЎвЂќР В РЎвЂў',
             'part_of_speech' => 'noun',
         ]);
 
         $dictionary->words()->attach($word->id);
+
 
         FavoriteWord::query()->create([
             'user_id' => $user->id,
@@ -76,7 +77,7 @@ class FavoriteWordsUiTest extends TestCase
 
         $word = Word::query()->create([
             'word' => 'apple',
-            'translation' => 'яблоко',
+            'translation' => 'Р РЋР РЏР В Р’В±Р В Р’В»Р В РЎвЂўР В РЎвЂќР В РЎвЂў',
             'part_of_speech' => 'noun',
         ]);
 
@@ -103,7 +104,7 @@ class FavoriteWordsUiTest extends TestCase
         $word = ReadyDictionaryWord::factory()->create([
             'ready_dictionary_id' => $dictionary->id,
             'word' => 'airport',
-            'translation' => 'аэропорт',
+            'translation' => 'Р В Р’В°Р РЋР РЉР РЋР вЂљР В РЎвЂўР В РЎвЂ”Р В РЎвЂўР РЋР вЂљР РЋРІР‚С™',
             'part_of_speech' => 'noun',
         ]);
 
@@ -133,12 +134,19 @@ class FavoriteWordsUiTest extends TestCase
 
         $word = Word::query()->create([
             'word' => 'apple',
-            'translation' => 'яблоко',
+            'translation' => 'Р РЋР РЏР В Р’В±Р В Р’В»Р В РЎвЂўР В РЎвЂќР В РЎвЂў',
             'part_of_speech' => 'noun',
             'comment' => 'fruit',
         ]);
 
         $userDictionary->words()->attach($word->id);
+        $word->examples()->create([
+            'example_text' => 'I eat an apple every morning.',
+            'example_translation' => 'Р В Р вЂЎ Р В Р’ВµР В РЎВ Р РЋР РЏР В Р’В±Р В Р’В»Р В РЎвЂўР В РЎвЂќР В РЎвЂў Р В РЎвЂќР В Р’В°Р В Р’В¶Р В РўвЂР В РЎвЂўР В Р’Вµ Р РЋРЎвЂњР РЋРІР‚С™Р РЋР вЂљР В РЎвЂў.',
+            'sort_order' => 0,
+            'source' => 'tatoeba',
+            'source_external_id' => '101',
+        ]);
 
         $favorite = FavoriteWord::query()->create([
             'user_id' => $user->id,
@@ -154,6 +162,8 @@ class FavoriteWordsUiTest extends TestCase
             ->assertSee('Favorite Words')
             ->assertSee('apple')
             ->assertSee('English Core')
+            ->assertSee('I eat an apple every morning.')
+            ->assertSee('Р В Р вЂЎ Р В Р’ВµР В РЎВ Р РЋР РЏР В Р’В±Р В Р’В»Р В РЎвЂўР В РЎвЂќР В РЎвЂў Р В РЎвЂќР В Р’В°Р В Р’В¶Р В РўвЂР В РЎвЂўР В Р’Вµ Р РЋРЎвЂњР РЋРІР‚С™Р РЋР вЂљР В РЎвЂў.')
             ->assertSee(route('dictionaries.show', $userDictionary), false);
 
         Livewire::actingAs($user)
@@ -176,8 +186,17 @@ class FavoriteWordsUiTest extends TestCase
         $readyWord = ReadyDictionaryWord::factory()->create([
             'ready_dictionary_id' => $dictionary->id,
             'word' => 'airport',
-            'translation' => 'аэропорт',
+            'translation' => 'Р В Р’В°Р РЋР РЉР РЋР вЂљР В РЎвЂўР В РЎвЂ”Р В РЎвЂўР РЋР вЂљР РЋРІР‚С™',
             'part_of_speech' => 'noun',
+        ]);
+
+
+        $readyWord->examples()->create([
+            'example_text' => 'The airport is close to the city.',
+            'example_translation' => 'Аэропорт находится рядом с городом.',
+            'sort_order' => 0,
+            'source' => 'tatoeba',
+            'source_external_id' => '202',
         ]);
 
         FavoriteWord::query()->create([
@@ -193,6 +212,8 @@ class FavoriteWordsUiTest extends TestCase
             ->assertOk()
             ->assertSee('airport')
             ->assertSee('Ready Travel')
+            ->assertSee('The airport is close to the city.')
+            ->assertSee('Аэропорт находится рядом с городом.')
             ->assertSee(route('ready-dictionaries.show', $dictionary), false);
     }
 }

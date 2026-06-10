@@ -4,6 +4,7 @@ namespace App\Services\Dictionaries;
 
 use App\Models\User;
 use App\Models\Word;
+use App\Models\WordExample;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
@@ -34,7 +35,7 @@ class UserDictionaryWordSearchService
 
         $normalizedSearchTerm = mb_strtolower($searchTerm);
 
-        return Word::query()
+        $results = Word::query()
             ->withProgressForUser($user)
             ->join('user_dictionary_word', 'user_dictionary_word.word_id', '=', 'words.id')
             ->join('user_dictionaries', 'user_dictionaries.id', '=', 'user_dictionary_word.user_dictionary_id')
@@ -81,5 +82,28 @@ class UserDictionaryWordSearchService
                         : null,
                 ];
             });
+
+        $wordIds = $results
+            ->pluck('word_id')
+            ->map(static fn ($id): int => (int) $id)
+            ->filter(static fn (int $id): bool => $id > 0)
+            ->unique()
+            ->values();
+
+        $examplesByWordId = $wordIds->isEmpty()
+            ? collect()
+            : WordExample::query()
+                ->where('exampleable_type', Word::class)
+                ->whereIn('exampleable_id', $wordIds->all())
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->get()
+                ->groupBy('exampleable_id');
+
+        return $results->map(function (object $result) use ($examplesByWordId): object {
+            $result->examples = $examplesByWordId->get($result->word_id) ?? collect();
+
+            return $result;
+        });
     }
 }

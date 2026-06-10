@@ -43,7 +43,7 @@ class Show extends Component
     {
         $user = Auth::user();
         $totalWordsCount = $this->readyDictionary->words()->count();
-        $wordsQuery = $this->readyDictionary->words();
+        $wordsQuery = $this->readyDictionary->words()->with('examples');
         $searchTerm = trim($this->search);
         $normalizedSearchTerm = mb_strtolower($searchTerm);
 
@@ -147,7 +147,12 @@ class Show extends Component
                 'part_of_speech' => $readyDictionaryWord->part_of_speech,
                 'translation' => $readyDictionaryWord->translation,
                 'comment' => $readyDictionaryWord->comment,
-            ]);
+                'source_language' => match (strtolower((string) $this->readyDictionary->language)) {
+                    'english' => 'en',
+                    'spanish' => 'es',
+                    default => null,
+                },
+            ], $readyDictionaryWord);
         } catch (Throwable) {
             $this->showTransferError();
 

@@ -475,10 +475,93 @@
     min-width: 0;
 }
 
+.word-list-main-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 100%;
+}
+
 .word-list-main {
     font-size: 0.94rem;
     font-weight: 700;
     letter-spacing: -0.02em;
+    color: var(--text-color);
+}
+
+.word-example-hint {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+.word-example-hint__trigger {
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(14, 165, 233, 0.12);
+    color: #0369a1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-size: 0.95rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.word-example-hint__trigger:hover {
+    background: rgba(14, 165, 233, 0.2);
+    color: #075985;
+}
+
+.word-example-hint__trigger:focus-visible {
+    outline: 2px solid rgba(14, 165, 233, 0.35);
+    outline-offset: 2px;
+}
+
+.word-example-hint__popover {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    z-index: 35;
+    display: none;
+    width: min(320px, 70vw);
+    padding: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.16);
+}
+
+.word-example-hint:hover .word-example-hint__popover,
+.word-example-hint:focus-within .word-example-hint__popover,
+.word-example-hint.is-open .word-example-hint__popover {
+    display: block;
+}
+
+.word-example-hint__item + .word-example-hint__item {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.word-example-hint__label {
+    margin: 0 0 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted-color);
+}
+
+.word-example-hint__text {
+    margin: 0;
+    font-size: 0.86rem;
+    line-height: 1.45;
     color: var(--text-color);
 }
 
@@ -1254,6 +1337,12 @@ html.speech-synthesis-unsupported .word-list-pronounce-cell {
     .word-list-mobile-card .word-list-comment {
         font-size: 0.82rem;
         line-height: 1.35;
+    }
+
+    .word-example-hint__popover {
+        left: 50%;
+        width: min(300px, calc(100vw - 48px));
+        transform: translateX(-50%);
     }
 
     .word-list-mobile-card__actions {

@@ -8,6 +8,7 @@ use App\Services\Favorites\FavoriteWordsService;
 use App\Services\Navigation\HeaderNavigationService;
 use App\Support\PartOfSpeechCatalog;
 use Illuminate\Contracts\View\View;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -61,8 +62,14 @@ class Favorites extends Component
             $itemsQuery->orderByDesc('favorite_words.created_at');
         }
 
+        /** @var LengthAwarePaginator $favoriteWords */
+        $favoriteWords = $itemsQuery->paginate(20);
+        $favoriteWords->setCollection(
+            $favoriteWordsService->attachExamplesToFavoritesPageItems($favoriteWords->getCollection())
+        );
+
         return view('livewire.dictionaries.favorites', [
-            'favoriteWords' => $itemsQuery->paginate(20),
+            'favoriteWords' => $favoriteWords,
             'totalWordsCount' => $totalWordsCount,
             'partOfSpeechFilterOptions' => PartOfSpeechCatalog::dictionaryFilterLabels(),
             'partOfSpeechDisplayMap' => PartOfSpeechCatalog::labels(),

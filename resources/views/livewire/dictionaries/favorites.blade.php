@@ -79,7 +79,10 @@
                                 @endphp
                                 <tr wire:key="favorite-word-row-{{ $favoriteWord->favorite_id }}">
                                     <td>
-                                        <div class="word-list-main">{{ $favoriteWord->word }}</div>
+                                        <div class="word-list-main-row">
+                                            <div class="word-list-main">{{ $favoriteWord->word }}</div>
+                                            <x-word-example-hint :examples="$favoriteWord->examples ?? collect()" :word="$favoriteWord->word" />
+                                        </div>
                                         <div class="word-list-meta">
                                             {{ $favoriteWord->source_dictionary_name }}
                                             &middot;
@@ -161,6 +164,7 @@
                                 <div class="word-list-word-content">
                                     <div class="word-list-mobile-card__title-line">
                                         <span class="word-list-main">{{ $favoriteWord->word }}</span>
+                                        <x-word-example-hint :examples="$favoriteWord->examples ?? collect()" :word="$favoriteWord->word" />
                                         @if ($pronounceLocale !== null)
                                             <button
                                                 type="button"

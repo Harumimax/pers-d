@@ -204,6 +204,12 @@ return [
                 'add_title' => 'Add to favorites',
                 'remove_title' => 'Remove from favorites',
             ],
+            'examples' => [
+                'title' => 'Usage examples',
+                'aria' => 'Show usage examples for word :word',
+                'example_label' => 'Example',
+                'translation_label' => 'Translation',
+            ],
         ],
     ],
 ];

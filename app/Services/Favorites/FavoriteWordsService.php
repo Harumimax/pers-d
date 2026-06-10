@@ -8,6 +8,7 @@ use App\Models\ReadyDictionaryWord;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
+use App\Models\WordExample;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -175,6 +176,59 @@ class FavoriteWordsService
     public function favoritesPageQuery(User|int $user): Builder
     {
         return $this->favoriteWordEntriesQuery($user);
+    }
+
+    /**
+     * @param  Collection<int, object>  $items
+     * @return Collection<int, object>
+     */
+    public function attachExamplesToFavoritesPageItems(Collection $items): Collection
+    {
+        $userWordIds = $items
+            ->where('source_word_type', FavoriteWord::SOURCE_WORD_USER)
+            ->pluck('source_word_id')
+            ->map(static fn ($id): int => (int) $id)
+            ->filter(static fn (int $id): bool => $id > 0)
+            ->unique()
+            ->values();
+
+        $readyWordIds = $items
+            ->where('source_word_type', FavoriteWord::SOURCE_WORD_READY)
+            ->pluck('source_word_id')
+            ->map(static fn ($id): int => (int) $id)
+            ->filter(static fn (int $id): bool => $id > 0)
+            ->unique()
+            ->values();
+
+        $userExamples = $userWordIds->isEmpty()
+            ? collect()
+            : WordExample::query()
+                ->where('exampleable_type', Word::class)
+                ->whereIn('exampleable_id', $userWordIds->all())
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->get()
+                ->groupBy('exampleable_id');
+
+        $readyExamples = $readyWordIds->isEmpty()
+            ? collect()
+            : WordExample::query()
+                ->where('exampleable_type', ReadyDictionaryWord::class)
+                ->whereIn('exampleable_id', $readyWordIds->all())
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->get()
+                ->groupBy('exampleable_id');
+
+        return $items->map(function (object $item) use ($userExamples, $readyExamples): object {
+            $examples = $item->source_word_type === FavoriteWord::SOURCE_WORD_READY
+                ? ($readyExamples->get((int) $item->source_word_id) ?? collect())
+                : ($userExamples->get((int) $item->source_word_id) ?? collect());
+
+            $item->examples = $examples;
+
+            return $item;
+        });
     }
 
     /**

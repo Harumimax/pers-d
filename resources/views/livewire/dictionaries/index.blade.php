@@ -153,7 +153,10 @@
                                         </span>
 
                                         <div class="word-list-word-content">
-                                            <div class="word-list-main">{{ $searchResult->word }}</div>
+                                            <div class="word-list-main-row">
+                                                <div class="word-list-main">{{ $searchResult->word }}</div>
+                                                <x-word-example-hint :examples="$searchResult->examples ?? collect()" :word="$searchResult->word" />
+                                            </div>
                                             <div class="word-list-meta">
                                                 {{ $searchResult->dictionary_name }}
                                                 &middot;
@@ -236,6 +239,7 @@
                                 <div class="word-list-word-content">
                                     <div class="word-list-mobile-card__title-line">
                                         <span class="word-list-main">{{ $searchResult->word }}</span>
+                                        <x-word-example-hint :examples="$searchResult->examples ?? collect()" :word="$searchResult->word" />
                                         @if ($pronounceLocale !== null)
                                             <button
                                                 type="button"

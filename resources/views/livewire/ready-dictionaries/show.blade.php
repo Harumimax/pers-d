@@ -91,7 +91,10 @@
                                 @endphp
                                 <tr wire:key="ready-word-row-{{ $wordItem->id }}">
                                     <td>
-                                        <div class="word-list-main">{{ $wordItem->word }}</div>
+                                        <div class="word-list-main-row">
+                                            <div class="word-list-main">{{ $wordItem->word }}</div>
+                                            <x-word-example-hint :examples="$wordItem->examples" :word="$wordItem->word" />
+                                        </div>
                                         <div class="word-list-meta">
                                             {{ $dictionaryLanguageLabel }}
                                             &middot;
@@ -198,6 +201,7 @@
                                 <div class="word-list-word-content">
                                     <div class="word-list-mobile-card__title-line">
                                         <span class="word-list-main">{{ $wordItem->word }}</span>
+                                        <x-word-example-hint :examples="$wordItem->examples" :word="$wordItem->word" />
                                         @if ($pronounceLocale !== null)
                                             <button
                                                 type="button"

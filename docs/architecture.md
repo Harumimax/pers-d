@@ -8,6 +8,7 @@
   - auth/profile/about/remainder settings pages use classic Laravel controllers + Blade views
   - active game play is rendered through an embedded Livewire component inside a Blade page
 - Translation integration is isolated behind a service abstraction and is not called directly from Blade or controllers
+- Stored usage examples for words are isolated behind a dedicated example-provider abstraction and persisted locally instead of being requested on every UI hover
 
 ## Main Layers
 
@@ -140,6 +141,10 @@
 - `App\Services\Dictionaries\SaveDictionaryWordService`
   - persists one new `Word` and attaches it to the chosen personal dictionary in a transaction
   - is reusable from non-web entry points such as Telegram bot dialogs
+- `WordExample`
+  - stores persisted usage examples for both personal dictionary words and ready dictionary words
+  - uses a polymorphic `exampleable` relation so examples are not duplicated across two schema variants
+  - keeps source metadata from the external example provider for future refresh/backfill scripts
 - `DictionarySubscription`
   - links one subscriber user to one owner dictionary in read-only mode
 - `DictionaryShareInvitation`
@@ -175,6 +180,17 @@
   - validates that the source word really belongs to the chosen source dictionary
   - provides the count and virtual dictionary summary for the virtual `Favorite Words` system entry
   - exposes favorite-word candidate queries so `Remainder`, Telegram random words, and Telegram interval review can treat favorites as a read-only word source without duplicating words
+- `App\Services\Examples\ExampleProviderInterface`
+  - defines the boundary for external example-sentence providers
+- `App\Services\Examples\TatoebaExampleProvider`
+  - fetches example sentence pairs from the public Tatoeba API
+  - normalizes the partner response into internal example DTOs
+  - keeps example sentences even when Tatoeba did not return a direct translation
+- `App\Services\Examples\ExampleEnrichmentService`
+  - wraps provider calls with safe failure handling and logging
+  - fills missing example translations through the existing text-translation abstraction
+  - stores normalized examples on `Word` and `ReadyDictionaryWord` through the shared polymorphic relation
+  - copies already stored examples when ready-dictionary words are transferred into user dictionaries so repeat partner calls are avoided
 - `App\Livewire\ReadyDictionaries\Show`
   - shows one developer-managed ready dictionary
   - lists ready dictionary words with pagination
@@ -242,6 +258,7 @@
 
 ### Services
 - Translation integration lives under `app/Services/Translation`
+- Example sentence integration lives under `app/Services/Examples`
 - Current translation abstraction:
   - `TranslationServiceInterface`
   - `FailoverTranslationService`
@@ -258,6 +275,10 @@
 - Translator page direct translation abstraction:
   - `TranslatorTextTranslationServiceInterface`
   - `TranslatorTextTranslationService`
+- Example sentence abstraction:
+  - `ExampleProviderInterface`
+  - `TatoebaExampleProvider`
+  - `ExampleEnrichmentService`
   - always calls `LibreTranslateTextTranslationService` directly
   - intentionally ignores the cached `libretranslate unhealthy` marker and never falls back to MyMemory for `/translator`
 - Interface text localization uses standard Laravel lang files plus application locale set by middleware
