@@ -31,7 +31,9 @@ class BackfillWordExamplesCommand extends Command
         }
 
         try {
-            $stats = $service->backfill($source, $limit);
+            $stats = $service->backfill($source, $limit, function (string $currentSource, string $word, int $processed): void {
+                $this->line("[{$processed}] {$currentSource}: {$word}");
+            });
         } catch (Throwable $exception) {
             $this->error($exception->getMessage());
 

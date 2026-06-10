@@ -50,6 +50,7 @@ class BackfillWordExamplesCommandTest extends TestCase
         ]);
 
         $this->artisan('words:backfill-examples', ['--source' => 'user'])
+            ->expectsOutputToContain('[1] user: apple')
             ->expectsOutputToContain('Backfill completed.')
             ->expectsOutputToContain('Processed: 1')
             ->expectsOutputToContain('Enriched: 1')
@@ -81,6 +82,7 @@ class BackfillWordExamplesCommandTest extends TestCase
         ]);
 
         $this->artisan('words:backfill-examples', ['--source' => 'ready'])
+            ->expectsOutputToContain('[1] ready:')
             ->expectsOutputToContain('Backfill completed.')
             ->assertExitCode(0);
 
@@ -118,6 +120,7 @@ class BackfillWordExamplesCommandTest extends TestCase
         $dictionary->words()->attach([$firstWord->id, $secondWord->id]);
 
         $this->artisan('words:backfill-examples', ['--source' => 'user', '--limit' => 1])
+            ->expectsOutputToContain('[1] user:')
             ->expectsOutputToContain('Processed: 1')
             ->assertExitCode(0);
 

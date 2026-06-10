@@ -25,11 +25,11 @@ class BackfillWordExamplesService
      *     skipped_without_examples:int
      * }
      */
-    public function backfill(string $source, int $limit = 0): array
+    public function backfill(string $source, int $limit = 0, ?callable $progress = null): array
     {
         return match ($source) {
-            'user' => $this->backfillUserWords($limit),
-            'ready' => $this->backfillReadyWords($limit),
+            'user' => $this->backfillUserWords($limit, $progress),
+            'ready' => $this->backfillReadyWords($limit, $progress),
             default => throw new \InvalidArgumentException("Unsupported backfill source [{$source}]."),
         };
     }
@@ -43,7 +43,7 @@ class BackfillWordExamplesService
      *     skipped_without_examples:int
      * }
      */
-    private function backfillUserWords(int $limit): array
+    private function backfillUserWords(int $limit, ?callable $progress): array
     {
         $stats = $this->emptyStats();
         $remaining = $limit > 0 ? $limit : PHP_INT_MAX;
@@ -55,7 +55,7 @@ class BackfillWordExamplesService
             ])
             ->whereHas('dictionaries', fn ($query) => $query->whereIn('language', ['English', 'Spanish']))
             ->orderBy('id')
-            ->chunkById(self::CHUNK_SIZE, function ($words) use (&$stats, &$remaining): bool {
+            ->chunkById(self::CHUNK_SIZE, function ($words) use (&$stats, &$remaining, $progress): bool {
                 foreach ($words as $word) {
                     if ($remaining <= 0) {
                         return false;
@@ -77,6 +77,9 @@ class BackfillWordExamplesService
 
                     $stats['processed']++;
                     $remaining--;
+                    if ($progress !== null) {
+                        $progress('user', (string) $word->word, $stats['processed']);
+                    }
 
                     $storedExamples = $this->exampleEnrichmentService->fetchAndStoreForWord(
                         $word,
@@ -107,7 +110,7 @@ class BackfillWordExamplesService
      *     skipped_without_examples:int
      * }
      */
-    private function backfillReadyWords(int $limit): array
+    private function backfillReadyWords(int $limit, ?callable $progress): array
     {
         $stats = $this->emptyStats();
         $remaining = $limit > 0 ? $limit : PHP_INT_MAX;
@@ -116,7 +119,7 @@ class BackfillWordExamplesService
             ->with(['readyDictionary:id,language', 'examples'])
             ->whereHas('readyDictionary', fn ($query) => $query->whereIn('language', ['English', 'Spanish']))
             ->orderBy('id')
-            ->chunkById(self::CHUNK_SIZE, function ($words) use (&$stats, &$remaining): bool {
+            ->chunkById(self::CHUNK_SIZE, function ($words) use (&$stats, &$remaining, $progress): bool {
                 foreach ($words as $word) {
                     if ($remaining <= 0) {
                         return false;
@@ -136,6 +139,9 @@ class BackfillWordExamplesService
 
                     $stats['processed']++;
                     $remaining--;
+                    if ($progress !== null) {
+                        $progress('ready', (string) $word->word, $stats['processed']);
+                    }
 
                     $storedExamples = $this->exampleEnrichmentService->fetchAndStoreForWord(
                         $word,
