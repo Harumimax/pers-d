@@ -279,6 +279,14 @@
   - `ExampleProviderInterface`
   - `TatoebaExampleProvider`
   - `ExampleEnrichmentService`
+  - `BackfillWordExamplesService`
+    - performs one-time or repeated backfill for already existing words
+    - processes either personal dictionary words or ready-dictionary words, based on the command source
+    - skips words that already have examples
+    - relies on the existing provider throttling to avoid sending too many requests per second to the external API
+- Console command:
+  - `words:backfill-examples --source=user|ready [--limit=N]`
+    - backfills persisted examples for existing words without touching words that already have saved examples
   - always calls `LibreTranslateTextTranslationService` directly
   - intentionally ignores the cached `libretranslate unhealthy` marker and never falls back to MyMemory for `/translator`
 - Interface text localization uses standard Laravel lang files plus application locale set by middleware
