@@ -354,6 +354,9 @@
                                     $pronounceLocale = match (strtolower($dictionary->language ?? '')) {
                                         'english' => 'en-US',
                                         'spanish' => 'es-ES',
+                                        'german' => 'de-DE',
+                                        'italian' => 'it-IT',
+                                        'portuguese' => 'pt-PT',
                                         default => null,
                                     };
                                 @endphp
@@ -533,6 +536,9 @@
                             $pronounceLocale = match (strtolower($dictionary->language ?? '')) {
                                 'english' => 'en-US',
                                 'spanish' => 'es-ES',
+                                'german' => 'de-DE',
+                                'italian' => 'it-IT',
+                                'portuguese' => 'pt-PT',
                                 default => null,
                             };
                         @endphp

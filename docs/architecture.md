@@ -1074,6 +1074,9 @@
 - At the moment dictionaries support:
   - `English`
   - `Spanish`
+  - `German`
+  - `Italian`
+  - `Portuguese`
 - Dictionary creation validates language against this fixed set
 - Ready dictionaries store `language` as required metadata and are filtered independently through `ReadyDictionaryCatalogService`
 
@@ -1151,6 +1154,9 @@
 - Current source language mapping:
   - `English` -> `en`
   - `Spanish` -> `es`
+  - `German` -> `de`
+  - `Italian` -> `it`
+  - `Portuguese` -> `pt`
 - Current target language is fixed:
   - `ru`
 

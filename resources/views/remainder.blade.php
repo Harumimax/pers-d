@@ -388,6 +388,9 @@
                                             <option value="all">{{ __('remainder.settings.dictionaries.language_filter.all') }}</option>
                                             <option value="English">{{ __('dictionaries.index.languages.english') }}</option>
                                             <option value="Spanish">{{ __('dictionaries.index.languages.spanish') }}</option>
+                                            <option value="German">{{ __('dictionaries.index.languages.german') }}</option>
+                                            <option value="Italian">{{ __('dictionaries.index.languages.italian') }}</option>
+                                            <option value="Portuguese">{{ __('dictionaries.index.languages.portuguese') }}</option>
                                         </select>
                                     </label>
                                 </div>

@@ -10,6 +10,9 @@ class DictionaryLanguageCode
     private const MAP = [
         'english' => 'en',
         'spanish' => 'es',
+        'german' => 'de',
+        'italian' => 'it',
+        'portuguese' => 'pt',
     ];
 
     public static function fromDictionaryLanguage(?string $language): ?string

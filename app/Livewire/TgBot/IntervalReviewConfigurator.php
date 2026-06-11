@@ -375,6 +375,9 @@ class IntervalReviewConfigurator extends Component
         return [
             ['value' => 'English', 'label' => __('dictionaries.index.languages.english')],
             ['value' => 'Spanish', 'label' => __('dictionaries.index.languages.spanish')],
+            ['value' => 'German', 'label' => __('dictionaries.index.languages.german')],
+            ['value' => 'Italian', 'label' => __('dictionaries.index.languages.italian')],
+            ['value' => 'Portuguese', 'label' => __('dictionaries.index.languages.portuguese')],
         ];
     }
 
@@ -387,6 +390,9 @@ class IntervalReviewConfigurator extends Component
             ['value' => 'all', 'label' => __('remainder.settings.dictionaries.language_filter.all')],
             ['value' => 'English', 'label' => __('dictionaries.index.languages.english')],
             ['value' => 'Spanish', 'label' => __('dictionaries.index.languages.spanish')],
+            ['value' => 'German', 'label' => __('dictionaries.index.languages.german')],
+            ['value' => 'Italian', 'label' => __('dictionaries.index.languages.italian')],
+            ['value' => 'Portuguese', 'label' => __('dictionaries.index.languages.portuguese')],
         ];
     }
 

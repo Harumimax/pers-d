@@ -17,6 +17,9 @@ class TatoebaExampleProvider implements ExampleProviderInterface
     private const LANGUAGE_CODES = [
         'en' => 'eng',
         'es' => 'spa',
+        'de' => 'deu',
+        'it' => 'ita',
+        'pt' => 'por',
         'ru' => 'rus',
     ];
 

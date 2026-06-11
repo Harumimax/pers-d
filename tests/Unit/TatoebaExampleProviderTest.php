@@ -90,6 +90,49 @@ class TatoebaExampleProviderTest extends TestCase
         $this->assertSame([], $examples);
     }
 
+    public function test_provider_supports_german_italian_and_portuguese_language_codes(): void
+    {
+        Http::fake([
+            'https://api.tatoeba.org/v1/sentences*' => Http::response([
+                'data' => [
+                    [
+                        'id' => 401,
+                        'text' => 'Hallo Welt.',
+                        'translations' => [
+                            [
+                                ['text' => 'Привет, мир.'],
+                            ],
+                        ],
+                    ],
+                ],
+            ]),
+        ]);
+
+        $provider = $this->app->make(TatoebaExampleProvider::class);
+
+        $provider->fetchExamples('hallo', 'de', 'ru', 1);
+        $provider->fetchExamples('ciao', 'it', 'ru', 1);
+        $provider->fetchExamples('ola', 'pt', 'ru', 1);
+
+        Http::assertSent(function (Request $request): bool {
+            return str_starts_with($request->url(), 'https://api.tatoeba.org/v1/sentences')
+                && $request['lang'] === 'deu'
+                && $request['trans:lang'] === 'rus';
+        });
+
+        Http::assertSent(function (Request $request): bool {
+            return str_starts_with($request->url(), 'https://api.tatoeba.org/v1/sentences')
+                && $request['lang'] === 'ita'
+                && $request['trans:lang'] === 'rus';
+        });
+
+        Http::assertSent(function (Request $request): bool {
+            return str_starts_with($request->url(), 'https://api.tatoeba.org/v1/sentences')
+                && $request['lang'] === 'por'
+                && $request['trans:lang'] === 'rus';
+        });
+    }
+
     public function test_provider_keeps_example_when_partner_translation_is_missing(): void
     {
         Http::fake([

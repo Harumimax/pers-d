@@ -27,7 +27,32 @@ class TranslatorPageTest extends TestCase
             ->get(route('translator.index'))
             ->assertOk()
             ->assertSee('Translate short texts inside WordKeeper.')
+            ->assertSee('DE')
+            ->assertSee('IT')
+            ->assertSee('PT')
             ->assertSeeInOrder(['TG bot', 'Translator', 'Profile']);
+    }
+
+    public function test_authenticated_user_can_translate_text_with_new_supported_languages(): void
+    {
+        $user = User::factory()->create();
+
+        $translator = Mockery::mock(TranslatorTextTranslationServiceInterface::class);
+        $translator->shouldReceive('translateText')
+            ->once()
+            ->with('Guten Morgen', 'de', 'pt')
+            ->andReturn('Bom dia');
+
+        $this->app->instance(TranslatorTextTranslationServiceInterface::class, $translator);
+
+        $this->actingAs($user)
+            ->post(route('translator.store'), [
+                'source_language' => 'de',
+                'target_language' => 'pt',
+                'text' => 'Guten Morgen',
+            ])
+            ->assertOk()
+            ->assertSee('Bom dia');
     }
 
     public function test_authenticated_user_can_translate_text(): void

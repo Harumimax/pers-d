@@ -23,7 +23,7 @@ class TranslateTextRequest extends FormRequest
 
     public function rules(): array
     {
-        $supportedLanguages = ['ru', 'en', 'es'];
+        $supportedLanguages = ['ru', 'en', 'es', 'de', 'it', 'pt'];
 
         return [
             'source_language' => ['required', 'string', Rule::in($supportedLanguages)],

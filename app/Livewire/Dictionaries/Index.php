@@ -70,7 +70,7 @@ class Index extends Component
             ],
             'language' => [
                 'required',
-                Rule::in(['English', 'Spanish']),
+                Rule::in(['English', 'Spanish', 'German', 'Italian', 'Portuguese']),
             ],
         ]);
 

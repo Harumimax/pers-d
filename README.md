@@ -22,6 +22,7 @@ Telegram bot: [https://t.me/WordKeeperBot_bot](https://t.me/WordKeeperBot_bot)
 - registration, login, logout, and localized interface in English and Russian;
 - personal dictionaries:
   - create, rename, browse, and delete;
+  - supported dictionary languages: English, Spanish, German, Italian, Portuguese;
   - search across all available dictionaries;
 - word management in owned dictionaries:
   - add words manually;
@@ -36,7 +37,7 @@ Telegram bot: [https://t.me/WordKeeperBot_bot](https://t.me/WordKeeperBot_bot)
 - text translator:
   - authenticated-only Translator page in the header;
   - translate short texts up to 4500 characters;
-  - choose RU / EN / SP direction before sending the request;
+  - choose RU / EN / SP / DE / IT / PT direction before sending the request;
 - dictionary sharing:
   - send dictionary subscription invitations by email;
   - accept invitations through a secure token flow;

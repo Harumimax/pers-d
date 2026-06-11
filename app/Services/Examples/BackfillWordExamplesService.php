@@ -12,6 +12,7 @@ class BackfillWordExamplesService
 {
     private const CHUNK_SIZE = 50;
     private const TARGET_LANGUAGE = 'ru';
+    private const SUPPORTED_DICTIONARY_LANGUAGES = ['English', 'Spanish', 'German', 'Italian', 'Portuguese'];
 
     public function __construct(
         private readonly ExampleEnrichmentService $exampleEnrichmentService,
@@ -85,7 +86,7 @@ class BackfillWordExamplesService
                 'examples',
             ])
             ->whereHas('dictionaries', function ($query) use ($dictionaryId): void {
-                $query->whereIn('language', ['English', 'Spanish']);
+                $query->whereIn('language', self::SUPPORTED_DICTIONARY_LANGUAGES);
 
                 if ($dictionaryId !== null) {
                     $query->where('user_dictionaries.id', $dictionaryId);
@@ -165,7 +166,7 @@ class BackfillWordExamplesService
         $query = ReadyDictionaryWord::query()
             ->with(['readyDictionary:id,language', 'examples'])
             ->whereHas('readyDictionary', function ($query) use ($dictionaryId): void {
-                $query->whereIn('language', ['English', 'Spanish']);
+                $query->whereIn('language', self::SUPPORTED_DICTIONARY_LANGUAGES);
 
                 if ($dictionaryId !== null) {
                     $query->where('ready_dictionaries.id', $dictionaryId);

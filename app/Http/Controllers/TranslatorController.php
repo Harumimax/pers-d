@@ -80,6 +80,9 @@ class TranslatorController extends Controller
                 ['value' => 'ru', 'label' => 'RU'],
                 ['value' => 'en', 'label' => 'EN'],
                 ['value' => 'es', 'label' => 'SP'],
+                ['value' => 'de', 'label' => 'DE'],
+                ['value' => 'it', 'label' => 'IT'],
+                ['value' => 'pt', 'label' => 'PT'],
             ],
         ] + $headerNavigationService->forUser($request->user()));
     }

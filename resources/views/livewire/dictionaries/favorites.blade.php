@@ -70,6 +70,9 @@
                                     $pronounceLocale = match (strtolower($favoriteWord->source_dictionary_language ?? '')) {
                                         'english' => 'en-US',
                                         'spanish' => 'es-ES',
+                                        'german' => 'de-DE',
+                                        'italian' => 'it-IT',
+                                        'portuguese' => 'pt-PT',
                                         default => null,
                                     };
                                     $languageKey = $favoriteWord->source_dictionary_language !== null
@@ -152,6 +155,9 @@
                             $pronounceLocale = match (strtolower($favoriteWord->source_dictionary_language ?? '')) {
                                 'english' => 'en-US',
                                 'spanish' => 'es-ES',
+                                'german' => 'de-DE',
+                                'italian' => 'it-IT',
+                                'portuguese' => 'pt-PT',
                                 default => null,
                             };
                             $languageKey = $favoriteWord->source_dictionary_language !== null

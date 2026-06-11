@@ -17,6 +17,9 @@ return [
         'languages' => [
             'english' => 'English',
             'spanish' => 'Spanish',
+            'german' => 'German',
+            'italian' => 'Italian',
+            'portuguese' => 'Portuguese',
             'not_specified' => 'Language not specified',
         ],
         'actions' => [

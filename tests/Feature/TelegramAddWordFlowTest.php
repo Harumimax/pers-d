@@ -138,6 +138,55 @@ class TelegramAddWordFlowTest extends TestCase
             && str_contains((string) $request['text'], 'успешно сохранено в Travel English'));
     }
 
+    public function test_add_word_flow_uses_german_source_language_code_for_german_dictionary(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true], 200),
+        ]);
+
+        $translationService = new class implements TranslationServiceInterface
+        {
+            /** @var array<int, array{text:string,sourceLanguage:string,targetLanguage:string}> */
+            public array $calls = [];
+
+            public function translate(string $text, string $sourceLanguage, string $targetLanguage): TranslationResult
+            {
+                $this->calls[] = compact('text', 'sourceLanguage', 'targetLanguage');
+
+                return new TranslationResult([
+                    new TranslationSuggestion('привет', 'top result'),
+                    new TranslationSuggestion('здравствуй', 'alternative'),
+                ]);
+            }
+        };
+
+        $this->app->instance(TranslationServiceInterface::class, $translationService);
+
+        $user = User::factory()->create([
+            'tg_chat_id' => '1001',
+            'tg_linked_at' => now(),
+        ]);
+
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'German words',
+            'language' => 'German',
+        ]);
+
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('Добавить слово', 41001))
+            ->assertOk();
+        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("tg_add_word:dictionary:{$dictionary->id}", 41002, 'cb-dict-de'))
+            ->assertOk();
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('hallo', 41003))
+            ->assertOk();
+
+        $this->assertSame([[
+            'text' => 'hallo',
+            'sourceLanguage' => 'de',
+            'targetLanguage' => 'ru',
+        ]], $translationService->calls);
+    }
+
     public function test_user_cannot_pick_foreign_dictionary_in_add_word_flow(): void
     {
         Http::fake([

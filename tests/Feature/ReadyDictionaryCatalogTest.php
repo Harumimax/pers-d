@@ -178,6 +178,30 @@ class ReadyDictionaryCatalogTest extends TestCase
         ], $catalog['selectedFilters']);
     }
 
+    public function test_catalog_service_exposes_new_supported_languages_in_filter_options(): void
+    {
+        ReadyDictionary::factory()->create([
+            'name' => 'German nouns',
+            'language' => 'German',
+        ]);
+
+        ReadyDictionary::factory()->create([
+            'name' => 'Italian verbs',
+            'language' => 'Italian',
+        ]);
+
+        ReadyDictionary::factory()->create([
+            'name' => 'Portuguese basics',
+            'language' => 'Portuguese',
+        ]);
+
+        $catalog = app(ReadyDictionaryCatalogService::class)->catalog();
+
+        $this->assertContains('German', $catalog['filterOptions']['languages']);
+        $this->assertContains('Italian', $catalog['filterOptions']['languages']);
+        $this->assertContains('Portuguese', $catalog['filterOptions']['languages']);
+    }
+
     public function test_catalog_service_filters_by_language_level_and_part_of_speech(): void
     {
         $matchingDictionary = ReadyDictionary::factory()->create([

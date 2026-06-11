@@ -56,6 +56,45 @@ class TgBotIntervalReviewConfiguratorTest extends TestCase
             ->assertDontSee('Ready English');
     }
 
+    public function test_component_supports_german_italian_and_portuguese_language_selection(): void
+    {
+        $user = User::factory()->create();
+
+        UserDictionary::query()->create([
+            'user_id' => $user->id,
+            'name' => 'German Core',
+            'language' => 'German',
+        ]);
+
+        UserDictionary::query()->create([
+            'user_id' => $user->id,
+            'name' => 'Italian Travel',
+            'language' => 'Italian',
+        ]);
+
+        ReadyDictionary::factory()->create([
+            'name' => 'Ready Portuguese',
+            'language' => 'Portuguese',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(IntervalReviewConfigurator::class, ['timezone' => 'Europe/Moscow'])
+            ->assertSee('German')
+            ->assertSee('Italian')
+            ->assertSee('Portuguese')
+            ->set('selectedLanguage', 'German')
+            ->assertSee('German Core')
+            ->assertDontSee('Italian Travel')
+            ->assertDontSee('Ready Portuguese')
+            ->set('selectedLanguage', 'Italian')
+            ->assertSee('Italian Travel')
+            ->assertDontSee('German Core')
+            ->set('selectedLanguage', 'Portuguese')
+            ->assertSee('Ready Portuguese')
+            ->assertDontSee('German Core')
+            ->assertDontSee('Italian Travel');
+    }
+
     public function test_component_opens_dictionary_modal_and_filters_words(): void
     {
         $user = User::factory()->create();

@@ -164,6 +164,24 @@ class UserDictionaryCrudTest extends TestCase
         ]);
     }
 
+    public function test_user_can_create_dictionary_with_new_supported_language(): void
+    {
+        $user = User::factory()->create();
+
+        Livewire::actingAs($user)
+            ->test(Index::class)
+            ->set('name', 'German Basics')
+            ->set('language', 'German')
+            ->call('createDictionary')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('user_dictionaries', [
+            'user_id' => $user->id,
+            'name' => 'German Basics',
+            'language' => 'German',
+        ]);
+    }
+
     public function test_user_can_rename_dictionary_through_livewire_interface(): void
     {
         $user = User::factory()->create();

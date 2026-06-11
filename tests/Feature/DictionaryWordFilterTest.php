@@ -8,6 +8,7 @@ use App\Models\UserDictionary;
 use App\Models\UserWordProgress;
 use App\Models\Word;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -577,6 +578,38 @@ class DictionaryWordFilterTest extends TestCase
             ->assertSet('autoTranslationError', 'Translation is currently unavailable. Please switch to Enter manually.')
             ->assertSee('Translation is currently unavailable. Please switch to Enter manually.')
             ->assertSee('Switch to Enter manually');
+    }
+
+    public function test_translate_automatically_uses_italian_source_language_code(): void
+    {
+        Http::fake([
+            'http://localhost:5000/translate' => Http::response([
+                'translatedText' => 'привет',
+                'alternatives' => ['здравствуй'],
+            ]),
+        ]);
+
+        $user = User::factory()->create();
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'Italian',
+            'language' => 'Italian',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['dictionary' => $dictionary])
+            ->set('showCreateForm', true)
+            ->set('autoWord', 'ciao')
+            ->call('translateAutomatically')
+            ->assertSet('autoTranslated', true)
+            ->assertSet('autoTranslation', 'привет');
+
+        Http::assertSent(function (Request $request): bool {
+            return $request->url() === 'http://localhost:5000/translate'
+                && $request['q'] === 'ciao'
+                && $request['source'] === 'it'
+                && $request['target'] === 'ru';
+        });
     }
 
     public function test_user_can_switch_selected_auto_translation_chip_by_index(): void

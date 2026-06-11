@@ -48,6 +48,9 @@
                         <option value="" disabled>{{ __('dictionaries.index.language_prompt') }}</option>
                         <option value="English">{{ __('dictionaries.index.languages.english') }}</option>
                         <option value="Spanish">{{ __('dictionaries.index.languages.spanish') }}</option>
+                        <option value="German">{{ __('dictionaries.index.languages.german') }}</option>
+                        <option value="Italian">{{ __('dictionaries.index.languages.italian') }}</option>
+                        <option value="Portuguese">{{ __('dictionaries.index.languages.portuguese') }}</option>
                     </select>
                     @error('language')
                         <p class="dictionaries-error">{{ $message }}</p>
@@ -137,6 +140,9 @@
                                 $pronounceLocale = match (strtolower($searchResult->dictionary_language ?? '')) {
                                     'english' => 'en-US',
                                     'spanish' => 'es-ES',
+                                    'german' => 'de-DE',
+                                    'italian' => 'it-IT',
+                                    'portuguese' => 'pt-PT',
                                     default => null,
                                 };
                             @endphp
@@ -221,6 +227,9 @@
                         $pronounceLocale = match (strtolower($searchResult->dictionary_language ?? '')) {
                             'english' => 'en-US',
                             'spanish' => 'es-ES',
+                            'german' => 'de-DE',
+                            'italian' => 'it-IT',
+                            'portuguese' => 'pt-PT',
                             default => null,
                         };
                     @endphp

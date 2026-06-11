@@ -66,6 +66,39 @@ class BackfillWordExamplesCommandTest extends TestCase
         ]);
     }
 
+    public function test_command_backfills_examples_for_italian_user_dictionary_words(): void
+    {
+        $this->bindFakeExampleServices();
+
+        $user = User::factory()->create();
+        $dictionary = UserDictionary::query()->create([
+            'user_id' => $user->id,
+            'name' => 'Italian Core',
+            'language' => 'Italian',
+        ]);
+
+        $word = Word::query()->create([
+            'word' => 'ciao',
+            'translation' => 'hello',
+            'part_of_speech' => 'interjection',
+        ]);
+
+        $dictionary->words()->attach([$word->id]);
+
+        $this->artisan('words:backfill-examples', ['--source' => 'user'])
+            ->expectsOutputToContain('[1] user: ciao')
+            ->expectsOutputToContain('Processed: 1')
+            ->expectsOutputToContain('Enriched: 1')
+            ->assertExitCode(0);
+
+        $this->assertDatabaseHas('word_examples', [
+            'exampleable_type' => Word::class,
+            'exampleable_id' => $word->id,
+            'example_text' => 'Ciao, come stai?',
+            'example_translation' => 'Hello, how are you in Russian.',
+        ]);
+    }
+
     public function test_command_backfills_examples_for_ready_words_only(): void
     {
         $this->bindFakeExampleServices();
@@ -280,6 +313,14 @@ class BackfillWordExamplesCommandTest extends TestCase
                             'The station is busy today in Russian.',
                             'tatoeba',
                             '404',
+                        ),
+                    ],
+                    'ciao' => [
+                        new WordExampleData(
+                            'Ciao, come stai?',
+                            'Hello, how are you in Russian.',
+                            'tatoeba',
+                            '505',
                         ),
                     ],
                     'book' => [

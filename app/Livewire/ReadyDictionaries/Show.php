@@ -9,6 +9,7 @@ use App\Models\UserDictionary;
 use App\Services\Dictionaries\CopyWordToUserDictionaryService;
 use App\Services\Favorites\FavoriteWordsService;
 use App\Services\Navigation\HeaderNavigationService;
+use App\Support\DictionaryLanguageCode;
 use App\Support\PartOfSpeechCatalog;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -147,11 +148,7 @@ class Show extends Component
                 'part_of_speech' => $readyDictionaryWord->part_of_speech,
                 'translation' => $readyDictionaryWord->translation,
                 'comment' => $readyDictionaryWord->comment,
-                'source_language' => match (strtolower((string) $this->readyDictionary->language)) {
-                    'english' => 'en',
-                    'spanish' => 'es',
-                    default => null,
-                },
+                'source_language' => DictionaryLanguageCode::fromDictionaryLanguage($this->readyDictionary->language),
             ], $readyDictionaryWord);
         } catch (Throwable) {
             $this->showTransferError();
