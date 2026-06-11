@@ -2,7 +2,9 @@
 
 namespace App\Services\Examples;
 
+use App\Models\ReadyDictionary;
 use App\Models\ReadyDictionaryWord;
+use App\Models\UserDictionary;
 use App\Models\Word;
 use App\Support\DictionaryLanguageCode;
 
@@ -20,16 +22,17 @@ class BackfillWordExamplesService
      * @return array{
      *     processed:int,
      *     enriched:int,
+     *     cleared:int,
      *     skipped_existing:int,
      *     skipped_unsupported_language:int,
      *     skipped_without_examples:int
      * }
      */
-    public function backfill(string $source, int $limit = 0, ?callable $progress = null): array
+    public function backfill(string $source, int $limit = 0, ?int $dictionaryId = null, bool $clear = false, ?callable $progress = null): array
     {
         return match ($source) {
-            'user' => $this->backfillUserWords($limit, $progress),
-            'ready' => $this->backfillReadyWords($limit, $progress),
+            'user' => $this->backfillUserWords($limit, $dictionaryId, $clear, $progress),
+            'ready' => $this->backfillReadyWords($limit, $dictionaryId, $clear, $progress),
             default => throw new \InvalidArgumentException("Unsupported backfill source [{$source}]."),
         };
     }
@@ -38,27 +41,50 @@ class BackfillWordExamplesService
      * @return array{
      *     processed:int,
      *     enriched:int,
+     *     cleared:int,
      *     skipped_existing:int,
      *     skipped_unsupported_language:int,
      *     skipped_without_examples:int
      * }
      */
-    private function backfillUserWords(int $limit, ?callable $progress): array
+    private function backfillUserWords(int $limit, ?int $dictionaryId, bool $clear, ?callable $progress): array
     {
+        if ($dictionaryId !== null) {
+            $dictionary = UserDictionary::query()->find($dictionaryId);
+
+            if ($dictionary === null) {
+                throw new \InvalidArgumentException("User dictionary [{$dictionaryId}] was not found.");
+            }
+        }
+
         $stats = $this->emptyStats();
         $remaining = $limit > 0 ? $limit : PHP_INT_MAX;
 
-        Word::query()
+        $query = Word::query()
             ->with([
                 'dictionaries' => fn ($query) => $query->select('user_dictionaries.id', 'language')->orderBy('user_dictionaries.id'),
                 'examples',
             ])
-            ->whereHas('dictionaries', fn ($query) => $query->whereIn('language', ['English', 'Spanish']))
-            ->orderBy('id')
-            ->chunkById(self::CHUNK_SIZE, function ($words) use (&$stats, &$remaining, $progress): bool {
+            ->whereHas('dictionaries', function ($query) use ($dictionaryId): void {
+                $query->whereIn('language', ['English', 'Spanish']);
+
+                if ($dictionaryId !== null) {
+                    $query->where('user_dictionaries.id', $dictionaryId);
+                }
+            })
+            ->orderBy('id');
+
+        $query->chunkById(self::CHUNK_SIZE, function ($words) use (&$stats, &$remaining, $progress, $clear): bool {
                 foreach ($words as $word) {
                     if ($remaining <= 0) {
                         return false;
+                    }
+
+                    if ($clear && $word->examples->isNotEmpty()) {
+                        $stats['cleared'] += $word->examples->count();
+                        $word->examples()->delete();
+                        $word->unsetRelation('examples');
+                        $word->setRelation('examples', collect());
                     }
 
                     if ($word->examples->isNotEmpty()) {
@@ -105,24 +131,47 @@ class BackfillWordExamplesService
      * @return array{
      *     processed:int,
      *     enriched:int,
+     *     cleared:int,
      *     skipped_existing:int,
      *     skipped_unsupported_language:int,
      *     skipped_without_examples:int
      * }
      */
-    private function backfillReadyWords(int $limit, ?callable $progress): array
+    private function backfillReadyWords(int $limit, ?int $dictionaryId, bool $clear, ?callable $progress): array
     {
+        if ($dictionaryId !== null) {
+            $dictionary = ReadyDictionary::query()->find($dictionaryId);
+
+            if ($dictionary === null) {
+                throw new \InvalidArgumentException("Ready dictionary [{$dictionaryId}] was not found.");
+            }
+        }
+
         $stats = $this->emptyStats();
         $remaining = $limit > 0 ? $limit : PHP_INT_MAX;
 
-        ReadyDictionaryWord::query()
+        $query = ReadyDictionaryWord::query()
             ->with(['readyDictionary:id,language', 'examples'])
-            ->whereHas('readyDictionary', fn ($query) => $query->whereIn('language', ['English', 'Spanish']))
-            ->orderBy('id')
-            ->chunkById(self::CHUNK_SIZE, function ($words) use (&$stats, &$remaining, $progress): bool {
+            ->whereHas('readyDictionary', function ($query) use ($dictionaryId): void {
+                $query->whereIn('language', ['English', 'Spanish']);
+
+                if ($dictionaryId !== null) {
+                    $query->where('ready_dictionaries.id', $dictionaryId);
+                }
+            })
+            ->orderBy('id');
+
+        $query->chunkById(self::CHUNK_SIZE, function ($words) use (&$stats, &$remaining, $progress, $clear): bool {
                 foreach ($words as $word) {
                     if ($remaining <= 0) {
                         return false;
+                    }
+
+                    if ($clear && $word->examples->isNotEmpty()) {
+                        $stats['cleared'] += $word->examples->count();
+                        $word->examples()->delete();
+                        $word->unsetRelation('examples');
+                        $word->setRelation('examples', collect());
                     }
 
                     if ($word->examples->isNotEmpty()) {
@@ -177,6 +226,7 @@ class BackfillWordExamplesService
         return [
             'processed' => 0,
             'enriched' => 0,
+            'cleared' => 0,
             'skipped_existing' => 0,
             'skipped_unsupported_language' => 0,
             'skipped_without_examples' => 0,

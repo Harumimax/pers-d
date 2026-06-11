@@ -30,20 +30,20 @@ class BackfillWordExamplesCommandTest extends TestCase
 
         $backfillWord = Word::query()->create([
             'word' => 'apple',
-            'translation' => 'яблоко',
+            'translation' => 'apple translation',
             'part_of_speech' => 'noun',
         ]);
 
         $existingWord = Word::query()->create([
             'word' => 'book',
-            'translation' => 'книга',
+            'translation' => 'book translation',
             'part_of_speech' => 'noun',
         ]);
 
         $dictionary->words()->attach([$backfillWord->id, $existingWord->id]);
         $existingWord->examples()->create([
             'example_text' => 'This is a book.',
-            'example_translation' => 'Это книга.',
+            'example_translation' => 'Book example translation.',
             'sort_order' => 0,
             'source' => 'manual',
             'source_external_id' => '1',
@@ -54,6 +54,7 @@ class BackfillWordExamplesCommandTest extends TestCase
             ->expectsOutputToContain('Backfill completed.')
             ->expectsOutputToContain('Processed: 1')
             ->expectsOutputToContain('Enriched: 1')
+            ->expectsOutputToContain('Cleared: 0')
             ->expectsOutputToContain('Skipped existing: 1')
             ->assertExitCode(0);
 
@@ -61,7 +62,7 @@ class BackfillWordExamplesCommandTest extends TestCase
             'exampleable_type' => Word::class,
             'exampleable_id' => $backfillWord->id,
             'example_text' => 'I eat an apple every morning.',
-            'example_translation' => 'Я ем яблоко каждое утро.',
+            'example_translation' => 'I eat an apple every morning in Russian.',
         ]);
     }
 
@@ -77,21 +78,62 @@ class BackfillWordExamplesCommandTest extends TestCase
         $readyWord = ReadyDictionaryWord::factory()->create([
             'ready_dictionary_id' => $readyDictionary->id,
             'word' => 'airport',
-            'translation' => 'аэропорт',
+            'translation' => 'airport translation',
             'part_of_speech' => 'noun',
         ]);
 
         $this->artisan('words:backfill-examples', ['--source' => 'ready'])
             ->expectsOutputToContain('[1] ready:')
             ->expectsOutputToContain('Backfill completed.')
+            ->expectsOutputToContain('Cleared: 0')
             ->assertExitCode(0);
 
         $this->assertDatabaseHas('word_examples', [
             'exampleable_type' => ReadyDictionaryWord::class,
             'exampleable_id' => $readyWord->id,
             'example_text' => 'The airport is close to the city.',
-            'example_translation' => 'Аэропорт находится рядом с городом.',
+            'example_translation' => 'The airport is close to the city in Russian.',
         ]);
+    }
+
+    public function test_command_can_backfill_only_selected_ready_dictionary_by_id_without_explicit_source(): void
+    {
+        $this->bindFakeExampleServices();
+
+        $targetDictionary = ReadyDictionary::factory()->create([
+            'name' => 'Ready Travel',
+            'language' => 'English',
+        ]);
+
+        $otherDictionary = ReadyDictionary::factory()->create([
+            'name' => 'Ready Other',
+            'language' => 'English',
+        ]);
+
+        $targetWord = ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $targetDictionary->id,
+            'word' => 'airport',
+            'translation' => 'airport translation',
+            'part_of_speech' => 'noun',
+        ]);
+
+        $otherWord = ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $otherDictionary->id,
+            'word' => 'station',
+            'translation' => 'station translation',
+            'part_of_speech' => 'noun',
+        ]);
+
+        $this->artisan('words:backfill-examples', ['--id' => $targetDictionary->id])
+            ->expectsOutputToContain('Starting word example backfill for source [ready]...')
+            ->expectsOutputToContain('Dictionary id: '.$targetDictionary->id)
+            ->expectsOutputToContain('[1] ready:')
+            ->expectsOutputToContain('Processed: 1')
+            ->expectsOutputToContain('Enriched: 1')
+            ->assertExitCode(0);
+
+        $this->assertSame(1, $targetWord->fresh()->examples()->count());
+        $this->assertSame(0, $otherWord->fresh()->examples()->count());
     }
 
     public function test_command_respects_limit_option(): void
@@ -107,13 +149,13 @@ class BackfillWordExamplesCommandTest extends TestCase
 
         $firstWord = Word::query()->create([
             'word' => 'apple',
-            'translation' => 'яблоко',
+            'translation' => 'apple translation',
             'part_of_speech' => 'noun',
         ]);
 
         $secondWord = Word::query()->create([
             'word' => 'book',
-            'translation' => 'книга',
+            'translation' => 'book translation',
             'part_of_speech' => 'noun',
         ]);
 
@@ -127,10 +169,60 @@ class BackfillWordExamplesCommandTest extends TestCase
         $this->assertSame(1, $firstWord->fresh()->examples()->count() + $secondWord->fresh()->examples()->count());
     }
 
+    public function test_command_can_clear_and_refill_examples_for_selected_ready_dictionary(): void
+    {
+        $this->bindFakeExampleServices();
+
+        $readyDictionary = ReadyDictionary::factory()->create([
+            'name' => 'English idioms',
+            'language' => 'English',
+        ]);
+
+        $readyWord = ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $readyDictionary->id,
+            'word' => 'airport',
+            'translation' => 'airport translation',
+            'part_of_speech' => 'noun',
+        ]);
+
+        $readyWord->examples()->create([
+            'example_text' => 'Old invalid example.',
+            'example_translation' => 'Old invalid translation.',
+            'sort_order' => 0,
+            'source' => 'manual',
+            'source_external_id' => 'legacy-1',
+        ]);
+
+        $this->artisan('words:backfill-examples', ['--id' => $readyDictionary->id, '--clear' => true])
+            ->expectsOutputToContain('Clear mode: enabled')
+            ->expectsOutputToContain('Cleared: 1')
+            ->expectsOutputToContain('Enriched: 1')
+            ->assertExitCode(0);
+
+        $this->assertDatabaseMissing('word_examples', [
+            'exampleable_type' => ReadyDictionaryWord::class,
+            'exampleable_id' => $readyWord->id,
+            'example_text' => 'Old invalid example.',
+        ]);
+
+        $this->assertDatabaseHas('word_examples', [
+            'exampleable_type' => ReadyDictionaryWord::class,
+            'exampleable_id' => $readyWord->id,
+            'example_text' => 'The airport is close to the city.',
+        ]);
+    }
+
     public function test_command_fails_for_invalid_source(): void
     {
         $this->artisan('words:backfill-examples', ['--source' => 'all'])
             ->expectsOutputToContain('Option --source must be either "user" or "ready".')
+            ->assertExitCode(1);
+    }
+
+    public function test_command_fails_for_invalid_dictionary_id(): void
+    {
+        $this->artisan('words:backfill-examples', ['--id' => 0])
+            ->expectsOutputToContain('Option --id must be a positive integer.')
             ->assertExitCode(1);
     }
 
@@ -144,7 +236,7 @@ class BackfillWordExamplesCommandTest extends TestCase
                     'apple' => [
                         new WordExampleData(
                             'I eat an apple every morning.',
-                            'Я ем яблоко каждое утро.',
+                            'I eat an apple every morning in Russian.',
                             'tatoeba',
                             '101',
                         ),
@@ -152,15 +244,23 @@ class BackfillWordExamplesCommandTest extends TestCase
                     'airport' => [
                         new WordExampleData(
                             'The airport is close to the city.',
-                            'Аэропорт находится рядом с городом.',
+                            'The airport is close to the city in Russian.',
                             'tatoeba',
                             '202',
+                        ),
+                    ],
+                    'station' => [
+                        new WordExampleData(
+                            'The station is busy today.',
+                            'The station is busy today in Russian.',
+                            'tatoeba',
+                            '404',
                         ),
                     ],
                     'book' => [
                         new WordExampleData(
                             'This book is interesting.',
-                            'Эта книга интересная.',
+                            'This book is interesting in Russian.',
                             'tatoeba',
                             '303',
                         ),
