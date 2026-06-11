@@ -13,6 +13,7 @@ return [
         'conjunction' => 'Conjunction',
         'interjection' => 'Interjection',
         'stable_expression' => 'Stable expression',
+        'collocation' => 'Collocation',
     ],
     'form_labels' => [
         'noun' => 'Noun (Существительное)',
@@ -25,6 +26,7 @@ return [
         'conjunction' => 'Conjunction (Союз)',
         'interjection' => 'Interjection (Междометие)',
         'stable_expression' => 'Stable expression (Устойчивое выражение)',
+        'collocation' => 'Collocation (Словосочетание)',
     ],
     'filter_labels' => [
         'all' => 'All (Все)',

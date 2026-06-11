@@ -37,4 +37,31 @@ class PartOfSpeechOptionsTest extends TestCase
             ->assertOk()
             ->assertSee('Cardinal');
     }
+
+    public function test_dictionary_page_remainder_and_tg_bot_display_collocation_option(): void
+    {
+        $user = User::factory()->create([
+            'tg_chat_id' => '123456789',
+        ]);
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English',
+            'language' => 'English',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['dictionary' => $dictionary])
+            ->assertSee('Collocation')
+            ->assertSee('Словосочетание');
+
+        $this->actingAs($user)
+            ->get(route('remainder'))
+            ->assertOk()
+            ->assertSee('Collocation');
+
+        $this->actingAs($user)
+            ->get(route('tg-bot'))
+            ->assertOk()
+            ->assertSee('Collocation');
+    }
 }

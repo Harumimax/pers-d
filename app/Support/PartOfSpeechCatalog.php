@@ -17,6 +17,7 @@ class PartOfSpeechCatalog
         'conjunction',
         'interjection',
         'stable_expression',
+        'collocation',
     ];
 
     /**
