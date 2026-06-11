@@ -96,7 +96,7 @@ class BackfillWordExamplesCommandTest extends TestCase
         ]);
     }
 
-    public function test_command_can_backfill_only_selected_ready_dictionary_by_id_without_explicit_source(): void
+    public function test_command_can_backfill_only_selected_ready_dictionary_by_id(): void
     {
         $this->bindFakeExampleServices();
 
@@ -124,7 +124,7 @@ class BackfillWordExamplesCommandTest extends TestCase
             'part_of_speech' => 'noun',
         ]);
 
-        $this->artisan('words:backfill-examples', ['--id' => $targetDictionary->id])
+        $this->artisan('words:backfill-examples', ['--source' => 'ready', '--id' => $targetDictionary->id])
             ->expectsOutputToContain('Starting word example backfill for source [ready]...')
             ->expectsOutputToContain('Dictionary id: '.$targetDictionary->id)
             ->expectsOutputToContain('[1] ready:')
@@ -169,7 +169,7 @@ class BackfillWordExamplesCommandTest extends TestCase
         $this->assertSame(1, $firstWord->fresh()->examples()->count() + $secondWord->fresh()->examples()->count());
     }
 
-    public function test_command_can_clear_and_refill_examples_for_selected_ready_dictionary(): void
+    public function test_command_can_clear_examples_for_selected_ready_dictionary_without_refill(): void
     {
         $this->bindFakeExampleServices();
 
@@ -193,10 +193,11 @@ class BackfillWordExamplesCommandTest extends TestCase
             'source_external_id' => 'legacy-1',
         ]);
 
-        $this->artisan('words:backfill-examples', ['--id' => $readyDictionary->id, '--clear' => true])
+        $this->artisan('words:backfill-examples', ['--source' => 'ready', '--id' => $readyDictionary->id, '--clear' => true])
             ->expectsOutputToContain('Clear mode: enabled')
+            ->expectsOutputToContain('Clear completed.')
             ->expectsOutputToContain('Cleared: 1')
-            ->expectsOutputToContain('Enriched: 1')
+            ->expectsOutputToContain('Enriched: 0')
             ->assertExitCode(0);
 
         $this->assertDatabaseMissing('word_examples', [
@@ -205,11 +206,7 @@ class BackfillWordExamplesCommandTest extends TestCase
             'example_text' => 'Old invalid example.',
         ]);
 
-        $this->assertDatabaseHas('word_examples', [
-            'exampleable_type' => ReadyDictionaryWord::class,
-            'exampleable_id' => $readyWord->id,
-            'example_text' => 'The airport is close to the city.',
-        ]);
+        $this->assertSame(0, $readyWord->fresh()->examples()->count());
     }
 
     public function test_command_fails_for_invalid_source(): void
@@ -222,6 +219,34 @@ class BackfillWordExamplesCommandTest extends TestCase
     public function test_command_fails_for_invalid_dictionary_id(): void
     {
         $this->artisan('words:backfill-examples', ['--id' => 0])
+            ->expectsOutputToContain('Option --source is required when using --id or --clear.')
+            ->assertExitCode(1);
+    }
+
+    public function test_command_fails_when_id_is_used_without_source(): void
+    {
+        $this->artisan('words:backfill-examples', ['--id' => 7])
+            ->expectsOutputToContain('Option --source is required when using --id or --clear.')
+            ->assertExitCode(1);
+    }
+
+    public function test_command_fails_when_clear_is_used_without_source_and_id(): void
+    {
+        $this->artisan('words:backfill-examples', ['--clear' => true])
+            ->expectsOutputToContain('Option --source is required when using --id or --clear.')
+            ->assertExitCode(1);
+    }
+
+    public function test_command_fails_when_clear_is_used_without_id(): void
+    {
+        $this->artisan('words:backfill-examples', ['--source' => 'ready', '--clear' => true])
+            ->expectsOutputToContain('Option --clear requires both --source and --id.')
+            ->assertExitCode(1);
+    }
+
+    public function test_command_fails_for_non_positive_dictionary_id_with_source(): void
+    {
+        $this->artisan('words:backfill-examples', ['--source' => 'ready', '--id' => 0])
             ->expectsOutputToContain('Option --id must be a positive integer.')
             ->assertExitCode(1);
     }

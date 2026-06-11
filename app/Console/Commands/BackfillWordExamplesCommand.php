@@ -23,8 +23,10 @@ class BackfillWordExamplesCommand extends Command
         $clear = (bool) $this->option('clear');
         $limit = max(0, (int) $this->option('limit'));
 
-        if ($source === '' && $dictionaryId !== null && $dictionaryId !== '') {
-            $source = 'ready';
+        if ($source === '' && ($dictionaryId !== null && $dictionaryId !== '' || $clear)) {
+            $this->error('Option --source is required when using --id or --clear.');
+
+            return self::FAILURE;
         }
 
         if (! in_array($source, ['user', 'ready'], true)) {
@@ -43,7 +45,15 @@ class BackfillWordExamplesCommand extends Command
             return self::FAILURE;
         }
 
-        $this->info("Starting word example backfill for source [{$source}]...");
+        if ($clear && $dictionaryId === null) {
+            $this->error('Option --clear requires both --source and --id.');
+
+            return self::FAILURE;
+        }
+
+        $modeLabel = $clear ? 'clear' : 'backfill';
+
+        $this->info("Starting word example {$modeLabel} for source [{$source}]...");
         if ($dictionaryId !== null) {
             $this->line("Dictionary id: {$dictionaryId}");
         }
@@ -55,9 +65,13 @@ class BackfillWordExamplesCommand extends Command
         }
 
         try {
-            $stats = $service->backfill($source, $limit, $dictionaryId, $clear, function (string $currentSource, string $word, int $processed): void {
-                $this->line("[{$processed}] {$currentSource}: {$word}");
-            });
+            $stats = $clear
+                ? $service->clear($source, $dictionaryId, function (string $currentSource, string $word, int $processed): void {
+                    $this->line("[{$processed}] {$currentSource}: {$word}");
+                })
+                : $service->backfill($source, $limit, $dictionaryId, function (string $currentSource, string $word, int $processed): void {
+                    $this->line("[{$processed}] {$currentSource}: {$word}");
+                });
         } catch (Throwable $exception) {
             $this->error($exception->getMessage());
 
@@ -65,7 +79,7 @@ class BackfillWordExamplesCommand extends Command
         }
 
         $this->newLine();
-        $this->info('Backfill completed.');
+        $this->info(ucfirst($modeLabel).' completed.');
         $this->line('Processed: '.$stats['processed']);
         $this->line('Enriched: '.$stats['enriched']);
         $this->line('Cleared: '.$stats['cleared']);

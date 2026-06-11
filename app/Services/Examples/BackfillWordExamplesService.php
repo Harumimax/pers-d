@@ -28,11 +28,11 @@ class BackfillWordExamplesService
      *     skipped_without_examples:int
      * }
      */
-    public function backfill(string $source, int $limit = 0, ?int $dictionaryId = null, bool $clear = false, ?callable $progress = null): array
+    public function backfill(string $source, int $limit = 0, ?int $dictionaryId = null, ?callable $progress = null): array
     {
         return match ($source) {
-            'user' => $this->backfillUserWords($limit, $dictionaryId, $clear, $progress),
-            'ready' => $this->backfillReadyWords($limit, $dictionaryId, $clear, $progress),
+            'user' => $this->backfillUserWords($limit, $dictionaryId, $progress),
+            'ready' => $this->backfillReadyWords($limit, $dictionaryId, $progress),
             default => throw new \InvalidArgumentException("Unsupported backfill source [{$source}]."),
         };
     }
@@ -47,7 +47,26 @@ class BackfillWordExamplesService
      *     skipped_without_examples:int
      * }
      */
-    private function backfillUserWords(int $limit, ?int $dictionaryId, bool $clear, ?callable $progress): array
+    public function clear(string $source, int $dictionaryId, ?callable $progress = null): array
+    {
+        return match ($source) {
+            'user' => $this->clearUserWords($dictionaryId, $progress),
+            'ready' => $this->clearReadyWords($dictionaryId, $progress),
+            default => throw new \InvalidArgumentException("Unsupported clear source [{$source}]."),
+        };
+    }
+
+    /**
+     * @return array{
+     *     processed:int,
+     *     enriched:int,
+     *     cleared:int,
+     *     skipped_existing:int,
+     *     skipped_unsupported_language:int,
+     *     skipped_without_examples:int
+     * }
+     */
+    private function backfillUserWords(int $limit, ?int $dictionaryId, ?callable $progress): array
     {
         if ($dictionaryId !== null) {
             $dictionary = UserDictionary::query()->find($dictionaryId);
@@ -74,17 +93,10 @@ class BackfillWordExamplesService
             })
             ->orderBy('id');
 
-        $query->chunkById(self::CHUNK_SIZE, function ($words) use (&$stats, &$remaining, $progress, $clear): bool {
+        $query->chunkById(self::CHUNK_SIZE, function ($words) use (&$stats, &$remaining, $progress): bool {
                 foreach ($words as $word) {
                     if ($remaining <= 0) {
                         return false;
-                    }
-
-                    if ($clear && $word->examples->isNotEmpty()) {
-                        $stats['cleared'] += $word->examples->count();
-                        $word->examples()->delete();
-                        $word->unsetRelation('examples');
-                        $word->setRelation('examples', collect());
                     }
 
                     if ($word->examples->isNotEmpty()) {
@@ -137,7 +149,7 @@ class BackfillWordExamplesService
      *     skipped_without_examples:int
      * }
      */
-    private function backfillReadyWords(int $limit, ?int $dictionaryId, bool $clear, ?callable $progress): array
+    private function backfillReadyWords(int $limit, ?int $dictionaryId, ?callable $progress): array
     {
         if ($dictionaryId !== null) {
             $dictionary = ReadyDictionary::query()->find($dictionaryId);
@@ -161,17 +173,10 @@ class BackfillWordExamplesService
             })
             ->orderBy('id');
 
-        $query->chunkById(self::CHUNK_SIZE, function ($words) use (&$stats, &$remaining, $progress, $clear): bool {
+        $query->chunkById(self::CHUNK_SIZE, function ($words) use (&$stats, &$remaining, $progress): bool {
                 foreach ($words as $word) {
                     if ($remaining <= 0) {
                         return false;
-                    }
-
-                    if ($clear && $word->examples->isNotEmpty()) {
-                        $stats['cleared'] += $word->examples->count();
-                        $word->examples()->delete();
-                        $word->unsetRelation('examples');
-                        $word->setRelation('examples', collect());
                     }
 
                     if ($word->examples->isNotEmpty()) {
@@ -207,6 +212,97 @@ class BackfillWordExamplesService
                 }
 
                 return $remaining > 0;
+            });
+
+        return $stats;
+    }
+
+    /**
+     * @return array{
+     *     processed:int,
+     *     enriched:int,
+     *     cleared:int,
+     *     skipped_existing:int,
+     *     skipped_unsupported_language:int,
+     *     skipped_without_examples:int
+     * }
+     */
+    private function clearUserWords(int $dictionaryId, ?callable $progress): array
+    {
+        $dictionary = UserDictionary::query()->find($dictionaryId);
+
+        if ($dictionary === null) {
+            throw new \InvalidArgumentException("User dictionary [{$dictionaryId}] was not found.");
+        }
+
+        $stats = $this->emptyStats();
+
+        Word::query()
+            ->with([
+                'dictionaries' => fn ($query) => $query->select('user_dictionaries.id'),
+                'examples',
+            ])
+            ->whereHas('dictionaries', fn ($query) => $query->where('user_dictionaries.id', $dictionaryId))
+            ->orderBy('id')
+            ->chunkById(self::CHUNK_SIZE, function ($words) use (&$stats, $progress): void {
+                foreach ($words as $word) {
+                    $stats['processed']++;
+
+                    if ($progress !== null) {
+                        $progress('user', (string) $word->word, $stats['processed']);
+                    }
+
+                    if ($word->examples->isEmpty()) {
+                        continue;
+                    }
+
+                    $stats['cleared'] += $word->examples->count();
+                    $word->examples()->delete();
+                }
+            });
+
+        return $stats;
+    }
+
+    /**
+     * @return array{
+     *     processed:int,
+     *     enriched:int,
+     *     cleared:int,
+     *     skipped_existing:int,
+     *     skipped_unsupported_language:int,
+     *     skipped_without_examples:int
+     * }
+     */
+    private function clearReadyWords(int $dictionaryId, ?callable $progress): array
+    {
+        $dictionary = ReadyDictionary::query()->find($dictionaryId);
+
+        if ($dictionary === null) {
+            throw new \InvalidArgumentException("Ready dictionary [{$dictionaryId}] was not found.");
+        }
+
+        $stats = $this->emptyStats();
+
+        ReadyDictionaryWord::query()
+            ->with(['examples'])
+            ->where('ready_dictionary_id', $dictionaryId)
+            ->orderBy('id')
+            ->chunkById(self::CHUNK_SIZE, function ($words) use (&$stats, $progress): void {
+                foreach ($words as $word) {
+                    $stats['processed']++;
+
+                    if ($progress !== null) {
+                        $progress('ready', (string) $word->word, $stats['processed']);
+                    }
+
+                    if ($word->examples->isEmpty()) {
+                        continue;
+                    }
+
+                    $stats['cleared'] += $word->examples->count();
+                    $word->examples()->delete();
+                }
             });
 
         return $stats;
