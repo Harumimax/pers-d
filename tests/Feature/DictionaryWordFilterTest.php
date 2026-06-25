@@ -161,10 +161,36 @@ class DictionaryWordFilterTest extends TestCase
             ->assertOk()
             ->assertSee('wire:click="gotoPage(1)"', false)
             ->assertSee('wire:click="gotoPage(2)"', false)
+            ->assertSee('wire:click="gotoPage(19)"', false)
+            ->assertSee('wire:click="gotoPage(20)"', false)
+            ->assertDontSee('wire:click="gotoPage(3)"', false)
+            ->assertDontSee('wire:click="gotoPage(4)"', false)
+            ->assertSee('word-list-page-btn--ellipsis', false);
+
+        $secondPageResponse = $this->actingAs($user)->get(route('dictionaries.show', $dictionary).'?page=2');
+
+        $secondPageResponse
+            ->assertOk()
+            ->assertSee('wire:click="gotoPage(1)"', false)
+            ->assertSee('wire:click="gotoPage(2)"', false)
             ->assertSee('wire:click="gotoPage(3)"', false)
             ->assertSee('wire:click="gotoPage(19)"', false)
             ->assertSee('wire:click="gotoPage(20)"', false)
             ->assertDontSee('wire:click="gotoPage(4)"', false)
+            ->assertSee('word-list-page-btn--ellipsis', false);
+
+        $middlePageResponse = $this->actingAs($user)->get(route('dictionaries.show', $dictionary).'?page=5');
+
+        $middlePageResponse
+            ->assertOk()
+            ->assertSee('wire:click="gotoPage(1)"', false)
+            ->assertSee('wire:click="gotoPage(2)"', false)
+            ->assertSee('wire:click="gotoPage(4)"', false)
+            ->assertSee('wire:click="gotoPage(5)"', false)
+            ->assertSee('wire:click="gotoPage(6)"', false)
+            ->assertSee('wire:click="gotoPage(19)"', false)
+            ->assertSee('wire:click="gotoPage(20)"', false)
+            ->assertDontSee('wire:click="gotoPage(3)"', false)
             ->assertSee('word-list-page-btn--ellipsis', false);
     }
 

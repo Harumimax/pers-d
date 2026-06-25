@@ -733,13 +733,16 @@
 
                         @php
                             $lastPage = $words->lastPage();
+                            $currentPage = $words->currentPage();
                             $visiblePages = $lastPage > 6
-                                ? [1, 2, 3, $lastPage - 1, $lastPage]
+                                ? [1, 2, $currentPage - 1, $currentPage, $currentPage + 1, $lastPage - 1, $lastPage]
                                 : range(1, $lastPage);
+
                             $visiblePages = array_values(array_unique(array_filter(
                                 $visiblePages,
                                 static fn (int $page): bool => $page >= 1 && $page <= $lastPage,
                             )));
+                            sort($visiblePages);
                             $previousVisiblePage = null;
                         @endphp
 
