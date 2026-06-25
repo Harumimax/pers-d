@@ -135,6 +135,39 @@ class DictionaryWordFilterTest extends TestCase
         $this->assertGreaterThanOrEqual(1, substr_count($response->getContent(), 'aria-label="Previous Remainder mistake"'));
     }
 
+    public function test_dictionary_page_compacts_pagination_when_there_are_many_pages(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'English',
+            'language' => 'English',
+        ]);
+
+        foreach (range(1, 400) as $index) {
+            $word = Word::create([
+                'word' => 'word-'.$index,
+                'part_of_speech' => 'noun',
+                'translation' => 'translation-'.$index,
+                'comment' => null,
+            ]);
+
+            $dictionary->words()->attach($word->id);
+        }
+
+        $response = $this->actingAs($user)->get(route('dictionaries.show', $dictionary));
+
+        $response
+            ->assertOk()
+            ->assertSee('wire:click="gotoPage(1)"', false)
+            ->assertSee('wire:click="gotoPage(2)"', false)
+            ->assertSee('wire:click="gotoPage(3)"', false)
+            ->assertSee('wire:click="gotoPage(19)"', false)
+            ->assertSee('wire:click="gotoPage(20)"', false)
+            ->assertDontSee('wire:click="gotoPage(4)"', false)
+            ->assertSee('word-list-page-btn--ellipsis', false);
+    }
+
     public function test_user_can_update_word_translation_part_of_speech_and_comment(): void
     {
         $user = User::factory()->create();

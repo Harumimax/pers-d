@@ -313,7 +313,23 @@
                             {{ __('dictionaries.show.word_list.pagination.prev') }}
                         </button>
 
-                        @for ($page = 1; $page <= $words->lastPage(); $page++)
+                        @php
+                            $lastPage = $words->lastPage();
+                            $visiblePages = $lastPage > 6
+                                ? [1, 2, 3, $lastPage - 1, $lastPage]
+                                : range(1, $lastPage);
+                            $visiblePages = array_values(array_unique(array_filter(
+                                $visiblePages,
+                                static fn (int $page): bool => $page >= 1 && $page <= $lastPage,
+                            )));
+                            $previousVisiblePage = null;
+                        @endphp
+
+                        @foreach ($visiblePages as $page)
+                            @if ($previousVisiblePage !== null && $page - $previousVisiblePage > 1)
+                                <span class="word-list-page-btn word-list-page-btn--ellipsis" aria-hidden="true">...</span>
+                            @endif
+
                             <button
                                 type="button"
                                 class="word-list-page-btn {{ $words->currentPage() === $page ? 'is-active' : '' }}"
@@ -321,7 +337,11 @@
                             >
                                 {{ $page }}
                             </button>
-                        @endfor
+
+                            @php
+                                $previousVisiblePage = $page;
+                            @endphp
+                        @endforeach
 
                         <button
                             type="button"

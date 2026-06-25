@@ -577,4 +577,34 @@ class ReadyDictionaryCatalogTest extends TestCase
             ->call('nextPage')
             ->assertSee('page-word-19');
     }
+
+    public function test_ready_dictionary_page_compacts_pagination_when_there_are_many_pages(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = ReadyDictionary::factory()->create([
+            'name' => 'Long Ready Dictionary',
+            'language' => 'English',
+        ]);
+
+        foreach (range(1, 400) as $index) {
+            ReadyDictionaryWord::query()->create([
+                'ready_dictionary_id' => $dictionary->id,
+                'word' => 'ready-word-'.$index,
+                'translation' => 'ready-translation-'.$index,
+                'part_of_speech' => 'noun',
+                'comment' => null,
+            ]);
+        }
+
+        $this->actingAs($user)
+            ->get(route('ready-dictionaries.show', $dictionary))
+            ->assertOk()
+            ->assertSee('wire:click="gotoPage(1)"', false)
+            ->assertSee('wire:click="gotoPage(2)"', false)
+            ->assertSee('wire:click="gotoPage(3)"', false)
+            ->assertSee('wire:click="gotoPage(19)"', false)
+            ->assertSee('wire:click="gotoPage(20)"', false)
+            ->assertDontSee('wire:click="gotoPage(4)"', false)
+            ->assertSee('word-list-page-btn--ellipsis', false);
+    }
 }
