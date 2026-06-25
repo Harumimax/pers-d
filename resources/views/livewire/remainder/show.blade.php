@@ -21,7 +21,7 @@
         </div>
     @endif
 
-    @if (! $showFeedback && $gameSession->status !== \App\Models\GameSession::STATUS_FINISHED && $gameSession->mode === \App\Models\GameSession::MODE_CHOICE && $sessionWarnings->isNotEmpty())
+    @if (! $showFeedback && $gameSession->status !== \App\Models\GameSession::STATUS_FINISHED && $gameSession->usesChoiceOptions() && $sessionWarnings->isNotEmpty())
         @foreach ($sessionWarnings as $warning)
             <div class="remainder-game-banner remainder-game-banner--info">
                 {{ $warning }}
@@ -33,9 +33,7 @@
         <section class="remainder-game-card">
             <header class="remainder-game-card__header">
                 <div>
-                    <p class="remainder-game-eyebrow">
-                        {{ $gameSession->mode === \App\Models\GameSession::MODE_CHOICE ? __('remainder.game.mode.choice') : __('remainder.game.mode.manual') }}
-                    </p>
+                    <p class="remainder-game-eyebrow">{{ $modeLabel }}</p>
                     <h1 class="remainder-game-title">{{ __('remainder.settings.title') }}</h1>
                 </div>
                 @if ($progressLabel)
@@ -148,9 +146,7 @@
         <section class="remainder-game-card">
             <header class="remainder-game-card__header">
                 <div>
-                    <p class="remainder-game-eyebrow">
-                        {{ $gameSession->mode === \App\Models\GameSession::MODE_CHOICE ? __('remainder.game.mode.choice') : __('remainder.game.mode.manual') }}
-                    </p>
+                    <p class="remainder-game-eyebrow">{{ $modeLabel }}</p>
                     <h1 class="remainder-game-title">{{ __('remainder.settings.title') }}</h1>
                 </div>
                 @if ($progressLabel)
@@ -161,9 +157,26 @@
             @if ($currentItem)
                 <div class="remainder-game-prompt-card">
                     <div class="remainder-game-prompt-card__body">
-                        <p class="remainder-game-prompt-card__label">{{ __('remainder.game.prompt.translate_this') }}</p>
+                        <p class="remainder-game-prompt-card__label">
+                            {{ $gameSession->usesAudioPrompt() ? __('remainder.game.prompt.translate_spoken_word') : __('remainder.game.prompt.translate_this') }}
+                        </p>
                         <div class="remainder-game-prompt-card__word-row">
-                            <p class="remainder-game-prompt-card__word">{{ $currentItem->prompt_text }}</p>
+                            <p class="remainder-game-prompt-card__word {{ $gameSession->usesAudioPrompt() ? 'remainder-game-prompt-card__word--blurred' : '' }}">
+                                {{ $currentItem->prompt_text }}
+                            </p>
+                            @if ($gameSession->usesAudioPrompt() && $currentItem->prompt_locale_snapshot)
+                                <button
+                                    type="button"
+                                    class="remainder-game-pronounce-btn"
+                                    title="{{ __('dictionaries.show.word_list.pronounce.tooltip') }}"
+                                    aria-label="{{ __('dictionaries.show.word_list.pronounce.aria', ['word' => $currentItem->prompt_text]) }}"
+                                    data-pronounce-button
+                                    data-pronounce-word="{{ $currentItem->prompt_text }}"
+                                    data-pronounce-lang="{{ $currentItem->prompt_locale_snapshot }}"
+                                >
+                                    <span class="remainder-game-pronounce-btn__icon" aria-hidden="true">🔊</span>
+                                </button>
+                            @endif
                             @if ($currentPartOfSpeechLabel)
                                 <span class="remainder-game-prompt-card__meta">({{ $currentPartOfSpeechLabel }})</span>
                             @endif
@@ -172,7 +185,7 @@
                 </div>
 
                 <form wire:submit="submitAnswer" class="remainder-game-form">
-                    @if ($gameSession->mode === \App\Models\GameSession::MODE_CHOICE)
+                    @if ($gameSession->usesChoiceOptions())
                         <div class="remainder-game-field">
                             <span class="remainder-game-label">{{ __('remainder.game.prompt.choose_correct_answer') }}</span>
 

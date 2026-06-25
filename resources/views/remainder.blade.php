@@ -74,6 +74,16 @@
                     readyDictionaryLanguageFilter: 'all',
                     selectedPartsOfSpeech: @js($initialPartsOfSpeech->all()),
                     wordsCount: @js((string) old('words_count', '10')),
+                    selectGameType(mode) {
+                        this.gameType = mode;
+
+                        if (this.isDirectionLocked()) {
+                            this.direction = this.defaultDirection;
+                        }
+                    },
+                    isDirectionLocked() {
+                        return this.gameType === 'audio_choice';
+                    },
                     toggleDictionary(id) {
                         if (this.selectedDictionaries.includes(id)) {
                             this.selectedDictionaries = this.selectedDictionaries.filter(dictionaryId => dictionaryId !== id);
@@ -183,6 +193,7 @@
                         this.wordsCount = this.defaultWordsCount;
                     }
                 }"
+                x-init="if (isDirectionLocked()) { direction = defaultDirection; }"
             >
                 @csrf
 
@@ -230,12 +241,12 @@
                             <p class="remainder-section__description">{{ __('remainder.settings.game_type.description') }}</p>
                         </div>
 
-                        <div class="remainder-option-grid remainder-option-grid--two">
+                        <div class="remainder-option-grid remainder-option-grid--three">
                             <button
                                 type="button"
                                 class="remainder-option-card"
                                 :class="{ 'remainder-option-card--active': gameType === 'manual' }"
-                                @click="gameType = 'manual'"
+                                @click="selectGameType('manual')"
                             >
                                 <span class="remainder-option-card__title">{{ __('remainder.settings.game_type.manual_title') }}</span>
                                 <span class="remainder-option-card__meta">{{ __('remainder.settings.game_type.manual_meta') }}</span>
@@ -245,10 +256,20 @@
                                 type="button"
                                 class="remainder-option-card"
                                 :class="{ 'remainder-option-card--active': gameType === 'choice' }"
-                                @click="gameType = 'choice'"
+                                @click="selectGameType('choice')"
                             >
                                 <span class="remainder-option-card__title">{{ __('remainder.settings.game_type.choice_title') }}</span>
                                 <span class="remainder-option-card__meta">{{ __('remainder.settings.game_type.choice_meta') }}</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                class="remainder-option-card"
+                                :class="{ 'remainder-option-card--active': gameType === 'audio_choice' }"
+                                @click="selectGameType('audio_choice')"
+                            >
+                                <span class="remainder-option-card__title">{{ __('remainder.settings.game_type.audio_choice_title') }}</span>
+                                <span class="remainder-option-card__meta">{{ __('remainder.settings.game_type.audio_choice_meta') }}</span>
                             </button>
                         </div>
 
@@ -260,12 +281,19 @@
                             <p class="remainder-section__description">{{ __('remainder.settings.direction.description') }}</p>
                         </div>
 
-                        <div class="remainder-option-grid remainder-option-grid--two">
+                        <div
+                            class="remainder-option-grid remainder-option-grid--two"
+                            :class="{ 'remainder-option-grid--disabled': isDirectionLocked() }"
+                        >
                             <button
                                 type="button"
                                 class="remainder-option-card"
-                                :class="{ 'remainder-option-card--active': direction === 'foreign_to_ru' }"
-                                @click="direction = 'foreign_to_ru'"
+                                :class="{
+                                    'remainder-option-card--active': direction === 'foreign_to_ru',
+                                    'remainder-option-card--disabled': isDirectionLocked(),
+                                }"
+                                :disabled="isDirectionLocked()"
+                                @click="if (!isDirectionLocked()) { direction = 'foreign_to_ru'; }"
                             >
                                 <span class="remainder-option-card__title">{{ __('remainder.settings.direction.foreign_to_ru_title') }}</span>
                                 <span class="remainder-option-card__meta">{{ __('remainder.settings.direction.foreign_to_ru_meta') }}</span>
@@ -274,13 +302,21 @@
                             <button
                                 type="button"
                                 class="remainder-option-card"
-                                :class="{ 'remainder-option-card--active': direction === 'ru_to_foreign' }"
-                                @click="direction = 'ru_to_foreign'"
+                                :class="{
+                                    'remainder-option-card--active': direction === 'ru_to_foreign',
+                                    'remainder-option-card--disabled': isDirectionLocked(),
+                                }"
+                                :disabled="isDirectionLocked()"
+                                @click="if (!isDirectionLocked()) { direction = 'ru_to_foreign'; }"
                             >
                                 <span class="remainder-option-card__title">{{ __('remainder.settings.direction.ru_to_foreign_title') }}</span>
                                 <span class="remainder-option-card__meta">{{ __('remainder.settings.direction.ru_to_foreign_meta') }}</span>
                             </button>
                         </div>
+
+                        <p class="remainder-section__note" x-show="isDirectionLocked()" x-cloak>
+                            {{ __('remainder.settings.direction.audio_choice_locked') }}
+                        </p>
                     </section>
                 </div>
 

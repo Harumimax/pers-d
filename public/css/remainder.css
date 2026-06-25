@@ -212,6 +212,10 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.remainder-option-grid--three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .remainder-option-card {
     min-height: 118px;
     display: flex;
@@ -238,6 +242,20 @@
     border-color: rgba(30, 58, 138, 0.42);
     background: rgba(30, 58, 138, 0.12);
     box-shadow: inset 0 0 0 1px rgba(30, 58, 138, 0.12);
+}
+
+.remainder-option-grid--disabled {
+    opacity: 0.82;
+}
+
+.remainder-option-card--disabled {
+    cursor: not-allowed;
+    opacity: 0.72;
+    transform: none !important;
+}
+
+.remainder-option-card--disabled:hover {
+    border-color: #d7dbe2;
 }
 
 .remainder-option-card__title {
@@ -552,6 +570,7 @@
 
     .remainder-setup-grid,
     .remainder-option-grid--two,
+    .remainder-option-grid--three,
     .remainder-dictionary-columns {
         grid-template-columns: 1fr;
     }

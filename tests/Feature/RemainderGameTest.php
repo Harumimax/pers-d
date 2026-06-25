@@ -683,6 +683,31 @@ class RemainderGameTest extends TestCase
         $this->assertSame(3, $gameSession->items()->count());
     }
 
+    public function test_authenticated_user_can_start_audio_choice_game_with_fixed_foreign_to_ru_direction(): void
+    {
+        $user = User::factory()->create();
+        $dictionary = $this->createDictionaryForUser($user, 'English Core', 'English');
+        $this->attachWord($dictionary, 'apple', 'red', 'noun');
+        $this->attachWord($dictionary, 'book', 'blue', 'noun');
+        $this->attachWord($dictionary, 'cloud', 'green', 'noun');
+
+        $response = $this->actingAs($user)->post(route('remainder.sessions.store'), [
+            'mode' => GameSession::MODE_AUDIO_CHOICE,
+            'direction' => GameSession::DIRECTION_RU_TO_FOREIGN,
+            'dictionary_ids' => [$dictionary->id],
+            'parts_of_speech' => ['all'],
+            'words_count' => 3,
+        ]);
+
+        $gameSession = GameSession::query()->firstOrFail();
+        $firstItem = $gameSession->items()->orderBy('order_index')->firstOrFail();
+
+        $response->assertRedirect(route('remainder.sessions.show', $gameSession));
+        $this->assertSame(GameSession::MODE_AUDIO_CHOICE, $gameSession->mode);
+        $this->assertSame(GameSession::DIRECTION_FOREIGN_TO_RU, $gameSession->direction);
+        $this->assertSame('en-US', $firstItem->prompt_locale_snapshot);
+    }
+
     public function test_choice_game_uses_existing_dictionary_ownership_restrictions(): void
     {
         $user = User::factory()->create();
@@ -885,6 +910,50 @@ class RemainderGameTest extends TestCase
             ['word' => 'apple', 'translation' => 'red', 'part_of_speech' => 'noun'],
             ['word' => 'book', 'translation' => 'blue', 'part_of_speech' => 'noun'],
         ], GameSession::MODE_CHOICE);
+
+        $firstItem = $gameSession->items()->orderBy('order_index')->firstOrFail();
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['gameSession' => $gameSession])
+            ->set('selectedChoice', $firstItem->correct_answer)
+            ->call('submitAnswer')
+            ->assertSet('showFeedback', true);
+
+        $firstItem->refresh();
+        $gameSession->refresh();
+
+        $this->assertTrue((bool) $firstItem->is_correct);
+        $this->assertSame($firstItem->correct_answer, $firstItem->user_answer);
+        $this->assertSame(1, $gameSession->correct_answers);
+    }
+
+    public function test_audio_choice_game_uses_blurred_prompt_and_pronounce_button(): void
+    {
+        $user = User::factory()->create();
+        $gameSession = $this->startGameForWords($user, [
+            ['word' => 'apple', 'translation' => 'red', 'part_of_speech' => 'noun'],
+            ['word' => 'book', 'translation' => 'blue', 'part_of_speech' => 'noun'],
+        ], GameSession::MODE_AUDIO_CHOICE);
+
+        $firstItem = $gameSession->items()->orderBy('order_index')->firstOrFail();
+
+        $this->actingAs($user)
+            ->get(route('remainder.sessions.show', $gameSession))
+            ->assertOk()
+            ->assertSee('Translate the spoken word')
+            ->assertSee('remainder-game-prompt-card__word--blurred', false)
+            ->assertSee('data-pronounce-button', false)
+            ->assertSee('data-pronounce-word="'.$firstItem->prompt_text.'"', false)
+            ->assertSee('data-pronounce-lang="en-US"', false);
+    }
+
+    public function test_audio_choice_answer_is_recorded_with_choice_mechanics(): void
+    {
+        $user = User::factory()->create();
+        $gameSession = $this->startGameForWords($user, [
+            ['word' => 'apple', 'translation' => 'red', 'part_of_speech' => 'noun'],
+            ['word' => 'book', 'translation' => 'blue', 'part_of_speech' => 'noun'],
+        ], GameSession::MODE_AUDIO_CHOICE);
 
         $firstItem = $gameSession->items()->orderBy('order_index')->firstOrFail();
 

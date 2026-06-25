@@ -20,7 +20,7 @@ class GameWordSelectionService
     }
 
     /**
-     * @return Collection<int, array{source:string,word_id:int|null,word:string,translation:string,part_of_speech:?string,comment:?string,remainder_had_mistake:bool}>
+     * @return Collection<int, array{source:string,word_id:int|null,word:string,translation:string,part_of_speech:?string,comment:?string,remainder_had_mistake:bool,prompt_locale_snapshot:?string}>
      */
     public function availableWordCandidates(?User $user, GameSessionConfigData $config): Collection
     {
@@ -30,7 +30,7 @@ class GameWordSelectionService
 
         if ($user !== null && $config->dictionaryIds !== []) {
             $query = Word::query()
-                ->select('words.*')
+                ->select('words.*', 'user_dictionaries.language as source_dictionary_language')
                 ->withProgressForUser($user)
                 ->join('user_dictionary_word', 'user_dictionary_word.word_id', '=', 'words.id')
                 ->join('user_dictionaries', 'user_dictionaries.id', '=', 'user_dictionary_word.user_dictionary_id')
@@ -60,6 +60,9 @@ class GameWordSelectionService
                     'part_of_speech' => $word->part_of_speech,
                     'comment' => $word->comment,
                     'remainder_had_mistake' => $word->remainder_had_mistake,
+                    'prompt_locale_snapshot' => self::pronounceLocaleFromDictionaryLanguage(
+                        $word->getAttribute('source_dictionary_language'),
+                    ),
                 ]);
         }
 
@@ -67,10 +70,12 @@ class GameWordSelectionService
 
         if ($config->readyDictionaryIds !== []) {
             $query = ReadyDictionaryWord::query()
-                ->whereIn('ready_dictionary_id', $config->readyDictionaryIds);
+                ->select('ready_dictionary_words.*', 'ready_dictionaries.language as source_dictionary_language')
+                ->join('ready_dictionaries', 'ready_dictionaries.id', '=', 'ready_dictionary_words.ready_dictionary_id')
+                ->whereIn('ready_dictionary_words.ready_dictionary_id', $config->readyDictionaryIds);
 
             if ($config->partsOfSpeech !== ['all']) {
-                $query->whereIn('part_of_speech', $config->partsOfSpeech);
+                $query->whereIn('ready_dictionary_words.part_of_speech', $config->partsOfSpeech);
             }
 
             $readyWords = $query->get()
@@ -82,6 +87,9 @@ class GameWordSelectionService
                     'part_of_speech' => $word->part_of_speech,
                     'comment' => $word->comment,
                     'remainder_had_mistake' => false,
+                    'prompt_locale_snapshot' => self::pronounceLocaleFromDictionaryLanguage(
+                        $word->getAttribute('source_dictionary_language'),
+                    ),
                 ]);
         }
 
@@ -98,6 +106,7 @@ class GameWordSelectionService
                     'part_of_speech' => $word['part_of_speech'],
                     'comment' => $word['comment'],
                     'remainder_had_mistake' => $word['remainder_had_mistake'],
+                    'prompt_locale_snapshot' => self::pronounceLocaleFromDictionaryLanguage($word['language'] ?? null),
                 ]);
         }
 
@@ -114,8 +123,8 @@ class GameWordSelectionService
     }
 
     /**
-     * @param Collection<int, array{source:string,word_id:int|null,word:string,translation:string,part_of_speech:?string,comment:?string,remainder_had_mistake:bool}> $availableWords
-     * @return Collection<int, array{source:string,word_id:int|null,word:string,translation:string,part_of_speech:?string,comment:?string,remainder_had_mistake:bool}>
+     * @param Collection<int, array{source:string,word_id:int|null,word:string,translation:string,part_of_speech:?string,comment:?string,remainder_had_mistake:bool,prompt_locale_snapshot:?string}> $availableWords
+     * @return Collection<int, array{source:string,word_id:int|null,word:string,translation:string,part_of_speech:?string,comment:?string,remainder_had_mistake:bool,prompt_locale_snapshot:?string}>
      */
     public function selectWordsForSession(Collection $availableWords, int $targetWordsCount): Collection
     {
@@ -206,5 +215,17 @@ class GameWordSelectionService
                 'ready_dictionary_ids' => __('remainder.messages.start.ready_not_found'),
             ]);
         }
+    }
+
+    private static function pronounceLocaleFromDictionaryLanguage(mixed $language): ?string
+    {
+        return match (strtolower(trim((string) $language))) {
+            'english' => 'en-US',
+            'spanish' => 'es-ES',
+            'german' => 'de-DE',
+            'italian' => 'it-IT',
+            'portuguese' => 'pt-PT',
+            default => null,
+        };
     }
 }

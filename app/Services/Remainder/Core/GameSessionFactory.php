@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 class GameSessionFactory
 {
     /**
-     * @param Collection<int, array{source:string,word_id:int|null,word:string,translation:string,comment:?string,order_index:int,prompt_text:string,part_of_speech_snapshot:?string,correct_answer:string,options_json:null|array<int,string>,user_answer:null|string,is_correct:null|bool,answered_at:mixed}> $itemPayloads
+     * @param Collection<int, array{source:string,word_id:int|null,word:string,translation:string,comment:?string,order_index:int,prompt_text:string,prompt_locale_snapshot:?string,part_of_speech_snapshot:?string,correct_answer:string,options_json:null|array<int,string>,user_answer:null|string,is_correct:null|bool,answered_at:mixed}> $itemPayloads
      * @param array<int, string> $warnings
      */
     public function create(
@@ -71,6 +71,7 @@ class GameSessionFactory
                         'word_id' => $wordId,
                         'order_index' => $item['order_index'],
                         'prompt_text' => $item['prompt_text'],
+                        'prompt_locale_snapshot' => $item['prompt_locale_snapshot'],
                         'part_of_speech_snapshot' => $item['part_of_speech_snapshot'],
                         'correct_answer' => $item['correct_answer'],
                         'source_type_snapshot' => $item['source'],

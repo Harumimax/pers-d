@@ -173,6 +173,63 @@
     color: var(--text-color);
 }
 
+.remainder-game-prompt-card__word--blurred {
+    filter: blur(9px);
+    user-select: none;
+    pointer-events: none;
+}
+
+.remainder-game-pronounce-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border: 1px solid rgba(30, 58, 138, 0.2);
+    border-radius: 14px;
+    background: rgba(30, 58, 138, 0.08);
+    color: var(--primary-color);
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.remainder-game-pronounce-btn.is-speech-ready {
+    display: inline-flex;
+}
+
+.remainder-game-pronounce-btn:hover {
+    border-color: rgba(30, 58, 138, 0.32);
+    background: rgba(30, 58, 138, 0.14);
+    transform: translateY(-1px);
+}
+
+.remainder-game-pronounce-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12);
+}
+
+.remainder-game-pronounce-btn__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    line-height: 1;
+    transition: transform 0.2s ease;
+}
+
+.remainder-game-pronounce-btn.is-speaking {
+    border-color: rgba(30, 58, 138, 0.42);
+    background: rgba(30, 58, 138, 0.2);
+}
+
+.remainder-game-pronounce-btn.is-speaking .remainder-game-pronounce-btn__icon {
+    transform: scale(1.08);
+}
+
+html.speech-synthesis-unsupported .remainder-game-pronounce-btn {
+    display: none !important;
+}
+
 .remainder-game-form {
     display: flex;
     flex-direction: column;

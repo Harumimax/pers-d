@@ -110,6 +110,7 @@ class RemainderStatisticsService
                     ->where('status', TelegramGameRun::STATUS_FINISHED)
                     ->where('mode', GameSession::MODE_CHOICE)
                     ->count(),
+            GameSession::MODE_AUDIO_CHOICE => (int) $modeCounts->firstWhere('mode', GameSession::MODE_AUDIO_CHOICE)?->aggregate,
         ])
             ->sortDesc()
             ->values();
@@ -125,8 +126,10 @@ class RemainderStatisticsService
                 ->where('status', TelegramGameRun::STATUS_FINISHED)
                 ->where('mode', GameSession::MODE_CHOICE)
                 ->count();
+        $audioChoiceCount = (int) $modeCounts->firstWhere('mode', GameSession::MODE_AUDIO_CHOICE)?->aggregate;
 
         return match (true) {
+            $audioChoiceCount > $choiceCount && $audioChoiceCount > $manualCount => __('profile.statistics.mode.audio_choice'),
             $choiceCount > $manualCount => __('profile.statistics.mode.choice'),
             $manualCount > $choiceCount => __('profile.statistics.mode.manual'),
             default => null,

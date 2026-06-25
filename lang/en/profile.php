@@ -30,6 +30,7 @@ return [
         'mode' => [
             'manual' => 'Manual translation input',
             'choice' => 'Multiple choice',
+            'audio_choice' => 'Translate the spoken word',
             'both_equally' => 'Both equally',
         ],
         'direction' => [

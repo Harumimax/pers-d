@@ -32,6 +32,12 @@ class StartGameRequest extends FormRequest
             'use_favorites' => $this->boolean('use_favorites'),
             'parts_of_speech' => $partsOfSpeech === [] ? ['all'] : $partsOfSpeech,
         ]);
+
+        if ($this->input('mode') === GameSession::MODE_AUDIO_CHOICE) {
+            $this->merge([
+                'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            ]);
+        }
     }
 
     /**
@@ -40,10 +46,7 @@ class StartGameRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'mode' => ['required', 'string', Rule::in([
-                GameSession::MODE_MANUAL,
-                GameSession::MODE_CHOICE,
-            ])],
+            'mode' => ['required', 'string', Rule::in(GameSession::modes())],
             'direction' => ['required', 'string', Rule::in([
                 GameSession::DIRECTION_FOREIGN_TO_RU,
                 GameSession::DIRECTION_RU_TO_FOREIGN,

@@ -10,6 +10,7 @@ class GameSession extends Model
 {
     public const MODE_MANUAL = 'manual';
     public const MODE_CHOICE = 'choice';
+    public const MODE_AUDIO_CHOICE = 'audio_choice';
     public const DIRECTION_FOREIGN_TO_RU = 'foreign_to_ru';
     public const DIRECTION_RU_TO_FOREIGN = 'ru_to_foreign';
     public const STATUS_ACTIVE = 'active';
@@ -49,5 +50,30 @@ class GameSession extends Model
     public function isDemo(): bool
     {
         return $this->user_id === null || (bool) ($this->config_snapshot['is_demo'] ?? false);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public static function modes(): array
+    {
+        return [
+            self::MODE_MANUAL,
+            self::MODE_CHOICE,
+            self::MODE_AUDIO_CHOICE,
+        ];
+    }
+
+    public function usesChoiceOptions(): bool
+    {
+        return in_array($this->mode, [
+            self::MODE_CHOICE,
+            self::MODE_AUDIO_CHOICE,
+        ], true);
+    }
+
+    public function usesAudioPrompt(): bool
+    {
+        return $this->mode === self::MODE_AUDIO_CHOICE;
     }
 }

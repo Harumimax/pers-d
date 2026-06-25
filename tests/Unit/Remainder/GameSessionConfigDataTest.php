@@ -55,4 +55,19 @@ class GameSessionConfigDataTest extends TestCase
         $this->assertFalse($emptyConfig->useFavorites);
         $this->assertFalse($emptyConfig->usesChoiceMode());
     }
+
+    public function test_audio_choice_mode_is_treated_as_choice_mode(): void
+    {
+        $config = GameSessionConfigData::fromArray([
+            'mode' => GameSession::MODE_AUDIO_CHOICE,
+            'direction' => GameSession::DIRECTION_FOREIGN_TO_RU,
+            'dictionary_ids' => [1],
+            'ready_dictionary_ids' => [],
+            'parts_of_speech' => ['all'],
+            'words_count' => 4,
+        ]);
+
+        $this->assertTrue($config->usesChoiceMode());
+        $this->assertTrue($config->usesAudioPrompt());
+    }
 }

@@ -51,4 +51,19 @@ class GameAnswerEvaluatorTest extends TestCase
         $this->assertSame('blue', $storedAnswer);
         $this->assertTrue($isCorrect);
     }
+
+    public function test_audio_choice_mode_uses_choice_answer_evaluation(): void
+    {
+        $evaluator = new GameAnswerEvaluator();
+        $gameSession = new GameSession(['mode' => GameSession::MODE_AUDIO_CHOICE]);
+        $item = new GameSessionItem([
+            'correct_answer' => 'red',
+            'options_json' => ['red', 'blue', 'green'],
+        ]);
+
+        [$storedAnswer, $isCorrect] = $evaluator->evaluate($gameSession, $item, ' blue ');
+
+        $this->assertSame('blue', $storedAnswer);
+        $this->assertFalse($isCorrect);
+    }
 }

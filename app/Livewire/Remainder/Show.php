@@ -83,12 +83,13 @@ class Show extends Component
             'gameNotice' => session('gameNotice'),
             'sessionWarnings' => $sessionWarnings,
             'userDictionaries' => $userDictionaries,
+            'modeLabel' => $this->modeLabel(),
         ]);
     }
 
     public function submitAnswer(GameEngineService $gameEngineService): void
     {
-        if ($this->gameSession->mode === GameSession::MODE_CHOICE) {
+        if ($this->gameSession->usesChoiceOptions()) {
             $validated = $this->validate([
                 'selectedChoice' => ['required', 'string', 'max:255'],
             ]);
@@ -178,6 +179,15 @@ class Show extends Component
     private function partOfSpeechLabel(?string $partOfSpeech): ?string
     {
         return PartOfSpeechCatalog::label($partOfSpeech);
+    }
+
+    private function modeLabel(): string
+    {
+        return match ($this->gameSession->mode) {
+            GameSession::MODE_AUDIO_CHOICE => __('remainder.game.mode.audio_choice'),
+            GameSession::MODE_CHOICE => __('remainder.game.mode.choice'),
+            default => __('remainder.game.mode.manual'),
+        };
     }
 
     private function currentUser(): User

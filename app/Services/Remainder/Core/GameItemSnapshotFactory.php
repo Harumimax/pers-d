@@ -8,8 +8,8 @@ use Illuminate\Support\Collection;
 class GameItemSnapshotFactory
 {
     /**
-     * @param Collection<int, array{source:string,word_id:int|null,word:string,translation:string,part_of_speech:?string,comment:?string,remainder_had_mistake:bool}> $selectedWords
-     * @return Collection<int, array{source:string,word_id:int|null,word:string,translation:string,comment:?string,order_index:int,prompt_text:string,part_of_speech_snapshot:?string,correct_answer:string,options_json:null|array<int,string>,user_answer:null,is_correct:null|bool,answered_at:null}>
+     * @param Collection<int, array{source:string,word_id:int|null,word:string,translation:string,part_of_speech:?string,comment:?string,remainder_had_mistake:bool,prompt_locale_snapshot:?string}> $selectedWords
+     * @return Collection<int, array{source:string,word_id:int|null,word:string,translation:string,comment:?string,order_index:int,prompt_text:string,prompt_locale_snapshot:?string,part_of_speech_snapshot:?string,correct_answer:string,options_json:null|array<int,string>,user_answer:null,is_correct:null|bool,answered_at:null}>
      */
     public function build(GameSessionConfigData $config, Collection $selectedWords): Collection
     {
@@ -26,6 +26,7 @@ class GameItemSnapshotFactory
                     'prompt_text' => $config->direction === GameSession::DIRECTION_FOREIGN_TO_RU
                         ? $word['word']
                         : $word['translation'],
+                    'prompt_locale_snapshot' => $word['prompt_locale_snapshot'],
                     'part_of_speech_snapshot' => $word['part_of_speech'],
                     'correct_answer' => $config->direction === GameSession::DIRECTION_FOREIGN_TO_RU
                         ? $word['translation']

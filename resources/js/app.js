@@ -67,6 +67,14 @@ const initializeWordPronunciation = () => {
     let activeButton = null;
     let activeUtterance = null;
 
+    const resolvePronounceIcon = (button) => {
+        if (!(button instanceof HTMLElement)) {
+            return null;
+        }
+
+        return button.querySelector('.word-list-pronounce-btn__icon, .remainder-game-pronounce-btn__icon');
+    };
+
     const resetButtonState = (button) => {
         if (!(button instanceof HTMLElement)) {
             return;
@@ -74,7 +82,7 @@ const initializeWordPronunciation = () => {
 
         button.classList.remove('is-speaking');
 
-        const icon = button.querySelector('.word-list-pronounce-btn__icon');
+        const icon = resolvePronounceIcon(button);
 
         if (icon) {
             icon.textContent = '🔊';
@@ -150,7 +158,7 @@ const initializeWordPronunciation = () => {
                 activeUtterance = utterance;
                 target.classList.add('is-speaking');
 
-                const icon = target.querySelector('.word-list-pronounce-btn__icon');
+                const icon = resolvePronounceIcon(target);
 
                 if (icon) {
                     icon.textContent = '🔉';

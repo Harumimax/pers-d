@@ -17,6 +17,8 @@ return [
             'manual_meta' => 'Type the translation yourself and check your recall.',
             'choice_title' => 'Choose from 6 options',
             'choice_meta' => 'See up to 6 prepared answer options for each word and choose the correct one.',
+            'audio_choice_title' => 'Translate the spoken word',
+            'audio_choice_meta' => 'Hear the word, do not read it, and choose the correct Russian translation.',
         ],
         'direction' => [
             'title' => 'Translation direction',
@@ -25,6 +27,7 @@ return [
             'foreign_to_ru_meta' => 'See the original word first and recall the Russian meaning.',
             'ru_to_foreign_title' => 'Russian to foreign language',
             'ru_to_foreign_meta' => 'Flip the direction and reproduce the foreign word yourself.',
+            'audio_choice_locked' => 'For this game type, the translation direction is fixed: foreign language to Russian.',
         ],
         'dictionaries' => [
             'title' => 'Dictionaries',
@@ -66,6 +69,7 @@ return [
         'mode' => [
             'choice' => 'Multiple choice',
             'manual' => 'Manual translation input',
+            'audio_choice' => 'Translate the spoken word',
         ],
         'progress' => 'Word :current of :total',
         'feedback' => [
@@ -93,6 +97,7 @@ return [
         ],
         'prompt' => [
             'translate_this' => 'Translate this',
+            'translate_spoken_word' => 'Translate the spoken word',
             'choose_correct_answer' => 'Choose the correct answer',
             'your_translation' => 'Your translation',
             'submit' => 'Submit',

@@ -15,7 +15,7 @@ class GameAnswerEvaluator
      */
     public function evaluate(GameSession $gameSession, GameSessionItem $currentItem, string $answer): array
     {
-        if ($gameSession->mode === GameSession::MODE_CHOICE) {
+        if ($gameSession->usesChoiceOptions()) {
             return $this->evaluateChoiceAnswer(
                 $answer,
                 collect($currentItem->options_json ?? [])

@@ -2,6 +2,8 @@
 
 namespace App\Services\Remainder\Core;
 
+use App\Models\GameSession;
+
 class GameSessionConfigData
 {
     /**
@@ -71,6 +73,14 @@ class GameSessionConfigData
 
     public function usesChoiceMode(): bool
     {
-        return $this->mode === 'choice';
+        return in_array($this->mode, [
+            GameSession::MODE_CHOICE,
+            GameSession::MODE_AUDIO_CHOICE,
+        ], true);
+    }
+
+    public function usesAudioPrompt(): bool
+    {
+        return $this->mode === GameSession::MODE_AUDIO_CHOICE;
     }
 }
