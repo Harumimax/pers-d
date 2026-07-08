@@ -4,34 +4,66 @@
     flex-shrink: 0;
     background-color: #ffffff;
     border-top: 1px solid #e5e7eb;
-    padding: 18px 0 22px;
+    padding: 22px 0 26px;
 }
 
 .footer-inner {
-    min-height: 78px;
+    min-height: 92px;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.footer-brand {
+    min-width: 0;
+}
+
+.footer-brand__title {
+    margin: 0;
+    color: #0f172a;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.footer-brand__text {
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 0.92rem;
+    line-height: 1.45;
+}
+
+.footer-nav {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 .footer-link {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 28px;
-    padding: 0 18px;
-    border: 1px solid #1e3a8a;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
     border-radius: 999px;
-    font-size: 1rem;
-    font-weight: 500;
+    background-color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 700;
     color: #334155;
     text-decoration: none;
-    transition: color 0.2s ease, background-color 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .footer-link:hover {
     color: #1e3a8a;
-    background-color: var(--bg-color);
+    background-color: #f8fafc;
+    border-color: rgba(30, 58, 138, 0.22);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+    transform: translateY(-1px);
 }
 
 @media (max-width: 640px) {
@@ -41,13 +73,28 @@
 
     .footer-inner {
         min-height: auto;
-        padding-top: 4px;
+        flex-direction: column;
+        align-items: flex-start;
+        padding-top: 6px;
         padding-bottom: 4px;
+        gap: 18px;
+    }
+
+    .footer-nav {
+        width: 100%;
+        justify-content: flex-start;
     }
 
     .footer-link {
         min-height: 44px;
         padding: 0 20px;
         font-size: 0.95rem;
+        flex: 1 1 calc(50% - 8px);
+    }
+}
+
+@media (max-width: 480px) {
+    .footer-link {
+        flex-basis: 100%;
     }
 }

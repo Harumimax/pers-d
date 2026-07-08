@@ -30,8 +30,24 @@
             <!-- /Yandex.Metrika counter -->
         @endif
 
-        <a href="{{ $linkHref }}" class="footer-link">
-            {{ $linkLabel }}
-        </a>
+        <div class="footer-brand">
+            <p class="footer-brand__title">WordKeeper</p>
+            <p class="footer-brand__text">Save words. Practice them. Remember more.</p>
+        </div>
+
+        <nav class="footer-nav" aria-label="Footer navigation">
+            <a href="{{ route('dictionaries.index') }}" class="footer-link">
+                {{ __('common.links.dictionaries') }}
+            </a>
+            <a href="{{ route('remainder') }}" class="footer-link">
+                {{ __('common.links.remainder') }}
+            </a>
+            <a href="{{ route('ready-dictionaries.index') }}" class="footer-link">
+                {{ __('common.links.ready_dictionaries') }}
+            </a>
+            <a href="{{ $linkHref }}" class="footer-link">
+                {{ $linkLabel }}
+            </a>
+        </nav>
     </div>
 </footer>
