@@ -63,6 +63,9 @@ img {
 
 /* Header */
 .site-header {
+    position: relative;
+    z-index: 120;
+    isolation: isolate;
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(246, 248, 251, 0.92)),
         radial-gradient(circle at 12% 0%, rgba(191, 219, 254, 0.2), transparent 30%),
