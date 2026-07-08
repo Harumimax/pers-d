@@ -2,8 +2,11 @@
     margin-top: auto;
     display: block;
     flex-shrink: 0;
-    background-color: #ffffff;
-    border-top: 1px solid #e5e7eb;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(246, 248, 251, 0.97)),
+        radial-gradient(circle at 14% 0%, rgba(191, 219, 254, 0.14), transparent 26%),
+        radial-gradient(circle at 86% 0%, rgba(196, 181, 253, 0.08), transparent 22%);
+    border-top: 1px solid rgba(226, 232, 240, 0.86);
     padding: 22px 0 26px;
 }
 

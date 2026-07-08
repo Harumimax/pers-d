@@ -2,12 +2,18 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background-color: var(--bg-color);
+    background:
+        radial-gradient(circle at 10% 0%, rgba(191, 219, 254, 0.14), transparent 24%),
+        radial-gradient(circle at 88% 4%, rgba(196, 181, 253, 0.08), transparent 22%),
+        linear-gradient(180deg, #f9fbfd 0%, #f4f6f9 42%, #f9fbfd 100%);
     --dictionaries-text-scale: 0.80;
 }
 
 .dictionaries-page {
     flex: 1 0 auto;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.04)),
+        radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.24), transparent 20%);
 }
 
 .dictionaries-header-nav {
@@ -119,6 +125,7 @@
 
 .dictionaries-main {
     padding: 56px 0 72px;
+    position: relative;
 }
 
 .dictionaries-container {

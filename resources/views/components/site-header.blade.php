@@ -8,7 +8,7 @@
     <div class="container header-inner">
         <a href="{{ url('/') }}" class="logo" aria-label="WordKeeper home">
             <img
-                src="{{ asset('images/wordkeeper-logo.jpg') }}"
+                src="{{ asset('images/wordkeeper-logo2.jpg') }}"
                 alt="WordKeeper"
                 class="logo__image"
             >
