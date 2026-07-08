@@ -25,7 +25,7 @@
     </head>
     @php($dictionariesNavActive = request()->routeIs('dictionaries.index') || request()->routeIs('dictionaries.show') || request()->routeIs('dictionaries.favorites'))
     @php($readyDictionariesNavActive = request()->routeIs('ready-dictionaries.*') || request()->routeIs('ready-dictionaries-v2.*'))
-    <body class="dictionaries-shell">
+    <body class="dictionaries-shell ready-v2-shell">
         <x-site-header
             nav-class="dictionaries-header-nav"
             :label="__('common.navigation.dictionaries')"
@@ -216,7 +216,7 @@
             {{ $slot }}
         </div>
 
-        <x-site-footer :link-href="route('about')" :link-label="__('common.links.about')" />
+        <x-site-footer-v2 :link-href="route('about')" :link-label="__('common.links.about')" />
 
         @livewireScripts
     </body>

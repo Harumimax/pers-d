@@ -427,6 +427,13 @@
 
 .word-list-table tbody tr {
     background: rgba(255, 255, 255, 0.72);
+    transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.word-list-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.07);
+    transform: translateY(-1px);
 }
 
 .word-list-table tbody td {

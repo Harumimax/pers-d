@@ -15,6 +15,7 @@ use App\Livewire\Dictionaries\Favorites as FavoriteWordsShow;
 use App\Livewire\Dictionaries\Index;
 use App\Livewire\Dictionaries\Show;
 use App\Livewire\ReadyDictionaries\Show as ReadyDictionaryShow;
+use App\Livewire\ReadyDictionaries\ShowV2 as ReadyDictionaryShowV2;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -40,7 +41,9 @@ Route::post('/interface-language', function (Request $request) {
 })->name('interface-language.update');
 
 Route::get('/ready-dictionaries', [ReadyDictionariesController::class, 'index'])->name('ready-dictionaries.index');
+Route::get('/ready-dictionaries-v2', [ReadyDictionariesController::class, 'indexV2'])->name('ready-dictionaries-v2.index');
 Route::get('/game', [GameController::class, 'index'])->name('game');
+Route::get('/ready-dictionaries/{readyDictionary}-v2', ReadyDictionaryShowV2::class)->name('ready-dictionaries.show-v2');
 Route::get('/ready-dictionaries/{readyDictionary}', ReadyDictionaryShow::class)->name('ready-dictionaries.show');
 Route::get('/remainder', [RemainderController::class, 'index'])->name('remainder');
 Route::post('/remainder/sessions', [RemainderController::class, 'store'])->name('remainder.sessions.store');

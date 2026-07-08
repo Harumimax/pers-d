@@ -1,0 +1,206 @@
+<?php
+
+namespace App\Livewire\ReadyDictionaries;
+
+use App\Models\ReadyDictionary;
+use App\Models\ReadyDictionaryWord;
+use App\Models\User;
+use App\Models\UserDictionary;
+use App\Services\Dictionaries\CopyWordToUserDictionaryService;
+use App\Services\Favorites\FavoriteWordsService;
+use App\Services\Navigation\HeaderNavigationService;
+use App\Support\DictionaryLanguageCode;
+use App\Support\PartOfSpeechCatalog;
+use App\Support\VersionedAsset;
+use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
+use Livewire\WithPagination;
+use Throwable;
+
+class ShowV2 extends Component
+{
+    use WithPagination;
+
+    private const PART_OF_SPEECH_FILTER_ALL = PartOfSpeechCatalog::ALL;
+    private const SORT_NEWEST = 'newest';
+    private const SORT_OLDEST = 'oldest';
+    private const SORT_A_TO_Z = 'a-z';
+
+    public ReadyDictionary $readyDictionary;
+    public string $partOfSpeechFilter = self::PART_OF_SPEECH_FILTER_ALL;
+    public string $search = '';
+    public string $sort = self::SORT_NEWEST;
+    public ?string $transferBannerType = null;
+    public ?string $transferBannerMessage = null;
+    /** @var array<int, bool> */
+    public array $favoriteWordMap = [];
+
+    public function mount(ReadyDictionary $readyDictionary): void
+    {
+        $this->readyDictionary = $readyDictionary;
+    }
+
+    public function render(): View
+    {
+        $user = Auth::user();
+        $totalWordsCount = $this->readyDictionary->words()->count();
+        $wordsQuery = $this->readyDictionary->words()->with('examples');
+        $searchTerm = trim($this->search);
+        $normalizedSearchTerm = mb_strtolower($searchTerm);
+
+        $headerNavigation = app(HeaderNavigationService::class)->forUser($user);
+        $userDictionaries = $user instanceof User
+            ? $user->ownedDictionaries()->orderBy('name')->get(['id', 'name'])
+            : collect();
+
+        if ($this->partOfSpeechFilter !== self::PART_OF_SPEECH_FILTER_ALL) {
+            $wordsQuery->where('part_of_speech', $this->partOfSpeechFilter);
+        }
+
+        if ($searchTerm !== '') {
+            $wordsQuery->where(function ($query) use ($normalizedSearchTerm): void {
+                $query->whereRaw('LOWER(word) LIKE ?', ['%'.$normalizedSearchTerm.'%'])
+                    ->orWhereRaw('LOWER(translation) LIKE ?', ['%'.$normalizedSearchTerm.'%']);
+            });
+        }
+
+        if ($this->sort === self::SORT_OLDEST) {
+            $wordsQuery->orderBy('created_at');
+        } elseif ($this->sort === self::SORT_A_TO_Z) {
+            $wordsQuery->orderBy('word');
+        } else {
+            $wordsQuery->orderByDesc('created_at');
+        }
+
+        $words = $wordsQuery->paginate(20);
+
+        $this->favoriteWordMap = $user instanceof User
+            ? app(FavoriteWordsService::class)->readyDictionaryFavoriteStateMap(
+                $user,
+                $this->readyDictionary,
+                $words->getCollection()->pluck('id')->all(),
+            )
+            : [];
+
+        return view('livewire.ready-dictionaries.show-v2', [
+            'words' => $words,
+            'totalWordsCount' => $totalWordsCount,
+            'partOfSpeechFilterOptions' => PartOfSpeechCatalog::dictionaryFilterLabels(),
+            'partOfSpeechDisplayMap' => PartOfSpeechCatalog::labels(),
+            'userDictionaries' => $userDictionaries,
+        ])->layout('layouts.dictionaries-v2', $headerNavigation + [
+            'additionalStyles' => [
+                VersionedAsset::url('css/ready-dictionaries-v2.css'),
+                VersionedAsset::url('css/ready-dictionary-show-v2.css'),
+            ],
+        ]);
+    }
+
+    public function applySearch(): void
+    {
+        $this->search = trim($this->search);
+        $this->resetPage();
+    }
+
+    public function updatedSort(string $value): void
+    {
+        if (! in_array($value, [
+            self::SORT_NEWEST,
+            self::SORT_OLDEST,
+            self::SORT_A_TO_Z,
+        ], true)) {
+            $this->sort = self::SORT_NEWEST;
+        }
+
+        $this->resetPage();
+    }
+
+    public function updatedPartOfSpeechFilter(string $value): void
+    {
+        $allowedValues = [
+            self::PART_OF_SPEECH_FILTER_ALL,
+            ...PartOfSpeechCatalog::values(),
+        ];
+
+        if (! in_array($value, $allowedValues, true)) {
+            $this->partOfSpeechFilter = self::PART_OF_SPEECH_FILTER_ALL;
+        }
+
+        $this->resetPage();
+    }
+
+    public function transferWordToDictionary(int $readyDictionaryWordId, int $userDictionaryId): void
+    {
+        $this->resetTransferBanner();
+
+        $user = $this->currentUser();
+        $userDictionary = $user->dictionaries()
+            ->whereKey($userDictionaryId)
+            ->first();
+        $readyDictionaryWord = $this->readyDictionary->words()
+            ->whereKey($readyDictionaryWordId)
+            ->first();
+
+        if (! $userDictionary instanceof UserDictionary || ! $readyDictionaryWord instanceof ReadyDictionaryWord) {
+            $this->showTransferError();
+
+            return;
+        }
+
+        try {
+            app(CopyWordToUserDictionaryService::class)->copy($userDictionary, [
+                'word' => $readyDictionaryWord->word,
+                'part_of_speech' => $readyDictionaryWord->part_of_speech,
+                'translation' => $readyDictionaryWord->translation,
+                'comment' => $readyDictionaryWord->comment,
+                'source_language' => DictionaryLanguageCode::fromDictionaryLanguage($this->readyDictionary->language),
+            ], $readyDictionaryWord);
+        } catch (Throwable) {
+            $this->showTransferError();
+
+            return;
+        }
+
+        $this->transferBannerType = 'success';
+        $this->transferBannerMessage = __('ready_dictionaries.show.transfer.success', [
+            'word' => $readyDictionaryWord->word,
+            'dictionary' => $userDictionary->name,
+        ]);
+    }
+
+    public function toggleFavoriteWord(int $readyDictionaryWordId, FavoriteWordsService $favoriteWordsService): void
+    {
+        $user = $this->currentUser();
+        $readyDictionaryWord = $this->readyDictionary->words()
+            ->whereKey($readyDictionaryWordId)
+            ->first();
+
+        abort_if(! $readyDictionaryWord instanceof ReadyDictionaryWord, 404);
+
+        $isFavorite = $favoriteWordsService->toggleReadyDictionaryWord($user, $this->readyDictionary, $readyDictionaryWord);
+
+        $this->favoriteWordMap[$readyDictionaryWordId] = $isFavorite;
+    }
+
+    private function currentUser(): User
+    {
+        $user = Auth::user();
+
+        abort_unless($user instanceof User, 401);
+
+        return $user;
+    }
+
+    private function resetTransferBanner(): void
+    {
+        $this->transferBannerType = null;
+        $this->transferBannerMessage = null;
+    }
+
+    private function showTransferError(): void
+    {
+        $this->transferBannerType = 'error';
+        $this->transferBannerMessage = __('ready_dictionaries.show.transfer.error');
+    }
+}

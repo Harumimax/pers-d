@@ -312,6 +312,38 @@ class ReadyDictionaryCatalogTest extends TestCase
             ]);
     }
 
+    public function test_ready_dictionaries_v2_route_renders_isolated_redesign(): void
+    {
+        $user = User::factory()->create();
+
+        ReadyDictionary::factory()
+            ->has(ReadyDictionaryWord::factory()->count(2), 'words')
+            ->create([
+                'name' => 'English nouns',
+                'language' => 'English',
+                'level' => 'A1',
+                'part_of_speech' => 'noun',
+            ]);
+
+        $this->actingAs($user)
+            ->get('/ready-dictionaries-v2?language=English&level=A1&part_of_speech=noun')
+            ->assertOk()
+            ->assertSee('English nouns')
+            ->assertSee('Find the right dictionary')
+            ->assertSee('Prepared vocabulary')
+            ->assertSee('Open dictionary')
+            ->assertSee('css/ready-dictionaries-v2.css', false)
+            ->assertSee('wk-footer__brand')
+            ->assertSee('Save words. Practice them. Remember more.')
+            ->assertViewHas('readyDictionaries', fn ($dictionaries): bool => $dictionaries->count() === 1
+                && $dictionaries->first()->words_count === 2)
+            ->assertViewHas('selectedFilters', [
+                'language' => 'English',
+                'level' => 'A1',
+                'part_of_speech' => 'noun',
+            ]);
+    }
+
     public function test_ready_dictionary_show_page_displays_words_without_write_actions(): void
     {
         $user = User::factory()->create();
@@ -359,6 +391,46 @@ class ReadyDictionaryCatalogTest extends TestCase
             ->assertDontSee('Add Word')
             ->assertDontSee('Edit word')
             ->assertDontSee('Delete word');
+    }
+
+    public function test_ready_dictionary_show_v2_page_renders_redesign_without_affecting_old_page(): void
+    {
+        $user = User::factory()->create();
+        UserDictionary::create([
+            'user_id' => $user->id,
+            'name' => 'My English',
+            'language' => 'English',
+        ]);
+
+        $dictionary = ReadyDictionary::factory()->create([
+            'name' => 'Readonly English',
+            'language' => 'English',
+        ]);
+
+        ReadyDictionaryWord::factory()->create([
+            'ready_dictionary_id' => $dictionary->id,
+            'word' => 'apple',
+            'translation' => 'apple',
+            'part_of_speech' => 'noun',
+            'comment' => 'Fruit.',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('ready-dictionaries.show-v2', $dictionary))
+            ->assertOk()
+            ->assertSee('Readonly English')
+            ->assertSee('Practice-ready set')
+            ->assertSee('Pronunciation ready')
+            ->assertSee('css/ready-dictionary-show-v2.css', false)
+            ->assertSee(route('ready-dictionaries-v2.index'), false)
+            ->assertSee('apple')
+            ->assertSee('Add to dictionary');
+
+        $this->actingAs($user)
+            ->get(route('ready-dictionaries.show', $dictionary))
+            ->assertOk()
+            ->assertDontSee('Practice-ready set')
+            ->assertDontSee('css/ready-dictionary-show-v2.css', false);
     }
 
     public function test_guest_can_open_ready_dictionary_show_page_with_demo_header_and_signup_prompt(): void
