@@ -161,6 +161,7 @@
                                     class="dictionaries-input"
                                     placeholder="{{ __('dictionaries.show.placeholders.word') }}"
                                     wire:model.defer="autoWord"
+                                    wire:keydown.enter.prevent="translateAutomatically"
                                 >
                                 @error('autoWord')
                                     <p class="dictionaries-error">{{ $message }}</p>
