@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class DictionaryAccessService
 {
+    private const ADMIN_EMAIL = 'harumimax@gmail.com';
+
     public function canManage(?User $user, UserDictionary $dictionary): bool
     {
         return $user !== null && (int) $dictionary->user_id === (int) $user->id;
@@ -21,6 +23,10 @@ class DictionaryAccessService
 
         if ($user === null) {
             return false;
+        }
+
+        if ($this->isAdmin($user)) {
+            return true;
         }
 
         return $dictionary->subscriptions()
@@ -62,8 +68,17 @@ class DictionaryAccessService
             return null;
         }
 
+        if ($this->isAdmin($user)) {
+            return UserDictionary::query()->find($dictionaryId);
+        }
+
         return $this->accessibleDictionariesQuery($user)
             ->where('user_dictionaries.id', $dictionaryId)
             ->first();
+    }
+
+    private function isAdmin(User $user): bool
+    {
+        return mb_strtolower((string) $user->email) === self::ADMIN_EMAIL;
     }
 }

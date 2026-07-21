@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\AboutContactController;
+use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\DictionaryShareInvitationController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\ProfileController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\TelegramAuthLinkController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\TgBotController;
 use App\Http\Controllers\TranslatorController;
+use App\Http\Middleware\EnsureAdminUser;
 use App\Livewire\Dictionaries\Favorites as FavoriteWordsShow;
 use App\Livewire\Dictionaries\Index;
 use App\Livewire\Dictionaries\Show;
@@ -60,6 +62,12 @@ Route::middleware('auth')->group(function () {
         ->name('dashboard');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::middleware(EnsureAdminUser::class)->group(function () {
+        Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.index');
+        Route::delete('/admin/users/{user}', [AdminDashboardController::class, 'destroyUser'])->name('admin.users.destroy');
+        Route::delete('/admin/dictionaries/{dictionary}', [AdminDashboardController::class, 'destroyDictionary'])->name('admin.dictionaries.destroy');
+        Route::delete('/admin/ready-dictionaries/{readyDictionary}', [AdminDashboardController::class, 'destroyReadyDictionary'])->name('admin.ready-dictionaries.destroy');
+    });
     Route::get('/translator', [TranslatorController::class, 'index'])->name('translator.index');
     Route::post('/translator', [TranslatorController::class, 'store'])->name('translator.store');
     Route::get('/tg-bot', [TgBotController::class, 'index'])->name('tg-bot');

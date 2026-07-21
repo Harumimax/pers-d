@@ -36,9 +36,11 @@
         </div>
 
         <nav class="footer-nav" aria-label="Footer navigation">
-            <a href="{{ route('dictionaries.index') }}" class="footer-link">
-                {{ __('common.links.dictionaries') }}
-            </a>
+            @auth
+                <a href="{{ route('dictionaries.index') }}" class="footer-link">
+                    {{ __('common.links.dictionaries') }}
+                </a>
+            @endauth
             <a href="{{ route('remainder') }}" class="footer-link">
                 {{ __('common.links.remainder') }}
             </a>

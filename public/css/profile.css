@@ -135,6 +135,20 @@
     margin-top: 40px;
 }
 
+.profile-settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.profile-admin-link {
+    min-height: 48px;
+    padding: 0 18px;
+    border-radius: 14px;
+    white-space: nowrap;
+}
+
 .profile-main [x-cloak] {
     display: none !important;
 }
@@ -639,6 +653,11 @@
 
     .profile-page-header--spacious {
         margin-top: 28px;
+    }
+
+    .profile-settings-header {
+        flex-direction: column;
+        align-items: stretch;
     }
 
     .profile-title {

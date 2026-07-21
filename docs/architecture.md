@@ -78,6 +78,12 @@
   - validates translation direction and the 4500-character input limit through `TranslateTextRequest`
   - delegates the external API call to a dedicated translator-only text translation abstraction
   - returns the translated text to a read-only result field and shows a banner on provider failures
+- `App\Http\Controllers\Admin\AdminDashboardController`
+  - renders the protected admin panel page for a single allowed account
+  - supports admin-side filtering by user email and dictionary names
+  - shows paginated user, personal dictionary, and prepared dictionary tables
+  - protects the dedicated admin account from self-deletion
+  - allows explicit deletion of user accounts, personal dictionaries, and prepared dictionaries through confirmation-based actions
 - `App\Http\Controllers\TelegramWebhookController`
   - accepts Telegram webhook requests on a public endpoint
   - validates the URL secret against `config('services.telegram.webhook_secret')`
@@ -104,6 +110,9 @@
   - validates the resolved locale against configured supported locales
   - synchronizes the resolved locale back into session
   - calls `app()->setLocale(...)` for each web request
+- `App\Http\Middleware\EnsureAdminUser`
+  - allows access to `/admin*` routes only for the authenticated `harumimax@gmail.com` account
+  - returns `403` for any other authenticated user
 - Telegram webhook access is protected by an explicit secret in the webhook URL, not by session or token-based web auth
 - `telegram/webhook/*` is explicitly excluded from Laravel CSRF validation because Telegram cannot send a browser CSRF token
 
@@ -172,7 +181,7 @@
   - marks invitations as `accepted` or `expired`
 - `App\Services\DictionarySubscriptions\DictionaryAccessService`
   - centralizes owner-vs-subscriber access checks for dictionaries
-  - exposes reusable query helpers for all dictionaries available to the current user
+  - allows the dedicated admin account to open any personal dictionary in read-only mode from the admin panel
   - exposes reusable query helpers for all dictionaries available to the current user
 - `App\Services\Favorites\FavoriteWordsService`
   - adds and removes favorite marks for personal dictionary words

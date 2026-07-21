@@ -1,0 +1,71 @@
+<?php
+
+return [
+    'title' => 'Admin Panel',
+    'description' => 'View key project entities and safely manage user accounts and personal dictionaries.',
+    'link' => 'Admin Panel',
+    'filters' => [
+        'title' => 'Filters',
+        'description' => 'Use filters to quickly find users and dictionaries.',
+        'user_email' => 'User email',
+        'user_dictionary_name' => 'User dictionary name',
+        'ready_dictionary_name' => 'Prepared dictionary name',
+        'apply' => 'Apply filters',
+        'reset' => 'Reset',
+    ],
+    'users' => [
+        'title' => 'Users',
+        'description' => 'All registered users with summary statistics.',
+        'empty' => 'No users found.',
+    ],
+    'dictionaries' => [
+        'title' => 'User Dictionaries',
+        'description' => 'Personal dictionaries created by users.',
+        'empty' => 'No dictionaries found.',
+    ],
+    'ready_dictionaries' => [
+        'title' => 'Prepared Dictionaries',
+        'description' => 'Prepared dictionaries available in demo and study flows.',
+        'empty' => 'No prepared dictionaries found.',
+        'system_owner' => 'System',
+    ],
+    'columns' => [
+        'number' => '#',
+        'email' => 'Email',
+        'registered_at' => 'Registration date',
+        'total_dictionaries' => 'Total dictionaries',
+        'total_words' => 'Total words in dictionaries',
+        'completed_sessions' => 'Completed sessions',
+        'accuracy' => 'Accuracy',
+        'actions' => 'Actions',
+        'dictionary_name' => 'Dictionary name',
+        'language' => 'Language',
+        'word_count' => 'Word count',
+        'owner_email' => 'Owner email',
+        'created_at' => 'Created at',
+    ],
+    'actions' => [
+        'open_dictionary' => 'Open',
+        'delete_account' => 'Delete account',
+        'delete_dictionary' => 'Delete dictionary',
+        'protected_account' => 'Protected account',
+        'cancel' => 'No',
+        'confirm_delete' => 'Yes',
+    ],
+    'confirm' => [
+        'user_title' => 'Delete account?',
+        'user_text' => 'Are you sure you want to permanently delete this account?',
+        'dictionary_title' => 'Delete dictionary?',
+        'dictionary_text' => 'Are you sure you want to permanently delete this dictionary?',
+        'ready_dictionary_text' => 'Are you sure you want to permanently delete this prepared dictionary?',
+    ],
+    'fallbacks' => [
+        'no_data' => 'No data',
+    ],
+    'flash' => [
+        'user_deleted' => 'Account :email has been deleted.',
+        'admin_user_protected' => 'The protected admin account cannot be deleted.',
+        'dictionary_deleted' => 'Dictionary ":name" has been deleted.',
+        'ready_dictionary_deleted' => 'Prepared dictionary ":name" has been deleted.',
+    ],
+];

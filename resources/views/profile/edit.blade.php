@@ -118,7 +118,15 @@
             </section>
 
             <header class="profile-page-header profile-page-header--spacious">
-                <h1 class="profile-title">{{ __('profile.settings.title') }}</h1>
+                <div class="profile-settings-header">
+                    <h1 class="profile-title">{{ __('profile.settings.title') }}</h1>
+
+                    @if (mb_strtolower((string) auth()->user()?->email) === 'harumimax@gmail.com')
+                        <a href="{{ route('admin.index') }}" class="btn btn-secondary profile-admin-link">
+                            {{ __('admin.link') }}
+                        </a>
+                    @endif
+                </div>
             </header>
 
             <section class="profile-card">
