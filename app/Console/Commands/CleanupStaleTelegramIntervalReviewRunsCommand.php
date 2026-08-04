@@ -11,56 +11,51 @@ class CleanupStaleTelegramIntervalReviewRunsCommand extends Command
 {
     protected $signature = 'telegram:cleanup-stale-interval-review-runs';
 
-    protected $description = 'Mark stale interval review Telegram runs as expired or abandoned.';
+    protected $description = 'Mark superseded interval review Telegram runs as expired once a newer session exists.';
 
     public function handle(TelegramIntervalReviewRunMonitorService $telegramIntervalReviewRunMonitorService): int
     {
         $expiredCount = 0;
-        $abandonedCount = 0;
-        $threshold = now()->subHours(12);
 
         TelegramIntervalReviewRun::query()
             ->with('session')
-            ->where('status', TelegramIntervalReviewRun::STATUS_AWAITING_START)
-            ->where(function ($query) use ($threshold): void {
-                $query->where('intro_message_sent_at', '<=', $threshold)
-                    ->orWhere(function ($nested) use ($threshold): void {
-                        $nested->whereNull('intro_message_sent_at')
-                            ->where('created_at', '<=', $threshold);
-                    });
-            })
+            ->whereIn('status', [
+                TelegramIntervalReviewRun::STATUS_AWAITING_START,
+                TelegramIntervalReviewRun::STATUS_IN_PROGRESS,
+            ])
             ->chunkById(100, function ($runs) use ($telegramIntervalReviewRunMonitorService, &$expiredCount): void {
                 foreach ($runs as $run) {
+                    if (! $this->hasNewerRun($run)) {
+                        continue;
+                    }
+
                     $telegramIntervalReviewRunMonitorService->markExpired($run);
                     $expiredCount++;
                 }
             });
 
-        TelegramIntervalReviewRun::query()
-            ->with('session')
-            ->where('status', TelegramIntervalReviewRun::STATUS_IN_PROGRESS)
-            ->where(function ($query) use ($threshold): void {
-                $query->where('last_interaction_at', '<=', $threshold)
-                    ->orWhere(function ($nested) use ($threshold): void {
-                        $nested->whereNull('last_interaction_at')
-                            ->where('started_at', '<=', $threshold);
-                    });
-            })
-            ->chunkById(100, function ($runs) use ($telegramIntervalReviewRunMonitorService, &$abandonedCount): void {
-                foreach ($runs as $run) {
-                    $telegramIntervalReviewRunMonitorService->markAbandoned($run);
-                    $abandonedCount++;
-                }
-            });
-
         Log::info('telegram.interval_review.cleanup_stale_runs', [
             'expired_count' => $expiredCount,
-            'abandoned_count' => $abandonedCount,
-            'threshold' => $threshold->toIso8601String(),
         ]);
 
-        $this->info("Expired interval runs: {$expiredCount}. Abandoned interval runs: {$abandonedCount}.");
+        $this->info("Expired interval runs: {$expiredCount}.");
 
         return self::SUCCESS;
+    }
+
+    private function hasNewerRun(TelegramIntervalReviewRun $run): bool
+    {
+        $scheduledFor = $run->scheduled_for ?? $run->created_at;
+
+        if ($scheduledFor === null) {
+            return false;
+        }
+
+        return TelegramIntervalReviewRun::query()
+            ->where('telegram_interval_review_plan_id', $run->telegram_interval_review_plan_id)
+            ->whereKeyNot($run->id)
+            ->whereNotNull('scheduled_for')
+            ->where('scheduled_for', '>', $scheduledFor)
+            ->exists();
     }
 }

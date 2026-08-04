@@ -12,8 +12,6 @@ use App\Models\GameSession;
 use App\Models\TelegramIntervalReviewPlan;
 use App\Models\TelegramIntervalReviewRun;
 use App\Models\TelegramIntervalReviewSession;
-use Carbon\CarbonImmutable;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class CreateTelegramIntervalReviewRunService
@@ -43,6 +41,7 @@ class CreateTelegramIntervalReviewRunService
                         ? (string) $word->comment
                         : null,
                     'remainder_had_mistake' => false,
+                    'prompt_locale_snapshot' => $this->promptLocaleFromLanguage((string) $plan->language),
                 ])
                 ->values();
 
@@ -102,5 +101,17 @@ class CreateTelegramIntervalReviewRunService
 
             return $run->fresh(['user', 'plan', 'session', 'items']);
         });
+    }
+
+    private function promptLocaleFromLanguage(string $language): ?string
+    {
+        return match (strtolower(trim($language))) {
+            'english' => 'en-US',
+            'spanish' => 'es-ES',
+            'german' => 'de-DE',
+            'italian' => 'it-IT',
+            'portuguese' => 'pt-PT',
+            default => null,
+        };
     }
 }

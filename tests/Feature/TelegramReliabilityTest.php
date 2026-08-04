@@ -77,7 +77,7 @@ class TelegramReliabilityTest extends TestCase
         }
     }
 
-    public function test_cleanup_command_marks_stale_runs_as_expired_and_abandoned(): void
+    public function test_cleanup_command_expires_only_runs_that_have_newer_session(): void
     {
         $user = User::factory()->create([
             'tg_chat_id' => '1001',
@@ -113,7 +113,22 @@ class TelegramReliabilityTest extends TestCase
             'config_snapshot' => [],
         ]);
 
-        $abandonedRun = TelegramGameRun::query()->create([
+        TelegramGameRun::query()->create([
+            'user_id' => $user->id,
+            'telegram_setting_id' => $setting->id,
+            'telegram_random_word_session_id' => $session->id,
+            'mode' => 'choice',
+            'direction' => 'foreign_to_ru',
+            'total_words' => 10,
+            'correct_answers' => 0,
+            'incorrect_answers' => 0,
+            'status' => TelegramGameRun::STATUS_AWAITING_START,
+            'scheduled_for' => now()->subHours(1),
+            'intro_message_sent_at' => now()->subHours(1),
+            'config_snapshot' => [],
+        ]);
+
+        $expiredInProgressRun = TelegramGameRun::query()->create([
             'user_id' => $user->id,
             'telegram_setting_id' => $setting->id,
             'telegram_random_word_session_id' => $session->id,
@@ -129,7 +144,7 @@ class TelegramReliabilityTest extends TestCase
             'config_snapshot' => [],
         ]);
 
-        $freshRun = TelegramGameRun::query()->create([
+        $latestInProgressRun = TelegramGameRun::query()->create([
             'user_id' => $user->id,
             'telegram_setting_id' => $setting->id,
             'telegram_random_word_session_id' => $session->id,
@@ -139,23 +154,112 @@ class TelegramReliabilityTest extends TestCase
             'correct_answers' => 0,
             'incorrect_answers' => 0,
             'status' => TelegramGameRun::STATUS_IN_PROGRESS,
-            'scheduled_for' => now()->subHours(2)->addMinute(),
-            'started_at' => now()->subHours(2),
-            'last_interaction_at' => now()->subHours(2),
+            'scheduled_for' => now(),
+            'started_at' => now()->subMinutes(10),
+            'last_interaction_at' => now()->subMinutes(10),
             'config_snapshot' => [],
         ]);
 
         $this->artisan('telegram:cleanup-stale-runs')->assertSuccessful();
 
         $expiredRun->refresh();
-        $abandonedRun->refresh();
-        $freshRun->refresh();
+        $expiredInProgressRun->refresh();
+        $latestInProgressRun->refresh();
 
         $this->assertSame(TelegramGameRun::STATUS_EXPIRED, $expiredRun->status);
         $this->assertSame('expired', $expiredRun->last_error_code);
-        $this->assertSame(TelegramGameRun::STATUS_ABANDONED, $abandonedRun->status);
-        $this->assertSame('abandoned', $abandonedRun->last_error_code);
-        $this->assertSame(TelegramGameRun::STATUS_IN_PROGRESS, $freshRun->status);
+        $this->assertSame(TelegramGameRun::STATUS_EXPIRED, $expiredInProgressRun->status);
+        $this->assertSame('expired', $expiredInProgressRun->last_error_code);
+        $this->assertSame(TelegramGameRun::STATUS_IN_PROGRESS, $latestInProgressRun->status);
+    }
+
+    public function test_cleanup_command_keeps_last_awaiting_start_run_available_until_newer_run_exists(): void
+    {
+        $user = User::factory()->create([
+            'tg_chat_id' => '1001',
+            'tg_linked_at' => now(),
+        ]);
+
+        $setting = TelegramSetting::query()->create([
+            'user_id' => $user->id,
+            'timezone' => 'UTC',
+            'random_words_enabled' => true,
+        ]);
+
+        $session = TelegramRandomWordSession::query()->create([
+            'telegram_setting_id' => $setting->id,
+            'position' => 1,
+            'send_time' => '22:00:00',
+            'translation_direction' => 'foreign_to_ru',
+            'words_count' => 10,
+        ]);
+
+        $overnightRun = TelegramGameRun::query()->create([
+            'user_id' => $user->id,
+            'telegram_setting_id' => $setting->id,
+            'telegram_random_word_session_id' => $session->id,
+            'mode' => 'choice',
+            'direction' => 'foreign_to_ru',
+            'total_words' => 10,
+            'correct_answers' => 0,
+            'incorrect_answers' => 0,
+            'status' => TelegramGameRun::STATUS_AWAITING_START,
+            'scheduled_for' => now()->subHours(13),
+            'intro_message_sent_at' => now()->subHours(13),
+            'config_snapshot' => [],
+        ]);
+
+        $this->artisan('telegram:cleanup-stale-runs')->assertSuccessful();
+
+        $overnightRun->refresh();
+
+        $this->assertSame(TelegramGameRun::STATUS_AWAITING_START, $overnightRun->status);
+        $this->assertNull($overnightRun->last_error_code);
+    }
+
+    public function test_cleanup_command_keeps_last_in_progress_run_available_until_newer_run_exists(): void
+    {
+        $user = User::factory()->create([
+            'tg_chat_id' => '1001',
+            'tg_linked_at' => now(),
+        ]);
+
+        $setting = TelegramSetting::query()->create([
+            'user_id' => $user->id,
+            'timezone' => 'UTC',
+            'random_words_enabled' => true,
+        ]);
+
+        $session = TelegramRandomWordSession::query()->create([
+            'telegram_setting_id' => $setting->id,
+            'position' => 1,
+            'send_time' => '22:00:00',
+            'translation_direction' => 'foreign_to_ru',
+            'words_count' => 10,
+        ]);
+
+        $run = TelegramGameRun::query()->create([
+            'user_id' => $user->id,
+            'telegram_setting_id' => $setting->id,
+            'telegram_random_word_session_id' => $session->id,
+            'mode' => 'choice',
+            'direction' => 'foreign_to_ru',
+            'total_words' => 10,
+            'correct_answers' => 0,
+            'incorrect_answers' => 0,
+            'status' => TelegramGameRun::STATUS_IN_PROGRESS,
+            'scheduled_for' => now()->subHours(13),
+            'started_at' => now()->subHours(13),
+            'last_interaction_at' => now()->subHours(13),
+            'config_snapshot' => [],
+        ]);
+
+        $this->artisan('telegram:cleanup-stale-runs')->assertSuccessful();
+
+        $run->refresh();
+
+        $this->assertSame(TelegramGameRun::STATUS_IN_PROGRESS, $run->status);
+        $this->assertNull($run->last_error_code);
     }
 
     /**

@@ -11,54 +11,50 @@ class CleanupStaleTelegramRunsCommand extends Command
 {
     protected $signature = 'telegram:cleanup-stale-runs';
 
-    protected $description = 'Mark old awaiting_start Telegram runs as expired and inactive in_progress runs as abandoned.';
+    protected $description = 'Mark superseded Telegram runs as expired once a newer session exists.';
 
     public function handle(TelegramGameRunMonitorService $telegramGameRunMonitorService): int
     {
         $expiredCount = 0;
-        $abandonedCount = 0;
-        $threshold = now()->subHours(12);
 
         TelegramGameRun::query()
-            ->where('status', TelegramGameRun::STATUS_AWAITING_START)
-            ->where(function ($query) use ($threshold): void {
-                $query->where('intro_message_sent_at', '<=', $threshold)
-                    ->orWhere(function ($nested) use ($threshold): void {
-                        $nested->whereNull('intro_message_sent_at')
-                            ->where('created_at', '<=', $threshold);
-                    });
-            })
+            ->whereIn('status', [
+                TelegramGameRun::STATUS_AWAITING_START,
+                TelegramGameRun::STATUS_IN_PROGRESS,
+            ])
             ->chunkById(100, function ($runs) use ($telegramGameRunMonitorService, &$expiredCount): void {
                 foreach ($runs as $run) {
+                    if (! $this->hasNewerRun($run)) {
+                        continue;
+                    }
+
                     $telegramGameRunMonitorService->markExpired($run);
                     $expiredCount++;
                 }
             });
 
-        TelegramGameRun::query()
-            ->where('status', TelegramGameRun::STATUS_IN_PROGRESS)
-            ->where(function ($query) use ($threshold): void {
-                $query->where('last_interaction_at', '<=', $threshold)
-                    ->orWhere(function ($nested) use ($threshold): void {
-                        $nested->whereNull('last_interaction_at')
-                            ->where('started_at', '<=', $threshold);
-                    });
-            })
-            ->chunkById(100, function ($runs) use ($telegramGameRunMonitorService, &$abandonedCount): void {
-                foreach ($runs as $run) {
-                    $telegramGameRunMonitorService->markAbandoned($run);
-                    $abandonedCount++;
-                }
-            });
-
         Log::info('telegram.scheduler.cleanup_stale_runs', [
             'expired_count' => $expiredCount,
-            'abandoned_count' => $abandonedCount,
-            'threshold' => $threshold->toIso8601String(),
         ]);
 
-        $this->info("Expired: {$expiredCount}. Abandoned: {$abandonedCount}.");
+        $this->info("Expired: {$expiredCount}.");
 
         return self::SUCCESS;
+    }
+
+    private function hasNewerRun(TelegramGameRun $run): bool
+    {
+        $scheduledFor = $run->scheduled_for ?? $run->created_at;
+
+        if ($scheduledFor === null) {
+            return false;
+        }
+
+        return TelegramGameRun::query()
+            ->where('user_id', $run->user_id)
+            ->whereKeyNot($run->id)
+            ->whereNotNull('scheduled_for')
+            ->where('scheduled_for', '>', $scheduledFor)
+            ->exists();
     }
 }

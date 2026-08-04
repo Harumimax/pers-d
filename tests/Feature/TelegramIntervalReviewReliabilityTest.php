@@ -58,12 +58,12 @@ class TelegramIntervalReviewReliabilityTest extends TestCase
         ]);
     }
 
-    public function test_interval_cleanup_command_marks_stale_runs_as_expired_and_abandoned(): void
+    public function test_interval_cleanup_command_expires_only_runs_that_have_newer_session(): void
     {
         [$expiredRun, $abandonedRun, $freshRun] = $this->createStaleIntervalRuns();
 
         $this->artisan('telegram:cleanup-stale-interval-review-runs')
-            ->expectsOutput('Expired interval runs: 1. Abandoned interval runs: 1.')
+            ->expectsOutput('Expired interval runs: 2.')
             ->assertSuccessful();
 
         $expiredRun->refresh();
@@ -74,12 +74,111 @@ class TelegramIntervalReviewReliabilityTest extends TestCase
         $this->assertSame('expired', $expiredRun->last_error_code);
         $this->assertSame(TelegramIntervalReviewSession::STATUS_EXPIRED, $expiredRun->session->fresh()->status);
 
-        $this->assertSame(TelegramIntervalReviewRun::STATUS_ABANDONED, $abandonedRun->status);
-        $this->assertSame('abandoned', $abandonedRun->last_error_code);
-        $this->assertSame(TelegramIntervalReviewSession::STATUS_ABANDONED, $abandonedRun->session->fresh()->status);
+        $this->assertSame(TelegramIntervalReviewRun::STATUS_EXPIRED, $abandonedRun->status);
+        $this->assertSame('expired', $abandonedRun->last_error_code);
+        $this->assertSame(TelegramIntervalReviewSession::STATUS_EXPIRED, $abandonedRun->session->fresh()->status);
 
         $this->assertSame(TelegramIntervalReviewRun::STATUS_IN_PROGRESS, $freshRun->status);
         $this->assertSame(TelegramIntervalReviewSession::STATUS_IN_PROGRESS, $freshRun->session->fresh()->status);
+    }
+
+    public function test_interval_cleanup_keeps_last_awaiting_start_run_available_until_newer_run_exists(): void
+    {
+        $user = User::factory()->create([
+            'tg_chat_id' => '5001',
+            'tg_linked_at' => now(),
+        ]);
+
+        $plan = TelegramIntervalReviewPlan::query()->create([
+            'user_id' => $user->id,
+            'status' => TelegramIntervalReviewPlan::STATUS_ACTIVE,
+            'language' => 'English',
+            'start_time' => '22:00',
+            'timezone' => 'UTC',
+            'words_count' => 1,
+        ]);
+
+        $session = TelegramIntervalReviewSession::query()->create([
+            'telegram_interval_review_plan_id' => $plan->id,
+            'session_number' => 2,
+            'scheduled_for' => now()->subHours(13),
+            'status' => TelegramIntervalReviewSession::STATUS_AWAITING_START,
+        ]);
+
+        $run = TelegramIntervalReviewRun::query()->create([
+            'user_id' => $user->id,
+            'telegram_interval_review_plan_id' => $plan->id,
+            'telegram_interval_review_session_id' => $session->id,
+            'session_number' => 2,
+            'total_words' => 1,
+            'correct_answers' => 0,
+            'incorrect_answers' => 0,
+            'status' => TelegramIntervalReviewRun::STATUS_AWAITING_START,
+            'scheduled_for' => now()->subHours(13),
+            'intro_message_sent_at' => now()->subHours(13),
+            'config_snapshot' => [],
+        ]);
+
+        $this->artisan('telegram:cleanup-stale-interval-review-runs')
+            ->expectsOutput('Expired interval runs: 0.')
+            ->assertSuccessful();
+
+        $run->refresh();
+        $session->refresh();
+
+        $this->assertSame(TelegramIntervalReviewRun::STATUS_AWAITING_START, $run->status);
+        $this->assertNull($run->last_error_code);
+        $this->assertSame(TelegramIntervalReviewSession::STATUS_AWAITING_START, $session->status);
+    }
+
+    public function test_interval_cleanup_keeps_last_in_progress_run_available_until_newer_run_exists(): void
+    {
+        $user = User::factory()->create([
+            'tg_chat_id' => '5001',
+            'tg_linked_at' => now(),
+        ]);
+
+        $plan = TelegramIntervalReviewPlan::query()->create([
+            'user_id' => $user->id,
+            'status' => TelegramIntervalReviewPlan::STATUS_ACTIVE,
+            'language' => 'English',
+            'start_time' => '22:00',
+            'timezone' => 'UTC',
+            'words_count' => 1,
+        ]);
+
+        $session = TelegramIntervalReviewSession::query()->create([
+            'telegram_interval_review_plan_id' => $plan->id,
+            'session_number' => 2,
+            'scheduled_for' => now()->subHours(13),
+            'status' => TelegramIntervalReviewSession::STATUS_IN_PROGRESS,
+        ]);
+
+        $run = TelegramIntervalReviewRun::query()->create([
+            'user_id' => $user->id,
+            'telegram_interval_review_plan_id' => $plan->id,
+            'telegram_interval_review_session_id' => $session->id,
+            'session_number' => 2,
+            'total_words' => 1,
+            'correct_answers' => 0,
+            'incorrect_answers' => 0,
+            'status' => TelegramIntervalReviewRun::STATUS_IN_PROGRESS,
+            'scheduled_for' => now()->subHours(13),
+            'started_at' => now()->subHours(13),
+            'last_interaction_at' => now()->subHours(13),
+            'config_snapshot' => [],
+        ]);
+
+        $this->artisan('telegram:cleanup-stale-interval-review-runs')
+            ->expectsOutput('Expired interval runs: 0.')
+            ->assertSuccessful();
+
+        $run->refresh();
+        $session->refresh();
+
+        $this->assertSame(TelegramIntervalReviewRun::STATUS_IN_PROGRESS, $run->status);
+        $this->assertNull($run->last_error_code);
+        $this->assertSame(TelegramIntervalReviewSession::STATUS_IN_PROGRESS, $session->status);
     }
 
     public function test_dispatch_command_marks_interval_session_and_run_as_failed_when_intro_delivery_fails(): void
@@ -265,6 +364,27 @@ class TelegramIntervalReviewReliabilityTest extends TestCase
             'status' => TelegramIntervalReviewRun::STATUS_AWAITING_START,
             'scheduled_for' => now()->subHours(13),
             'intro_message_sent_at' => now()->subHours(13),
+            'config_snapshot' => [],
+        ]);
+
+        $nextSession = TelegramIntervalReviewSession::query()->create([
+            'telegram_interval_review_plan_id' => $plan->id,
+            'session_number' => 4,
+            'scheduled_for' => now()->subHour(),
+            'status' => TelegramIntervalReviewSession::STATUS_AWAITING_START,
+        ]);
+
+        TelegramIntervalReviewRun::query()->create([
+            'user_id' => $user->id,
+            'telegram_interval_review_plan_id' => $plan->id,
+            'telegram_interval_review_session_id' => $nextSession->id,
+            'session_number' => 4,
+            'total_words' => 1,
+            'correct_answers' => 0,
+            'incorrect_answers' => 0,
+            'status' => TelegramIntervalReviewRun::STATUS_AWAITING_START,
+            'scheduled_for' => now()->subHour(),
+            'intro_message_sent_at' => now()->subHour(),
             'config_snapshot' => [],
         ]);
 
