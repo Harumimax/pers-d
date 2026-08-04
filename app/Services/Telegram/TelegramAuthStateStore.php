@@ -11,6 +11,7 @@ class TelegramAuthStateStore
     public const STEP_AWAITING_ADD_WORD_TEXT = 'awaiting_add_word_text';
     public const STEP_AWAITING_ADD_WORD_TRANSLATION = 'awaiting_add_word_translation';
     public const STEP_AWAITING_ADD_WORD_PART_OF_SPEECH = 'awaiting_add_word_part_of_speech';
+    public const STEP_AWAITING_TEXT_TRANSLATION_TEXT = 'awaiting_text_translation_text';
 
     private const TTL_MINUTES = 10;
 
@@ -42,6 +43,14 @@ class TelegramAuthStateStore
             'translation_options' => [],
             'selected_translation' => null,
         ]);
+    }
+
+    public function startTextTranslation(string $chatId): void
+    {
+        $this->put($chatId, [
+            'step' => self::STEP_AWAITING_TEXT_TRANSLATION_TEXT,
+            'email' => null,
+        ] + $this->emptyAddWordState());
     }
 
     /**

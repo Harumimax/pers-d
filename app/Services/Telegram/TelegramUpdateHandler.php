@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\UserDictionary;
 use App\Services\Dictionaries\SaveDictionaryWordService;
 use App\Services\Dictionaries\UserDictionaryWordSearchService;
+use App\Services\Translation\TranslatorTextTranslationServiceInterface;
 use App\Services\Translation\TranslationServiceInterface;
 use App\Support\DictionaryLanguageCode;
 use App\Support\PartOfSpeechCatalog;
@@ -20,6 +21,8 @@ use Throwable;
 class TelegramUpdateHandler
 {
     private const ADD_WORD_MAX_LENGTH = 50;
+    private const TEXT_TRANSLATION_MAX_LENGTH = 4000;
+    private const TEXT_TRANSLATION_SOURCE_LANGUAGE = 'en';
     private const TARGET_LANGUAGE = 'ru';
     public function __construct(
         private readonly TelegramBotService $bot,
@@ -37,6 +40,7 @@ class TelegramUpdateHandler
         private readonly TelegramAccountLinkService $telegramAccountLinkService,
         private readonly UserDictionaryWordSearchService $userDictionaryWordSearchService,
         private readonly SaveDictionaryWordService $saveDictionaryWordService,
+        private readonly TranslatorTextTranslationServiceInterface $translatorTextTranslationService,
         private readonly TranslationServiceInterface $translationService,
     ) {
     }
@@ -158,6 +162,25 @@ class TelegramUpdateHandler
                 return;
             }
 
+            if (in_array($text, ['Перевод текста'], true)) {
+                if (! $linkedUser instanceof User) {
+                    $this->bot->sendMessage($chatId, 'Сначала авторизуйтесь в боте через /login.');
+                    $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
+
+                    return;
+                }
+
+                $this->stateStore->startTextTranslation($chatId);
+                $this->bot->sendMessage(
+                    $chatId,
+                    'Введите текст до 4000 символов. Перевод фиксированный - с Английского на Русский.',
+                    $this->mainMenuReplyMarkup(),
+                );
+                $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
+
+                return;
+            }
+
             $state = $this->stateStore->get($chatId);
 
             if ($state === null) {
@@ -183,6 +206,13 @@ class TelegramUpdateHandler
 
             if ($state['step'] === TelegramAuthStateStore::STEP_AWAITING_ADD_WORD_TEXT) {
                 $this->handleAddWordTextStep($chatId, $text, $linkedUser, $state);
+                $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
+
+                return;
+            }
+
+            if ($state['step'] === TelegramAuthStateStore::STEP_AWAITING_TEXT_TRANSLATION_TEXT) {
+                $this->handleTextTranslationStep($chatId, $text, $linkedUser);
                 $this->telegramProcessedUpdateService->markProcessed($processedUpdate);
 
                 return;
@@ -991,6 +1021,49 @@ class TelegramUpdateHandler
         $this->showAddWordTranslationPicker($chatId, $suggestions);
     }
 
+    private function handleTextTranslationStep(string $chatId, string $text, ?User $linkedUser): void
+    {
+        if (! $linkedUser instanceof User) {
+            $this->stateStore->clear($chatId);
+            $this->bot->sendMessage($chatId, 'Сначала авторизуйтесь в боте через /login.');
+
+            return;
+        }
+
+        $translationText = trim($text);
+
+        if ($translationText === '') {
+            $this->bot->sendMessage($chatId, 'Введите текст до 4000 символов. Перевод фиксированный - с Английского на Русский.');
+
+            return;
+        }
+
+        if (mb_strlen($translationText) > self::TEXT_TRANSLATION_MAX_LENGTH) {
+            $this->bot->sendMessage($chatId, 'Текст не должен превышать 4000 символов.');
+
+            return;
+        }
+
+        try {
+            $translatedText = $this->translatorTextTranslationService->translateText(
+                $translationText,
+                self::TEXT_TRANSLATION_SOURCE_LANGUAGE,
+                self::TARGET_LANGUAGE,
+            );
+        } catch (ConnectionException|RequestException|Throwable) {
+            $this->stateStore->clear($chatId);
+            $this->bot->sendMessage(
+                $chatId,
+                'Не удалось перевести текст. Попробуйте позже.',
+                $this->mainMenuReplyMarkup(),
+            );
+
+            return;
+        }
+
+        $this->stateStore->clear($chatId);
+        $this->bot->sendMessage($chatId, $translatedText, $this->mainMenuReplyMarkup());
+    }
     private function handleLogout(string $chatId): void
     {
         $this->telegramAccountLinkService->unlinkByChatId($chatId);
@@ -1214,6 +1287,7 @@ class TelegramUpdateHandler
                     [['text' => 'Словари']],
                     [['text' => 'Поиск слов']],
                     [['text' => 'Добавить слово']],
+                    [['text' => 'Перевод текста']],
                     [['text' => 'Выход']],
                 ],
                 'resize_keyboard' => true,

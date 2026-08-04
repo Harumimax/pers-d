@@ -48,7 +48,8 @@ class TelegramDictionaryWordSearchTest extends TestCase
                 && data_get($request->data(), 'reply_markup.keyboard.0.0.text') === $this->ru('\\u0421\\u043b\\u043e\\u0432\\u0430\\u0440\\u0438')
                 && data_get($request->data(), 'reply_markup.keyboard.1.0.text') === $this->ru('\\u041f\\u043e\\u0438\\u0441\\u043a \\u0441\\u043b\\u043e\\u0432')
                 && data_get($request->data(), 'reply_markup.keyboard.2.0.text') === $this->ru('\\u0414\\u043e\\u0431\\u0430\\u0432\\u0438\\u0442\\u044c \\u0441\\u043b\\u043e\\u0432\\u043e')
-                && data_get($request->data(), 'reply_markup.keyboard.3.0.text') === $this->ru('\\u0412\\u044b\\u0445\\u043e\\u0434');
+                && data_get($request->data(), 'reply_markup.keyboard.3.0.text') === $this->ru('\\u041f\\u0435\\u0440\\u0435\\u0432\\u043e\\u0434 \\u0442\\u0435\\u043a\\u0441\\u0442\\u0430')
+                && data_get($request->data(), 'reply_markup.keyboard.4.0.text') === $this->ru('\\u0412\\u044b\\u0445\\u043e\\u0434');
         });
     }
 
