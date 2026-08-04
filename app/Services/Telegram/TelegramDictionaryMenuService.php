@@ -2,9 +2,11 @@
 
 namespace App\Services\Telegram;
 
-use App\Models\UserDictionary;
 use App\Models\User;
+use App\Models\UserDictionary;
 use App\Services\DictionarySubscriptions\DictionaryAccessService;
+use App\Services\Favorites\FavoriteWordsService;
+use Illuminate\Support\Collection;
 
 class TelegramDictionaryMenuService
 {
@@ -12,6 +14,7 @@ class TelegramDictionaryMenuService
         private readonly TelegramBotService $telegramBotService,
         private readonly TelegramDictionaryCallbackData $telegramDictionaryCallbackData,
         private readonly DictionaryAccessService $dictionaryAccessService,
+        private readonly FavoriteWordsService $favoriteWordsService,
     ) {
     }
 
@@ -20,34 +23,36 @@ class TelegramDictionaryMenuService
      */
     public function show(User $user, string $chatId, ?int $messageId = null): array
     {
+        $favoriteDictionary = [
+            'id' => $this->favoriteWordsService->virtualDictionaryId(),
+            'name' => __('dictionaries.index.favorites.name'),
+            'language' => null,
+        ];
+
         $dictionaries = $this->dictionaryAccessService
             ->accessibleDictionariesQuery($user)
             ->orderBy('id')
             ->get(['user_dictionaries.id', 'user_dictionaries.name', 'user_dictionaries.language']);
 
-        if ($dictionaries->isEmpty()) {
-            $text = 'У вас пока нет созданных словарей, сделать это можно на https://wordkeeper.space';
-
-            if ($messageId !== null) {
-                $this->telegramBotService->editMessageText($chatId, $messageId, $text);
-            } else {
-                $this->telegramBotService->sendMessage($chatId, $text);
-            }
-
-            return [
-                'status' => 'empty',
-                'dictionaries_count' => 0,
-            ];
-        }
+        /** @var Collection<int, array{id:int,name:string,language:?string}> $items */
+        $items = collect([$favoriteDictionary])
+            ->concat(
+                $dictionaries->map(static fn (UserDictionary $dictionary): array => [
+                    'id' => (int) $dictionary->id,
+                    'name' => (string) $dictionary->name,
+                    'language' => filled($dictionary->language) ? (string) $dictionary->language : null,
+                ])
+            )
+            ->values();
 
         $lines = ['Ваши словари:', ''];
 
-        foreach ($dictionaries as $index => $dictionary) {
+        foreach ($items as $index => $dictionary) {
             $number = $index + 1;
-            $line = "{$number}. {$dictionary->name}";
+            $line = "{$number}. {$dictionary['name']}";
 
-            if (filled($dictionary->language)) {
-                $line .= " — {$dictionary->language}";
+            if (filled($dictionary['language'])) {
+                $line .= " - {$dictionary['language']}";
             }
 
             $lines[] = $line;
@@ -56,12 +61,11 @@ class TelegramDictionaryMenuService
         $lines[] = '';
         $lines[] = 'Выберите словарь:';
 
-        $keyboard = collect($dictionaries)
-            ->values()
-            ->map(function (UserDictionary $dictionary, int $index): array {
+        $keyboard = $items
+            ->map(function (array $dictionary, int $index): array {
                 return [
                     'text' => (string) ($index + 1),
-                    'callback_data' => $this->telegramDictionaryCallbackData->makeShow($dictionary->id, 1),
+                    'callback_data' => $this->telegramDictionaryCallbackData->makeShow((int) $dictionary['id'], 1),
                 ];
             })
             ->chunk(4)
@@ -85,7 +89,7 @@ class TelegramDictionaryMenuService
 
         return [
             'status' => 'shown',
-            'dictionaries_count' => $dictionaries->count(),
+            'dictionaries_count' => $items->count(),
         ];
     }
 }

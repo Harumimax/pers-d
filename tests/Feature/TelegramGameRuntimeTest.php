@@ -43,7 +43,7 @@ class TelegramGameRuntimeTest extends TestCase
         $firstItem->refresh();
         $run->refresh();
 
-        $this->assertSame('СЏР±Р»РѕРєРѕ', $firstItem->user_answer);
+        $this->assertSame('яблоко', $firstItem->user_answer);
         $this->assertTrue($firstItem->is_correct);
         $this->assertNotNull($firstItem->answered_at);
         $this->assertSame(TelegramGameRun::STATUS_IN_PROGRESS, $run->status);
@@ -67,7 +67,7 @@ class TelegramGameRuntimeTest extends TestCase
         [$run, $firstItem, $secondItem] = $this->createRunWithItems();
 
         $firstItem->forceFill([
-            'user_answer' => 'СЏР±Р»РѕРєРѕ',
+            'user_answer' => 'яблоко',
             'is_correct' => true,
             'answered_at' => now(),
         ])->save();
@@ -78,7 +78,7 @@ class TelegramGameRuntimeTest extends TestCase
         $secondItem->refresh();
         $run->refresh();
 
-        $this->assertSame('СЂРµРєР°', $secondItem->user_answer);
+        $this->assertSame('река', $secondItem->user_answer);
         $this->assertFalse($secondItem->is_correct);
         $this->assertNotNull($secondItem->answered_at);
         $this->assertSame(TelegramGameRun::STATUS_FINISHED, $run->status);
@@ -90,7 +90,7 @@ class TelegramGameRuntimeTest extends TestCase
         Http::assertSent(function (Request $request): bool {
             return str_ends_with($request->url(), '/sendMessage')
                 && str_contains((string) $request['text'], '1. book')
-                && str_contains((string) $request['text'], 'СЂРµРєР°');
+                && str_contains((string) $request['text'], 'река');
         });
     }
 
@@ -128,7 +128,7 @@ class TelegramGameRuntimeTest extends TestCase
         [$run, $firstItem] = $this->createRunWithItems();
 
         $firstItem->forceFill([
-            'user_answer' => 'СЏР±Р»РѕРєРѕ',
+            'user_answer' => 'яблоко',
             'is_correct' => true,
             'answered_at' => now(),
         ])->save();
@@ -137,7 +137,7 @@ class TelegramGameRuntimeTest extends TestCase
             ->assertOk();
 
         Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/answerCallbackQuery'));
-        Http::assertNotSent(fn (Request $request): bool => str_ends_with($request->url(), '/sendMessage') && ((string) $request['text'] === 'РљРѕСЂСЂРµРєС‚РЅРѕ.' || str_contains((string) $request['text'], 'РќРµРєРѕСЂСЂРµРєС‚РЅРѕ.')));
+        Http::assertNotSent(fn (Request $request): bool => str_ends_with($request->url(), '/sendMessage') && ((string) $request['text'] === 'Корректно.' || str_contains((string) $request['text'], 'Некорректно.')));
     }
 
     public function test_invalid_option_index_is_rejected(): void
@@ -179,13 +179,13 @@ class TelegramGameRuntimeTest extends TestCase
 
         $firstWord = Word::query()->create([
             'word' => 'apple',
-            'translation' => 'СЏР±Р»РѕРєРѕ',
+            'translation' => 'яблоко',
             'part_of_speech' => 'noun',
         ]);
 
         $secondWord = Word::query()->create([
             'word' => 'book',
-            'translation' => 'РєРЅРёРіР°',
+            'translation' => 'книга',
             'part_of_speech' => 'noun',
         ]);
 
@@ -227,9 +227,9 @@ class TelegramGameRuntimeTest extends TestCase
             'order_index' => 1,
             'prompt_text' => 'apple',
             'part_of_speech_snapshot' => 'noun',
-            'correct_answer' => 'СЏР±Р»РѕРєРѕ',
+            'correct_answer' => 'яблоко',
             'source_type_snapshot' => 'user',
-            'options_json' => ['СЏР±Р»РѕРєРѕ', 'СЂРµРєР°', 'С‚СЂР°РІР° РІ РїРѕР»Рµ', 'СЃРёРЅРµРµ РјРѕСЂРµ', 'РѕС‚РєСЂС‹С‚РѕРµ РѕРєРЅРѕ', 'Р±РѕР»СЊС€РѕР№ РіРѕСЂРѕРґ'],
+            'options_json' => ['яблоко', 'река', 'трава в поле', 'синее море', 'открытое окно', 'большой город'],
         ]);
 
         $secondItem = $run->items()->create([
@@ -237,9 +237,9 @@ class TelegramGameRuntimeTest extends TestCase
             'order_index' => 2,
             'prompt_text' => 'book',
             'part_of_speech_snapshot' => 'noun',
-            'correct_answer' => 'РєРЅРёРіР°',
+            'correct_answer' => 'книга',
             'source_type_snapshot' => 'user',
-            'options_json' => ['РєРЅРёРіР°', 'СЂРµРєР°', 'С‚СЂР°РІР° РІ РїРѕР»Рµ', 'СЃРёРЅРµРµ РјРѕСЂРµ', 'РѕС‚РєСЂС‹С‚РѕРµ РѕРєРЅРѕ', 'Р±РѕР»СЊС€РѕР№ РіРѕСЂРѕРґ'],
+            'options_json' => ['книга', 'река', 'трава в поле', 'синее море', 'открытое окно', 'большой город'],
         ]);
 
         return [$run->fresh(['user', 'items']), $firstItem, $secondItem, $firstWord, $secondWord];
@@ -297,4 +297,3 @@ class TelegramGameRuntimeTest extends TestCase
         $this->assertSame($expected, (bool) $progress?->remainder_had_mistake);
     }
 }
-

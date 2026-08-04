@@ -45,10 +45,10 @@ class TelegramDictionaryWordSearchTest extends TestCase
 
         Http::assertSent(function (Request $request): bool {
             return str_ends_with($request->url(), '/sendMessage')
-                && data_get($request->data(), 'reply_markup.keyboard.0.0.text') === 'Словари'
-                && data_get($request->data(), 'reply_markup.keyboard.1.0.text') === 'Поиск слов'
-                && data_get($request->data(), 'reply_markup.keyboard.2.0.text') === 'Добавить слово'
-                && data_get($request->data(), 'reply_markup.keyboard.3.0.text') === 'Выход';
+                && data_get($request->data(), 'reply_markup.keyboard.0.0.text') === $this->ru('\\u0421\\u043b\\u043e\\u0432\\u0430\\u0440\\u0438')
+                && data_get($request->data(), 'reply_markup.keyboard.1.0.text') === $this->ru('\\u041f\\u043e\\u0438\\u0441\\u043a \\u0441\\u043b\\u043e\\u0432')
+                && data_get($request->data(), 'reply_markup.keyboard.2.0.text') === $this->ru('\\u0414\\u043e\\u0431\\u0430\\u0432\\u0438\\u0442\\u044c \\u0441\\u043b\\u043e\\u0432\\u043e')
+                && data_get($request->data(), 'reply_markup.keyboard.3.0.text') === $this->ru('\\u0412\\u044b\\u0445\\u043e\\u0434');
         });
     }
 
@@ -63,7 +63,7 @@ class TelegramDictionaryWordSearchTest extends TestCase
             'tg_linked_at' => now(),
         ]);
 
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('Поиск слов', 33001))
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate($this->ru('\\u041f\\u043e\\u0438\\u0441\\u043a \\u0441\\u043b\\u043e\\u0432'), 33001))
             ->assertOk();
 
         $state = app(TelegramAuthStateStore::class)->get('1001');
@@ -71,8 +71,8 @@ class TelegramDictionaryWordSearchTest extends TestCase
         $this->assertSame(TelegramAuthStateStore::STEP_AWAITING_DICTIONARY_SEARCH_QUERY, $state['step']);
 
         Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/sendMessage')
-            && str_contains((string) $request['text'], 'Введите слово или часть слова для поиска.')
-            && str_contains((string) $request['text'], 'Поиск будет осуществлён по вашим словарям'));
+            && str_contains((string) $request['text'], $this->ru('\\u0412\\u0432\\u0435\\u0434\\u0438\\u0442\\u0435 \\u0441\\u043b\\u043e\\u0432\\u043e \\u0438\\u043b\\u0438 \\u0447\\u0430\\u0441\\u0442\\u044c \\u0441\\u043b\\u043e\\u0432\\u0430 \\u0434\\u043b\\u044f \\u043f\\u043e\\u0438\\u0441\\u043a\\u0430.'))
+            && str_contains((string) $request['text'], $this->ru('\\u041f\\u043e\\u0438\\u0441\\u043a \\u0431\\u0443\\u0434\\u0435\\u0442 \\u043e\\u0441\\u0443\\u0449\\u0435\\u0441\\u0442\\u0432\\u043b\\u0451\\u043d \\u043f\\u043e \\u0432\\u0430\\u0448\\u0438\\u043c \\u0441\\u043b\\u043e\\u0432\\u0430\\u0440\\u044f\\u043c')));
     }
 
     public function test_search_query_returns_results_by_word_for_current_users_dictionaries_only(): void
@@ -89,37 +89,37 @@ class TelegramDictionaryWordSearchTest extends TestCase
 
         $generalDictionary = UserDictionary::create([
             'user_id' => $user->id,
-            'name' => 'Общий словарь',
+            'name' => 'General dictionary',
             'language' => 'English',
         ]);
         $politeDictionary = UserDictionary::create([
             'user_id' => $user->id,
-            'name' => 'Вежливый словарь',
+            'name' => 'Polite dictionary',
             'language' => 'English',
         ]);
         $foreignDictionary = UserDictionary::create([
             'user_id' => $otherUser->id,
-            'name' => 'Чужой словарь',
+            'name' => 'Foreign dictionary',
             'language' => 'English',
         ]);
 
         $helloWord = Word::create([
             'word' => 'Hello',
-            'translation' => 'Привет',
+            'translation' => 'Hi',
             'part_of_speech' => 'interjection',
-            'comment' => 'Приветствие',
+            'comment' => 'Greeting',
         ]);
         $formalHelloWord = Word::create([
             'word' => 'Hello',
-            'translation' => 'Здравствуйте',
+            'translation' => 'Good day',
             'part_of_speech' => 'interjection',
-            'comment' => 'Официальное приветствие',
+            'comment' => 'Formal greeting',
         ]);
         $foreignWord = Word::create([
             'word' => 'Hello hidden',
-            'translation' => 'Скрытый привет',
+            'translation' => 'Hidden hello',
             'part_of_speech' => 'interjection',
-            'comment' => 'Чужой комментарий',
+            'comment' => 'Foreign comment',
         ]);
 
         $generalDictionary->words()->attach($helloWord->id);
@@ -132,11 +132,11 @@ class TelegramDictionaryWordSearchTest extends TestCase
                 'language' => 'English',
             ])->id,
             'word' => 'Hello ready',
-            'translation' => 'Готовый привет',
-            'comment' => 'Готовый комментарий',
+            'translation' => 'Ready hello',
+            'comment' => 'Ready comment',
         ]);
 
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('Поиск слов', 33001))->assertOk();
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate($this->ru('\\u041f\\u043e\\u0438\\u0441\\u043a \\u0441\\u043b\\u043e\\u0432'), 33001))->assertOk();
         $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('hell', 33002))->assertOk();
 
         $this->assertNull(app(TelegramAuthStateStore::class)->get('1001'));
@@ -145,16 +145,15 @@ class TelegramDictionaryWordSearchTest extends TestCase
             $text = (string) $request['text'];
 
             return str_ends_with($request->url(), '/sendMessage')
-                && str_contains($text, 'Результаты поиска:')
-                && str_contains($text, '1. Hello - ')
-                && str_contains($text, '2. Hello - ')
-                && str_contains($text, 'Hello - Привет')
-                && str_contains($text, 'Приветствие')
-                && str_contains($text, 'Общий словарь')
-                && str_contains($text, 'Hello - Здравствуйте')
-                && str_contains($text, 'Официальное приветствие')
-                && str_contains($text, 'Вежливый словарь')
-                && ! str_contains($text, 'Чужой словарь')
+                && str_contains($text, $this->ru('\\u0420\\u0435\\u0437\\u0443\\u043b\\u044c\\u0442\\u0430\\u0442\\u044b \\u043f\\u043e\\u0438\\u0441\\u043a\\u0430:'))
+                && str_contains($text, 'Hello - Hi')
+                && str_contains($text, 'Hello - Good day')
+                && str_contains($text, 'Greeting')
+                && str_contains($text, 'General dictionary')
+                && str_contains($text, 'Formal greeting')
+                && str_contains($text, 'Polite dictionary')
+                && ! str_contains($text, 'Foreign dictionary')
+                && ! str_contains($text, 'Hello hidden')
                 && ! str_contains($text, 'Hello ready');
         });
     }
@@ -172,35 +171,35 @@ class TelegramDictionaryWordSearchTest extends TestCase
 
         $dictionary = UserDictionary::create([
             'user_id' => $user->id,
-            'name' => 'Испанские слова',
+            'name' => 'Spanish words',
             'language' => 'Spanish',
         ]);
 
         $matchingWord = Word::create([
             'word' => 'ventana',
-            'translation' => 'окно в комнате',
+            'translation' => 'room window',
             'part_of_speech' => 'noun',
             'comment' => null,
         ]);
         $nonMatchingWord = Word::create([
             'word' => 'mesa',
-            'translation' => 'стол',
+            'translation' => 'table',
             'part_of_speech' => 'noun',
             'comment' => null,
         ]);
 
         $dictionary->words()->attach([$matchingWord->id, $nonMatchingWord->id]);
 
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('Поиск слов', 33001))->assertOk();
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('комнат', 33002))->assertOk();
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate($this->ru('\\u041f\\u043e\\u0438\\u0441\\u043a \\u0441\\u043b\\u043e\\u0432'), 33001))->assertOk();
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('room', 33002))->assertOk();
 
         Http::assertSent(function (Request $request): bool {
             $text = (string) $request['text'];
 
             return str_ends_with($request->url(), '/sendMessage')
-                && str_contains($text, 'ventana - окно в комнате')
-                && str_contains($text, 'Испанские слова')
-                && ! str_contains($text, 'mesa - стол');
+                && str_contains($text, 'ventana - room window')
+                && str_contains($text, 'Spanish words')
+                && ! str_contains($text, 'mesa - table');
         });
     }
 
@@ -224,7 +223,7 @@ class TelegramDictionaryWordSearchTest extends TestCase
 
         $word = Word::create([
             'word' => 'shared hello',
-            'translation' => 'РѕР±С‰РёР№ РїСЂРёРІРµС‚',
+            'translation' => 'shared greeting',
             'comment' => 'Shared comment',
         ]);
 
@@ -241,7 +240,7 @@ class TelegramDictionaryWordSearchTest extends TestCase
         $this->assertSame('Shared dictionary', $results->first()->dictionary_name);
         $this->assertSame('shared hello', $results->first()->word);
 
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('РџРѕРёСЃРє СЃР»РѕРІ', 33011))->assertOk();
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate($this->ru('\\u041f\\u043e\\u0438\\u0441\\u043a \\u0441\\u043b\\u043e\\u0432'), 33011))->assertOk();
         $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('shared', 33012))->assertOk();
 
         $this->assertNull(app(TelegramAuthStateStore::class)->get('1001'));
@@ -267,20 +266,20 @@ class TelegramDictionaryWordSearchTest extends TestCase
 
         $word = Word::create([
             'word' => 'sun',
-            'translation' => 'солнце',
+            'translation' => 'sun',
             'part_of_speech' => 'noun',
             'comment' => null,
         ]);
 
         $dictionary->words()->attach($word->id);
 
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('Поиск слов', 33001))->assertOk();
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate($this->ru('\\u041f\\u043e\\u0438\\u0441\\u043a \\u0441\\u043b\\u043e\\u0432'), 33001))->assertOk();
         $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('moonlight', 33002))->assertOk();
 
         $this->assertNull(app(TelegramAuthStateStore::class)->get('1001'));
 
         Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/sendMessage')
-            && (string) $request['text'] === "Результаты поиска:\nТаких слов не найдено в ваших словарях.");
+            && (string) $request['text'] === $this->ru('\\u0420\\u0435\\u0437\\u0443\\u043b\\u044c\\u0442\\u0430\\u0442\\u044b \\u043f\\u043e\\u0438\\u0441\\u043a\\u0430:\\n\\u0422\\u0430\\u043a\\u0438\\u0445 \\u0441\\u043b\\u043e\\u0432 \\u043d\\u0435 \\u043d\\u0430\\u0439\\u0434\\u0435\\u043d\\u043e \\u0432 \\u0432\\u0430\\u0448\\u0438\\u0445 \\u0441\\u043b\\u043e\\u0432\\u0430\\u0440\\u044f\\u0445.'));
     }
 
     /**
@@ -306,5 +305,10 @@ class TelegramDictionaryWordSearchTest extends TestCase
                 'text' => $text,
             ],
         ];
+    }
+
+    private function ru(string $encoded): string
+    {
+        return (string) json_decode('"'.$encoded.'"', true, 512, JSON_THROW_ON_ERROR);
     }
 }

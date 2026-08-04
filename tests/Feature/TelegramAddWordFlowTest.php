@@ -173,12 +173,9 @@ class TelegramAddWordFlowTest extends TestCase
             'language' => 'German',
         ]);
 
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('Добавить слово', 41001))
-            ->assertOk();
-        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("tg_add_word:dictionary:{$dictionary->id}", 41002, 'cb-dict-de'))
-            ->assertOk();
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('hallo', 41003))
-            ->assertOk();
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('Добавить слово', 41001))->assertOk();
+        $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("tg_add_word:dictionary:{$dictionary->id}", 41002, 'cb-dict-de'))->assertOk();
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('hallo', 41003))->assertOk();
 
         $this->assertSame([[
             'text' => 'hallo',
@@ -256,8 +253,8 @@ class TelegramAddWordFlowTest extends TestCase
             public function translate(string $text, string $sourceLanguage, string $targetLanguage): TranslationResult
             {
                 return new TranslationResult([
-                    new TranslationSuggestion('РїСЂРёРІРµС‚', 'top result'),
-                    new TranslationSuggestion('Р·РґСЂР°РІСЃС‚РІСѓР№С‚Рµ', 'alternative'),
+                    new TranslationSuggestion('привет', 'top result'),
+                    new TranslationSuggestion('здравствуйте', 'alternative'),
                 ]);
             }
         });
@@ -273,7 +270,7 @@ class TelegramAddWordFlowTest extends TestCase
             'language' => 'English',
         ]);
 
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('Р”РѕР±Р°РІРёС‚СЊ СЃР»РѕРІРѕ', 40201))->assertOk();
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('Добавить слово', 40201))->assertOk();
         $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("tg_add_word:dictionary:{$dictionary->id}", 40202, 'cb-dict-cancel-1'))->assertOk();
         $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('hello', 40203))->assertOk();
 
@@ -297,8 +294,8 @@ class TelegramAddWordFlowTest extends TestCase
             public function translate(string $text, string $sourceLanguage, string $targetLanguage): TranslationResult
             {
                 return new TranslationResult([
-                    new TranslationSuggestion('РїСЂРёРІРµС‚', 'top result'),
-                    new TranslationSuggestion('Р·РґСЂР°РІСЃС‚РІСѓР№С‚Рµ', 'alternative'),
+                    new TranslationSuggestion('привет', 'top result'),
+                    new TranslationSuggestion('здравствуйте', 'alternative'),
                 ]);
             }
         });
@@ -314,7 +311,7 @@ class TelegramAddWordFlowTest extends TestCase
             'language' => 'English',
         ]);
 
-        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('Р”РѕР±Р°РІРёС‚СЊ СЃР»РѕРІРѕ', 40301))->assertOk();
+        $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('Добавить слово', 40301))->assertOk();
         $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("tg_add_word:dictionary:{$dictionary->id}", 40302, 'cb-dict-cancel-2'))->assertOk();
         $this->postJson('/telegram/webhook/telegram-secret', $this->messageUpdate('hello', 40303))->assertOk();
         $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate('tg_add_word:translation:0', 40304, 'cb-translation-cancel'))->assertOk();

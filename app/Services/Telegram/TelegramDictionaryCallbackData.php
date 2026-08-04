@@ -67,7 +67,7 @@ class TelegramDictionaryCallbackData
         $dictionaryId = isset($parts[2]) && is_numeric($parts[2]) ? (int) $parts[2] : null;
         $page = isset($parts[3]) && is_numeric($parts[3]) ? (int) $parts[3] : null;
 
-        if ($dictionaryId === null || $dictionaryId <= 0 || $page === null || $page <= 0) {
+        if ($dictionaryId === null || $dictionaryId === 0 || $page === null || $page <= 0) {
             return null;
         }
 

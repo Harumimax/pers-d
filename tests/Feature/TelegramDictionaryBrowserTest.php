@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\DictionarySubscription;
+use App\Models\FavoriteWord;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
+use App\Services\Favorites\FavoriteWordsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -59,16 +61,19 @@ class TelegramDictionaryBrowserTest extends TestCase
             ->assertOk();
 
         Http::assertSent(function (Request $request): bool {
+            $text = (string) $request['text'];
+
             return str_ends_with($request->url(), '/sendMessage')
-                && str_contains((string) $request['text'], 'Ваши словари:')
-                && str_contains((string) $request['text'], 'Travel English')
-                && str_contains((string) $request['text'], 'Spanish verbs')
-                && ! str_contains((string) $request['text'], 'Hidden dictionary')
+                && str_contains($text, 'Ваши словари:')
+                && str_contains($text, '1. '.__('dictionaries.index.favorites.name'))
+                && str_contains($text, '2. Travel English - English')
+                && str_contains($text, '3. Spanish verbs - Spanish')
+                && ! str_contains($text, 'Hidden dictionary')
                 && data_get($request->data(), 'reply_markup.inline_keyboard.0.0.text') === '1';
         });
     }
 
-    public function test_dictionary_menu_shows_empty_state_when_user_has_no_dictionaries(): void
+    public function test_dictionary_menu_shows_favorites_even_when_user_has_no_other_dictionaries(): void
     {
         Http::fake([
             'https://api.telegram.org/*' => Http::response(['ok' => true], 200),
@@ -83,8 +88,7 @@ class TelegramDictionaryBrowserTest extends TestCase
             ->assertOk();
 
         Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/sendMessage')
-            && str_contains((string) $request['text'], 'У вас пока нет созданных словарей')
-            && str_contains((string) $request['text'], 'https://wordkeeper.space'));
+            && str_contains((string) $request['text'], '1. '.__('dictionaries.index.favorites.name')));
     }
 
     public function test_user_can_open_subscribed_dictionary_from_menu(): void
@@ -107,7 +111,7 @@ class TelegramDictionaryBrowserTest extends TestCase
 
         $word = Word::query()->create([
             'word' => 'shared',
-            'translation' => 'РѕР±С‰РёР№',
+            'translation' => 'общий',
         ]);
 
         $dictionary->words()->attach($word->id);
@@ -121,6 +125,50 @@ class TelegramDictionaryBrowserTest extends TestCase
             ->assertOk();
 
         Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/editMessageText'));
+    }
+
+    public function test_user_can_open_favorites_dictionary_from_menu(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true], 200),
+        ]);
+
+        $user = User::factory()->create([
+            'tg_chat_id' => '1001',
+            'tg_linked_at' => now(),
+        ]);
+
+        $dictionary = UserDictionary::query()->create([
+            'user_id' => $user->id,
+            'name' => 'Travel English',
+            'language' => 'English',
+        ]);
+
+        $word = Word::query()->create([
+            'word' => 'airport',
+            'translation' => 'аэропорт',
+            'part_of_speech' => 'noun',
+            'comment' => 'travel',
+        ]);
+
+        $dictionary->words()->attach($word->id);
+
+        FavoriteWord::query()->create([
+            'user_id' => $user->id,
+            'source_dictionary_type' => FavoriteWord::SOURCE_DICTIONARY_USER,
+            'source_dictionary_id' => $dictionary->id,
+            'source_word_type' => FavoriteWord::SOURCE_WORD_USER,
+            'source_word_id' => $word->id,
+        ]);
+
+        $this->postJson(
+            '/telegram/webhook/telegram-secret',
+            $this->callbackUpdate('tg_dict:show:'.FavoriteWordsService::VIRTUAL_DICTIONARY_ID.':1', 30012, 'callback-favorites-dict')
+        )->assertOk();
+
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/editMessageText')
+            && str_contains((string) $request['text'], __('dictionaries.index.favorites.name'))
+            && str_contains((string) $request['text'], 'airport'));
     }
 
     public function test_user_can_open_dictionary_page_paginate_and_go_back(): void
@@ -143,9 +191,9 @@ class TelegramDictionaryBrowserTest extends TestCase
         foreach (range(1, 25) as $index) {
             $word = Word::query()->create([
                 'word' => 'word'.$index,
-                'translation' => 'РїРµСЂРµРІРѕРґ'.$index,
+                'translation' => 'Перевод'.$index,
                 'part_of_speech' => $index === 1 ? 'noun' : null,
-                'comment' => $index === 1 ? 'РІР°Р¶РЅС‹Р№ РєРѕРјРјРµРЅС‚Р°СЂРёР№' : null,
+                'comment' => $index === 1 ? 'важный комментарий' : null,
             ]);
 
             $dictionary->words()->attach($word->id);
@@ -154,7 +202,7 @@ class TelegramDictionaryBrowserTest extends TestCase
         $this->postJson('/telegram/webhook/telegram-secret', $this->callbackUpdate("tg_dict:show:{$dictionary->id}:1", 31001, 'callback-dict-show'))
             ->assertOk();
 
-        Http::assertSent(function (Request $request) use ($dictionary): bool {
+        Http::assertSent(function (Request $request): bool {
             return str_ends_with($request->url(), '/editMessageText')
                 && str_contains((string) $request['text'], '1. word1')
                 && str_contains((string) $request['text'], '20. word20')
@@ -259,4 +307,3 @@ class TelegramDictionaryBrowserTest extends TestCase
         ];
     }
 }
-

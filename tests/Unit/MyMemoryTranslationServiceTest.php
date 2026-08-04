@@ -16,20 +16,20 @@ class MyMemoryTranslationServiceTest extends TestCase
         Http::fake([
             'https://api.mymemory.translated.net/get*' => Http::response([
                 'responseData' => [
-                    'translatedText' => 'РґРѕР±СЂРѕРµ СѓС‚СЂРѕ',
+                    'translatedText' => 'доброе утро',
                 ],
                 'matches' => [
                     [
-                        'translation' => 'РґРѕР±СЂРѕРµ СѓС‚СЂРѕ',
+                        'translation' => 'доброе утро',
                         'match' => 1,
                     ],
                     [
-                        'translation' => 'Р·РґСЂР°РІСЃС‚РІСѓР№С‚Рµ',
+                        'translation' => 'здравствуйте',
                         'created-by' => 'tm',
                         'match' => 0.82,
                     ],
                     [
-                        'translation' => 'СѓС‚СЂРµРЅРЅРµРµ РїСЂРёРІРµС‚СЃС‚РІРёРµ',
+                        'translation' => 'утреннее приветствие',
                     ],
                 ],
             ]),
@@ -39,9 +39,9 @@ class MyMemoryTranslationServiceTest extends TestCase
         $result = $service->translate('good morning', 'en', 'ru');
 
         $this->assertSame([
-            ['text' => 'РґРѕР±СЂРѕРµ СѓС‚СЂРѕ', 'label' => 'top result'],
-            ['text' => 'Р·РґСЂР°РІСЃС‚РІСѓР№С‚Рµ', 'label' => 'memory match'],
-            ['text' => 'СѓС‚СЂРµРЅРЅРµРµ РїСЂРёРІРµС‚СЃС‚РІРёРµ', 'label' => 'suggested'],
+            ['text' => 'доброе утро', 'label' => 'top result'],
+            ['text' => 'здравствуйте', 'label' => 'memory match'],
+            ['text' => 'утреннее приветствие', 'label' => 'suggested'],
         ], $result->toArray());
     }
 
@@ -54,7 +54,7 @@ class MyMemoryTranslationServiceTest extends TestCase
                 ],
                 'matches' => [
                     [
-                        'translation' => 'РїРѕС‚СЂРµР±РёС‚РµР»СЊ',
+                        'translation' => 'потребитель',
                         'match' => 1,
                     ],
                     [
@@ -68,7 +68,7 @@ class MyMemoryTranslationServiceTest extends TestCase
                         'match' => 0.95,
                     ],
                     [
-                        'translation' => 'РћС‚РґРµР» РёРЅРґРµРєСЃР° РїРѕС‚СЂРµР±РёС‚РµР»СЊСЃРєРёС… С†РµРЅ',
+                        'translation' => 'Отдел индекса потребительских цен',
                         'created-by' => 'tm',
                         'match' => 0.87,
                     ],
@@ -80,10 +80,11 @@ class MyMemoryTranslationServiceTest extends TestCase
         $result = $service->translate('consumer', 'en', 'ru');
 
         $this->assertSame([
-            ['text' => 'РїРѕС‚СЂРµР±РёС‚РµР»СЊ', 'label' => 'best match'],
-            ['text' => 'РћС‚РґРµР» РёРЅРґРµРєСЃР° РїРѕС‚СЂРµР±РёС‚РµР»СЊСЃРєРёС… С†РµРЅ', 'label' => 'memory match'],
+            ['text' => 'потребитель', 'label' => 'best match'],
+            ['text' => 'Отдел индекса потребительских цен', 'label' => 'memory match'],
         ], $result->toArray());
     }
+
     public function test_service_filters_out_mixed_latin_and_cyrillic_suggestions(): void
     {
         Http::fake([
@@ -117,4 +118,3 @@ class MyMemoryTranslationServiceTest extends TestCase
         ], $result->toArray());
     }
 }
-
