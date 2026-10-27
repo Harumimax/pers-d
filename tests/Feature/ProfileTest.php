@@ -14,8 +14,9 @@ use App\Models\TelegramSetting;
 use App\Models\User;
 use App\Models\UserDictionary;
 use App\Models\Word;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Contracts\Bus\Dispatcher;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use RuntimeException;
@@ -262,7 +263,7 @@ class ProfileTest extends TestCase
         $job = new SendAboutContactMessageJob($contactMessage->id, 'en');
         app()->call([$job, 'handle']);
 
-        Http::assertSent(function (\Illuminate\Http\Client\Request $request) use ($contactMessage): bool {
+        Http::assertSent(function (Request $request) use ($contactMessage): bool {
             return $request->url() === 'https://api.notisend.ru/v1/email/messages'
                 && $request->hasHeader('Authorization', 'Bearer test-token')
                 && $request['from_email'] === 'sender@example.com'
@@ -562,16 +563,14 @@ class ProfileTest extends TestCase
 
         $this->get('/')
             ->assertOk()
-            ->assertSee('Demo')
-            ->assertSee('Try demo')
-            ->assertDontSee('Try prepared dictionaries first')
+            ->assertSee('Prepared dictionaries')
+            ->assertSee('Keep the words you want to remember.')
+            ->assertSee('Explore prepared dictionaries')
             ->assertSee('Save words. Practice them. Remember more.')
-            ->assertSee('Product preview')
-            ->assertSee('See WordKeeper in action')
-            ->assertSee('Add a new word in dictionary quickly')
-            ->assertSee('Review results and weak spots')
-            ->assertSee('Keep words in one place')
-            ->assertSee('Start building your vocabulary today')
+            ->assertSee('More than a list of translations')
+            ->assertSee('A word has somewhere to go next')
+            ->assertSee('Start with a prepared dictionary')
+            ->assertDontSee('Try demo')
             ->assertSee('Ru')
             ->assertSee('En')
             ->assertDontSee('mc.yandex.ru/metrika/tag.js');
@@ -587,8 +586,9 @@ class ProfileTest extends TestCase
             ->assertSee('My Dictionaries')
             ->assertSee('Remainder')
             ->assertSee('Prepared dictionaries')
+            ->assertSee('Open my dictionaries')
             ->assertDontSee('Try demo')
-            ->assertDontSee('Try prepared dictionaries first');
+            ->assertDontSee('Explore prepared dictionaries');
     }
 
     public function test_welcome_page_is_translated_to_russian_when_locale_is_set(): void
@@ -596,20 +596,33 @@ class ProfileTest extends TestCase
         $this->withSession(['ui_locale' => 'ru'])
             ->get('/')
             ->assertOk()
-            ->assertSee('Персональный')
-            ->assertSee('словарь иностранных слов')
-            ->assertSee('Создавайте и упорядочивайте свой словарный запас')
-            ->assertSee('Сохраняйте слова. Практикуйтесь. Запоминайте больше.')
-            ->assertSee('Примеры интерфейса')
-            ->assertSee('Посмотрите WordKeeper в работе')
-            ->assertSee('Быстро добавляйте новое слово в словарь')
-            ->assertSee('Просматривайте результаты и слабые места')
-            ->assertSee('Сценарии использования')
-            ->assertSee('Как можно использовать WordKeeper')
-            ->assertSee('Храните слова в одном месте')
-            ->assertSee('Начните собирать словарный запас уже сегодня')
+            ->assertSee('Личное пространство для слов')
+            ->assertSee('Сохраняйте слова, которые хотите запомнить.')
+            ->assertSee('Смотреть готовые словари')
+            ->assertSee('Больше, чем список переводов')
+            ->assertSee('У нового слова есть следующий шаг')
+            ->assertSee('Начните с готового словаря')
             ->assertSee('Регистрация')
             ->assertSee('Войти');
+    }
+
+    public function test_welcome_page_displays_real_prepared_dictionary_data(): void
+    {
+        $dictionary = ReadyDictionary::factory()->create([
+            'name' => 'English words for travel',
+            'language' => 'English',
+            'level' => 'A2',
+        ]);
+
+        ReadyDictionaryWord::factory()->count(2)->create([
+            'ready_dictionary_id' => $dictionary->id,
+        ]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('English words for travel')
+            ->assertSee('2 words')
+            ->assertSee(route('ready-dictionaries.show', $dictionary), false);
     }
 
     public function test_remainder_page_is_displayed_for_authenticated_user(): void

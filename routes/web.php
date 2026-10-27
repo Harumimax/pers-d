@@ -1,10 +1,11 @@
 <?php
 
-use App\Http\Controllers\AboutController;
 use App\Http\Controllers\AboutContactController;
+use App\Http\Controllers\AboutController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\DictionaryShareInvitationController;
 use App\Http\Controllers\GameController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReadyDictionariesController;
 use App\Http\Controllers\RemainderController;
@@ -21,9 +22,7 @@ use App\Livewire\ReadyDictionaries\ShowV2 as ReadyDictionaryShowV2;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::post('/interface-language', function (Request $request) {
     $language = (string) $request->input('language');
